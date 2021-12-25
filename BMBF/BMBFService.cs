@@ -91,7 +91,7 @@ namespace BMBF
                 {
                     logging.ClearProviders();
                 })
-                .UseUrls("http://0.0.0.0:50005")
+                .UseUrls(Constants.BindAddress)
                 .UseSerilog()
                 .Build();
         }
