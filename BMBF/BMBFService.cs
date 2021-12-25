@@ -63,6 +63,7 @@ namespace BMBF
         {
             _webHost?.StopAsync().Wait();
             _webHost?.Dispose();
+            Log.CloseAndFlush();
         }
 
         public override void OnDestroy()
