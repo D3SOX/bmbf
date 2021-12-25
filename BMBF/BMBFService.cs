@@ -63,7 +63,6 @@ namespace BMBF
         {
             _webHost?.StopAsync().Wait();
             _webHost?.Dispose();
-            Log.CloseAndFlush();
         }
 
         public override void OnDestroy()
@@ -72,6 +71,8 @@ namespace BMBF
             
             Log.Information("Shutting down BMBFService");
             StopWebServer();
+            Log.Information("Goodbye!");
+            Log.CloseAndFlush();
         }
 
         private void SetupLogging()
@@ -79,6 +80,7 @@ namespace BMBF
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
+                .WriteTo.AndroidLog(LogEventLevel.Verbose, "BMBF [{Level}] {Message:l{NewLine:l}{Exception:l}")
                 .WriteTo.File(Constants.LogPath, LogEventLevel.Verbose, "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
         }
@@ -87,7 +89,7 @@ namespace BMBF
         {
             return WebHost.CreateDefaultBuilder()
                 .UseStartup<Startup>()
-                .ConfigureLogging((context, logging) =>
+                .ConfigureLogging((_, logging) =>
                 {
                     logging.ClearProviders();
                 })
