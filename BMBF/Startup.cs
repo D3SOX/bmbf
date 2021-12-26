@@ -31,6 +31,7 @@ namespace BMBF
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseMiddleware<Middleware>();
             app.UseMvc();
         }
     }

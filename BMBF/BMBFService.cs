@@ -7,6 +7,7 @@ using Android.OS;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -100,6 +101,7 @@ namespace BMBF
                 {
                     logging.ClearProviders();
                 })
+                .ConfigureServices(services => services.AddSingleton(Assets))
                 .UseUrls(Constants.BindAddress)
                 .UseSerilog()
                 .Build();
