@@ -60,7 +60,7 @@ namespace BMBF
                 string assetFilePath = Path.Combine(AssetsWebRoot, context.Request.Path.Value.Substring(1));
                 try
                 {
-                    Stream? assetFile = _assetManager.Open(assetFilePath);
+                    using Stream? assetFile = _assetManager.Open(assetFilePath);
                     if (assetFile == null)
                     {
                         context.Response.StatusCode = (int) HttpStatusCode.NotFound;
