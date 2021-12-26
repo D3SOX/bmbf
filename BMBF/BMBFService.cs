@@ -82,9 +82,10 @@ namespace BMBF
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // Disable microsoft request logging
                 .Enrich.FromLogContext()
-                .WriteTo.AndroidLog(LogEventLevel.Verbose, "BMBF [{Level}] {Message:l{NewLine:l}{Exception:l}")
-                .WriteTo.File(Constants.LogPath, LogEventLevel.Verbose, "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-                .CreateLogger();
+                .WriteTo.AndroidLog(LogEventLevel.Verbose, "{Message:l}{NewLine}{Exception:l}")
+                .WriteTo.File(Constants.LogPath, LogEventLevel.Verbose,
+                    "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .CreateLogger().ForContext<BMBFService>(); // Set default context to BMBF service
         }
 
         private IWebHost CreateHostBuilder()
