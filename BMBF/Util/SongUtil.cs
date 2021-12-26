@@ -14,7 +14,7 @@ namespace BMBF.Util
     {
         private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
 
-        private static async Task<string> GetSongHashAsync(string path, string infoDatPath, BeatmapInfoDat infoDat)
+        private static async Task<string?> TryGetSongHashAsync(string path, string infoDatPath, BeatmapInfoDat infoDat)
         {
             using var hash = SHA1.Create();
             await using var dataStream = new MemoryStream();
@@ -29,8 +29,8 @@ namespace BMBF.Util
                     string beatmapFilePath = Path.Combine(path, difficulty.BeatmapFilename);
                     if (!File.Exists(beatmapFilePath))
                     {
-                        throw new FileNotFoundException(
-                            $"Song missing beatmap difficulty file named {difficulty.BeatmapFilename}");
+                        Log.Warning($"Song missing beatmap difficulty file named {difficulty.BeatmapFilename}");
+                        return null;
                     }
 
                     await using var difficultyStream = File.OpenRead(beatmapFilePath);
@@ -42,13 +42,12 @@ namespace BMBF.Util
         }
         
         /// <summary>
-        /// Loads a song from the given path
+        /// Attempts to load a song from the given path
         /// </summary>
         /// <param name="path">The path of the song</param>
-        /// <returns>The loaded Song model</returns>
+        /// <returns>The loaded Song model, or null if a song could not be loaded from the path</returns>
         /// <exception cref="DirectoryNotFoundException">If the song directory does not exist</exception>
-        /// <exception cref="FileNotFoundException">If no info.dat or Info.dat file is present in the song directory, the cover is missing, or any of the difficulty files of the song are missing</exception>
-        public static async Task<Models.Song> LoadSongInfoAsync(string path)
+        public static async Task<Models.Song?> TryLoadSongInfoAsync(string path)
         {
             if (!Directory.Exists(path))
             {
@@ -63,7 +62,8 @@ namespace BMBF.Util
 
             if (!File.Exists(infoDatPath))
             {
-                throw new FileNotFoundException("No info.dat or Info.dat file found in song folder");
+                Log.Warning($"Could not load song from {path} - missing info.dat/Info.dat");
+                return null;
             }
 
             BeatmapInfoDat infoDat;
@@ -78,7 +78,11 @@ namespace BMBF.Util
                 Log.Warning($"Song missing cover {infoDat.CoverImageFilename}");
             }
 
-            string hash = await GetSongHashAsync(path, infoDatPath, infoDat);
+            string? hash = await TryGetSongHashAsync(path, infoDatPath, infoDat);
+            if (hash == null)
+            {
+                return null;
+            }
             return new Models.Song(hash, infoDat.SongName, infoDat.SongSubName, infoDat.SongAuthorName, infoDat.LevelAuthorName, path, infoDat.CoverImageFilename);
         }
     }
