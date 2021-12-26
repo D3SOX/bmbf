@@ -3,6 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 #nullable enable 
 namespace BMBF
@@ -19,6 +22,7 @@ namespace BMBF
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            services.AddSingleton(Configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>());
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

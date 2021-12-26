@@ -6,6 +6,7 @@ using Android.Content;
 using Android.OS;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -84,11 +85,17 @@ namespace BMBF
                 .WriteTo.File(Constants.LogPath, LogEventLevel.Verbose, "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
         }
-        
+
         private IWebHost CreateHostBuilder()
         {
+            var fileProvider = new AssetFileProvider(Assets ?? throw new NullReferenceException("Asset manager was null"));
+            
             return WebHost.CreateDefaultBuilder()
                 .UseStartup<Startup>()
+                .ConfigureAppConfiguration((ctx, configBuilder) =>
+                {
+                    configBuilder.AddJsonFile(fileProvider, "appsettings.json", false, false);
+                })
                 .ConfigureLogging((_, logging) =>
                 {
                     logging.ClearProviders();
