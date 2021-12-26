@@ -11,5 +11,9 @@
         public string RootDataPath { get; set; }
 
         public string SongsCacheName { get; set; }
+        
+        public bool DeleteDuplicateSongs { get; set; }
+        
+        public bool DeleteInvalidSongs { get; set; }
     }
 }
