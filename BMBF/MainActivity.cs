@@ -47,11 +47,15 @@ namespace BMBF
             }
             RegisterReceiver(_startupReceiver, intentFilter);
             
-            if (!BMBFService.Running)
+            if (BMBFService.RunningUrl == null)
             {
                 Intent intent = new Intent(this, typeof(BMBFService));
                 // TODO: Start as foreground or background depending on config option
                 StartService(intent);
+            }
+            else
+            {
+                OnLoaded(BMBFService.RunningUrl);
             }
         }
 

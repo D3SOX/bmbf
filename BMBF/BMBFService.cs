@@ -19,9 +19,8 @@ namespace BMBF
     // ReSharper disable once InconsistentNaming
     public class BMBFService : Service
     {
-        // TODO: Is there a better way to do this than a static field?
-        public static bool Running { get; private set; }
-
+        public static string? RunningUrl { get; private set; }
+        
         private IWebHost? _webHost;
 
         public override IBinder? OnBind(Intent? intent)
@@ -37,7 +36,6 @@ namespace BMBF
             Log.Information("BMBF service starting up!");
             
             Task.Run(async () => await StartWebServer());
-            Running = true;
         }
 
         private async Task StartWebServer()
@@ -48,6 +46,7 @@ namespace BMBF
                 await _webHost.StartAsync();
                 
                 Log.Information("BMBF service startup complete");
+                RunningUrl = Constants.BindAddress; // Notify future activity startups that the service has already started
                 Intent intent = new Intent(BMBFIntents.WebServerStartedIntent);
                 intent.PutExtra("BindAddress", Constants.BindAddress);
                 SendBroadcast(intent);
@@ -65,6 +64,7 @@ namespace BMBF
         {
             _webHost?.StopAsync().Wait();
             _webHost?.Dispose();
+            RunningUrl = null;
         }
 
         public override void OnDestroy()
@@ -74,7 +74,7 @@ namespace BMBF
             Log.Information("Shutting down BMBFService");
             StopWebServer();
             Log.Information("Goodbye!");
-            Log.CloseAndFlush();
+            Log.CloseAndFlush(); 
         }
 
         private void SetupLogging()
