@@ -23,6 +23,7 @@ namespace BMBF
             services.AddMvc();
             services.AddSingleton(Configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>());
             services.AddSingleton<ISongService, SongService>();
+            services.AddSingleton<IPlaylistService, PlaylistService>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
