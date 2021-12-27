@@ -55,27 +55,7 @@
         <Reference Include="Mono.Android" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="AssetFileProvider.cs" />
-        <Compile Include="BMBFService.cs" />
-        <Compile Include="Constants.cs" />
-        <Compile Include="Controllers\SongsController.cs" />
-        <Compile Include="Controllers\VersionController.cs" />
-        <Compile Include="Implementations\SongService.cs" />
-        <Compile Include="MainActivity.cs" />
-        <Compile Include="Middleware.cs" />
-        <Compile Include="Models\Playlist.cs" />
-        <Compile Include="Resources\Resource.Designer.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="Services\IPlaylistService.cs" />
-        <Compile Include="Services\ISongService.cs" />
-        <Compile Include="Startup.cs" />
-        <Compile Include="BMBFSettings.cs" />
-        <Compile Include="Models\Song.cs" />
-        <Compile Include="Util\SongUtil.cs" />
-        <Compile Include="Util\Song\BeatmapInfoDat.cs" />
-        <Compile Include="Util\Song\Difficulty.cs" />
-        <Compile Include="Util\Song\DifficultyBeatmap.cs" />
-        <Compile Include="Util\Song\DifficultyBeatmapSet.cs" />
+        <Compile Include="**\*.cs" Exclude="obj\**"/>
     </ItemGroup>
     <ItemGroup>
         <None Include="Resources\AboutResources.txt" />
