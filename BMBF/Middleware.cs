@@ -56,6 +56,10 @@ namespace BMBF
             }
             else
             {
+                if (context.Request.Path == "/")
+                {
+                    context.Request.Path = "/index.html";
+                }
                 // Otherwise, we need to return the appropriate file from assets
                 string assetFilePath = Path.Combine(AssetsWebRoot, context.Request.Path.Value.Substring(1));
                 try
