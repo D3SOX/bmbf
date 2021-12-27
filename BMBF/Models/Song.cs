@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿#nullable enable
+
+using Newtonsoft.Json;
 
 namespace BMBF.Models
 {
@@ -17,11 +19,8 @@ namespace BMBF.Models
         
         public string LevelAuthorName { get; }
         
-        // The below properties will not be sent to the frontend
-        [JsonIgnore] 
         public string Path { get; }
         
-        [JsonIgnore]
         public string CoverImageFileName { get; }
         
         [JsonConstructor]
