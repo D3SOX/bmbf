@@ -55,7 +55,7 @@
         <Reference Include="Mono.Android" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="**\*.cs" Exclude="obj\**"/>
+        <Compile Include="**\*.cs" Exclude="obj\**" />
     </ItemGroup>
     <ItemGroup>
         <None Include="Resources\AboutResources.txt" />
@@ -63,9 +63,11 @@
         <None Include="Assets\AboutAssets.txt" />
     </ItemGroup>
     <ItemGroup>
+        <AndroidResource Include="Resources\layout\activity_loading.xml" />
         <AndroidResource Include="Resources\layout\activity_main.axml">
             <SubType>Designer</SubType>
         </AndroidResource>
+        <AndroidResource Include="Resources\layout\startup_failed.xml" />
         <AndroidResource Include="Resources\values\colors.xml" />
         <AndroidResource Include="Resources\values\ic_launcher_background.xml" />
         <AndroidResource Include="Resources\values\strings.xml" />

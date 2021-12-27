@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -34,31 +35,30 @@ namespace BMBF
 
             SetupLogging();
             Log.Information("BMBF service starting up!");
-
+            
+            Task.Run(async () => await StartWebServer());
             Running = true;
-            _webHost = CreateHostBuilder();
-            _webHost.StartAsync().ContinueWith(t => {
-                if (t.IsCompletedSuccessfully)
-                {
-                    Log.Information("BMBF service startup complete");
-                }
-                else
-                {
-                    Running = false;
-                    Log.Error("BMBF service startup failed");
-                    if (t.Exception != null)
-                    {
-                        foreach (Exception ex in t.Exception.InnerExceptions)
-                        {
-                            Log.Error($"{ex}");
-                        }
-                    }
-                    else
-                    {
-                        Log.Error("No exception found");
-                    }
-                }
-            });
+        }
+
+        private async Task StartWebServer()
+        {
+            try
+            {
+                _webHost = CreateHostBuilder();
+                await _webHost.StartAsync();
+                
+                Log.Information("BMBF service startup complete");
+                Intent intent = new Intent(BMBFIntents.WebServerStartedIntent);
+                intent.PutExtra("BindAddress", Constants.BindAddress);
+                SendBroadcast(intent);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "BMBF webserver startup failed");
+                Intent intent = new Intent(BMBFIntents.WebServerFailedToStartIntent);
+                intent.PutExtra("Exception", ex.ToString());
+                SendBroadcast(intent);
+            }
         }
 
         private void StopWebServer()
@@ -102,7 +102,11 @@ namespace BMBF
                 {
                     logging.ClearProviders();
                 })
-                .ConfigureServices(services => services.AddSingleton(Assets))
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton(Assets);
+                    services.AddSingleton<Service>(this);
+                })
                 .UseUrls(Constants.BindAddress)
                 .UseSerilog()
                 .Build();
