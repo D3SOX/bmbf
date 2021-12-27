@@ -15,5 +15,7 @@
         public bool DeleteDuplicateSongs { get; set; }
         
         public bool DeleteInvalidSongs { get; set; }
+        
+        public bool UpdateCacheAutomatically { get; set; }
     }
 }
