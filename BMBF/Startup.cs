@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using BMBF.Implementations;
+using BMBF.Services;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Routing;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 #nullable enable 
 namespace BMBF
@@ -23,6 +22,7 @@ namespace BMBF
         {
             services.AddMvc();
             services.AddSingleton(Configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>());
+            services.AddSingleton<ISongService, SongService>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
