@@ -25,11 +25,16 @@ namespace BMBF.Services
         Task UpdatePlaylistCacheAsync();
 
         /// <summary>
-        /// Deletes the given playlist
+        /// Saves the modified playlists in the playlist cache
         /// </summary>
-        /// <param name="playlist">The playlist to delete</param>
+        Task SavePlaylistsAsync();
+
+        /// <summary>
+        /// Deletes the playlist with the given path if it is in the cache
+        /// </summary>
+        /// <param name="playlistPath">Path of the playlist to delete</param>
         /// <returns>Whether or not the playlist was contained within the cache</returns>
-        Task<bool> DeletePlaylistAsync(Playlist playlist);
+        Task<bool> DeletePlaylistAsync(string playlistPath);
 
         /// <summary>
         /// Invoked whenever a playlist is added
