@@ -1,34 +1,73 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
+using BMBF.Util.BPList;
 using Newtonsoft.Json;
 
 namespace BMBF.Models
 {
     /// <summary>
     /// Represents a playlist in the BMBF cache
+    /// This format is compatible with BPList to make loading/saving easier
     /// </summary>
     public class Playlist : INotifyPropertyChanged
     {
-        public string PlaylistId { get => _playlistId; set { if (_playlistId != value) { _playlistId = value; NotifyPropertyChanged(); } } }
-        private string _playlistId;
+        public string PlaylistTitle { get => _playlistTitle; set { if (_playlistTitle != value) { _playlistTitle = value; NotifyPropertyChanged(); } } }
+        private string _playlistTitle;
         
-        public string PlaylistName { get => _playlistName; set { if (_playlistName != value) { _playlistName = value; NotifyPropertyChanged(); } } }
-        private string _playlistName;
+        public string PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyPropertyChanged(); } } }
+        private string _playlistAuthor;
+        
+        public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyPropertyChanged(); } } }
+        private string _playlistDescription;
+        
+        
+        [JsonProperty("image")]
+        public string? ImageString {
+            get => Image == null ? null : "data:image/png;base64," + Convert.ToBase64String(Image);
+            set
+            {
+                if (value == null)
+                {
+                    Image = null;
+                }
+                else
+                {
+                    var idx = value.IndexOf("base64,", StringComparison.Ordinal);
+                    Image = Convert.FromBase64String(idx == -1 ? value : value.Substring(idx + 7));
+                }
+            }
+        }
         
         [JsonIgnore]
-        public ObservableCollection<Song> Songs { get => _songs; set { if (Songs != value) { _songs = value; NotifyPropertyChanged(); } } }
-        private ObservableCollection<Song> _songs;
-
-        [JsonProperty("songs")]
-        public IEnumerable<string> SongHashes => Songs.Select(s => s.Hash);
+        public byte[]? Image { get; set; }
         
-        public string Path { get; }
+        [JsonIgnore]
+        public bool IsPendingSave { get; set; }
+
+        /// <summary>
+        /// The songs within the playlist
+        /// </summary>
+        public ObservableCollection<BPSong> Songs
+        {
+            get => _songs; 
+            set { 
+                if (_songs != value)
+                {
+                    _songs.CollectionChanged -= SongsCollectionChanged;
+                    _songs = value;
+                    _songs.CollectionChanged += SongsCollectionChanged;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        private ObservableCollection<BPSong> _songs;
+
 
         // The below intentionally do not notify changes
         
@@ -36,22 +75,33 @@ namespace BMBF.Models
         /// The time that the playlist was loaded from the playlists folder
         /// Used to avoid reloading playlists unless necessary
         /// </summary>
+        [JsonIgnore]
         public DateTime LastLoadTime { get; set; }
-        
+
+        [JsonIgnore] public string PlaylistId { get; set; } = null!;
+
         public event PropertyChangedEventHandler? PropertyChanged;
         
         private void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            IsPendingSave = true;
         }
 
-        public Playlist(string playlistId, string playlistName, string path, ObservableCollection<Song> songs, DateTime lastLoadTime)
+        private void SongsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
         {
-            _playlistId = playlistId;
-            _playlistName = playlistName;
+            NotifyPropertyChanged(nameof(Songs));
+        }
+
+        [JsonConstructor]
+        public Playlist(string playlistTitle, string playlistAuthor, string playlistDescription, ObservableCollection<BPSong> songs, string? image)
+        {
+            _playlistTitle = playlistTitle;
+            _playlistAuthor = playlistAuthor;
+            _playlistDescription = playlistDescription;
+            ImageString = image;
             _songs = songs;
-            Path = path;
-            LastLoadTime = lastLoadTime;
+            _songs.CollectionChanged += SongsCollectionChanged;
         }
     }
 }
