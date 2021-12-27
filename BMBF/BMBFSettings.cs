@@ -3,6 +3,8 @@
     public class BMBFSettings
     {
         public const string Position = "BMBFSettings";
+        
+        public string PackageId { get; set; }
 
         public string SongsPath { get; set; }
 
