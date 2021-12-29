@@ -112,6 +112,8 @@ namespace BMBF.Implementations
                 {
                     return _songs;
                 }
+                
+                Directory.CreateDirectory(_songsPath);
 
                 // Attempt to load the cache from BMBFData first, since it's expensive to generate
                 SongCache? songs = null;

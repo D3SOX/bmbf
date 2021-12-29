@@ -107,6 +107,8 @@ namespace BMBF.Implementations
                     return _cache;
                 }
 
+                Directory.CreateDirectory(_playlistsPath);
+
                 // We wait to assign the cache field until the cache is fully loaded
                 var cache = new PlaylistCache();
                 await UpdateCacheAsync(cache, false);
