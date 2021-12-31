@@ -12,12 +12,15 @@ namespace BMBF.Resources
         
         public Uri DownloadLink { get; set; }
         
+        public string? FileName { get; set; }
+        
         [JsonConstructor]
-        public CoreMod(string id, Version version, Uri downloadLink)
+        public CoreMod(string id, Version version, Uri downloadLink, string? fileName)
         {
             Id = id;
             Version = version;
             DownloadLink = downloadLink;
+            FileName = fileName;
         }
     }
 }
