@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -143,7 +141,7 @@ namespace BMBF.Implementations
             }
         }
 
-        private SongCache LoadCache()
+        private SongCache? LoadCache()
         {
             using var reader = new StreamReader(_cachePath);
             using var jsonReader = new JsonTextReader(reader);

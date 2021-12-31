@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -66,13 +64,18 @@ namespace BMBF.Util
                 return null;
             }
 
-            BeatmapInfoDat infoDat;
+            BeatmapInfoDat? infoDat;
             using (var reader = new StreamReader(infoDatPath))
             {
                 using var jsonReader = new JsonTextReader(reader);
                 infoDat = JsonSerializer.Deserialize<BeatmapInfoDat>(jsonReader);
+                if (infoDat == null)
+                {
+                    Log.Warning($"Info.dat for song {path} was null");
+                    return null;
+                }
             }
-
+            
             if (!File.Exists(Path.Combine(path, infoDat.CoverImageFilename)))
             {
                 Log.Warning($"Song missing cover {infoDat.CoverImageFilename}");

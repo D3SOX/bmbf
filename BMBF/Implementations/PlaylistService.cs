@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -163,7 +161,13 @@ namespace BMBF.Implementations
             {
                 using var streamReader = new StreamReader(path);
                 using var jsonReader = new JsonTextReader(streamReader);
-                Playlist playlist = _serializer.Deserialize<Playlist>(jsonReader);
+                var playlist = _serializer.Deserialize<Playlist>(jsonReader);
+                if (playlist == null)
+                {
+                    Log.Warning($"Deserialized playlist from {path} was null");
+                    return;
+                }
+                
                 playlist.PlaylistId = new string(Path.GetFileNameWithoutExtension(path).Select(c => Char.IsWhiteSpace(c) ? '_' : c).ToArray());
                 
                 // TODO: What to do with BPSongs that don't exist in the song cache?

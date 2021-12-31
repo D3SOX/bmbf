@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using BMBF.Patching;
+﻿using BMBF.Patching;
 using Newtonsoft.Json;
 
 namespace BMBF.Models

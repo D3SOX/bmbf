@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System;
+﻿using System;
 using Android;
 using Android.App;
 using Android.Content;

@@ -1,4 +1,6 @@
-﻿namespace BMBF
+﻿#nullable disable
+
+namespace BMBF
 {
     public class BMBFSettings
     {
