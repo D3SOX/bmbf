@@ -22,8 +22,6 @@ namespace BMBF.Resources
         /// </summary>
         public string? Name { get; set; }
         
-        // TODO: Source and destination hash for sanity checking
-
         [JsonConstructor]
         public DiffInfo(string fromVersion, string toVersion, string? name)
         {
