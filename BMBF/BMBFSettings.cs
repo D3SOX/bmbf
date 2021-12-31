@@ -21,5 +21,7 @@ namespace BMBF
         public bool DeleteInvalidSongs { get; set; }
         
         public bool UpdateCacheAutomatically { get; set; }
+        
+        public string PatchingFolderName { get; set; }
     }
 }
