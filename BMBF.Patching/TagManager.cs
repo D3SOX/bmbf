@@ -86,7 +86,7 @@ namespace BMBF.Patching
                     manifest.ModifiedFiles.Add(modifiedFile);
                 }
                 // Delete the existing tag
-                apkArchive.GetEntry(_tagLocation)!.Delete(); // Tag entry must exist, as it was just loaded from
+                apkArchive.GetEntry(_tagLocation)?.Delete(); // Tag entry must exist, as it was just loaded from
             }
 
             var tagEntry = apkArchive.CreateEntry(_tagLocation);
