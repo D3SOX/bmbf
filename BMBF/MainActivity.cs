@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Threading;
 using Android;
 using Android.App;
 using Android.Content;
