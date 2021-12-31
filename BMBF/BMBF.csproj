@@ -83,5 +83,10 @@
         <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
         <PackageReference Include="Serilog.Sinks.Xamarin" Version="0.2.0.64" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <ProjectReference Include="../BMBF.Patching/BMBF.Patching.csproj" />
+        <ProjectReference Include="../BMBF.Resources/BMBF.Resources.csproj" />
+    </ItemGroup>
     <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>
