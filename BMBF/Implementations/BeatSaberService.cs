@@ -22,6 +22,7 @@ namespace BMBF.Implementations
         private readonly string _packageId;
         private readonly TagManager _tagManager;
         
+
         public event EventHandler<InstallationInfo?>? AppChanged;
 
         private InstallationInfo? _installationInfo;
@@ -41,6 +42,12 @@ namespace BMBF.Implementations
             intentFilter.AddDataScheme("package");
             bmbfService.RegisterReceiver(this, intentFilter);
         }
+        
+        public string? GetApkPath()
+        {
+            return _packageManager.GetInstalledPackages(0)?.FirstOrDefault(package => package.PackageName == _packageId)?.ApplicationInfo?.PublicSourceDir;
+        }
+        
         public async Task<InstallationInfo?> GetInstallationInfoAsync()
         {
             if (_installationInfo == null)
