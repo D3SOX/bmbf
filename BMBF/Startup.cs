@@ -1,4 +1,5 @@
 ﻿using BMBF.Implementations;
+using BMBF.Patching;
 using BMBF.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,16 @@ namespace BMBF
             services.AddSingleton(Configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>());
             services.AddSingleton<ISongService, SongService>();
             services.AddSingleton<IPlaylistService, PlaylistService>();
+            services.AddSingleton<IBeatSaberService, BeatSaberService>();
+
+            // Configure our legacy tags
+            var tagManager = new TagManager();
+            tagManager.RegisterLegacyTag("modded",
+                () => new PatchManifest("QuestPatcher", null) { ModloaderName = "QuestLoader" });
+            tagManager.RegisterLegacyTag("BMBF.modded",
+                () => new PatchManifest("BMBF", null) { ModloaderName = "QuestLoader" });
+
+            services.AddSingleton(tagManager);
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
