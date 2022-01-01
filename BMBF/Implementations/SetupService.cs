@@ -347,9 +347,9 @@ namespace BMBF.Implementations
             {
                 if (CurrentStatus.Stage != SetupStage.Finalizing)
                 {
-                    _logger.Information("Modded Beat Saber was installed (woohoo)");
-                    ProcessStatusChange();
                     CurrentStatus.Stage = SetupStage.Finalizing;
+                    ProcessStatusChange();
+                    _logger.Information("Modded Beat Saber was installed (woohoo)");
                 }
             }
         }
