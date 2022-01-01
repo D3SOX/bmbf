@@ -10,6 +10,7 @@ using Android.Content.PM;
 using BMBF.Models;
 using BMBF.Patching;
 using BMBF.Services;
+using Java.Lang;
 using Serilog;
 using Exception = System.Exception;
 
@@ -39,7 +40,7 @@ namespace BMBF.Implementations
             intentFilter.AddAction(Intent.ActionPackageAdded);
             intentFilter.AddAction(Intent.ActionPackageRemoved);
             intentFilter.AddDataScheme("package");
-            bmbfService.RegisterReceiver(this, intentFilter);
+            _bmbfService.RegisterReceiver(this, intentFilter);
         }
 
         public async Task<InstallationInfo?> GetInstallationInfoAsync()
@@ -143,7 +144,14 @@ namespace BMBF.Implementations
         public new void Dispose()
         {
             base.Dispose();
-            _bmbfService.UnregisterReceiver(this);
+            try
+            {
+                _bmbfService.UnregisterReceiver(this);
+            }
+            catch (IllegalArgumentException)
+            {
+                // Already unregistered
+            }
         }
     }
 }
