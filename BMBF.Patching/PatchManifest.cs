@@ -18,8 +18,19 @@ namespace BMBF.Patching
         /// <summary>
         /// Version of the program used to patch the APK. Null if unknown
         /// </summary>
+        [JsonIgnore]
         public Version? PatcherVersion { get; set; }
-        
+
+        /// <summary>
+        /// String representation of <see cref="PatcherVersion"/>
+        /// </summary>
+        [JsonProperty(PropertyName = "patcherVersion")]
+        public string? PatcherVersionString
+        {
+            get => PatcherVersion?.ToString();
+            set => PatcherVersion = value == null ? null : Version.Parse(value);
+        }
+
         /// <summary>
         /// Name of the modloader that the APK was patched with
         /// </summary>
@@ -28,7 +39,18 @@ namespace BMBF.Patching
         /// <summary>
         /// Version of the modloader that the APK was patched with
         /// </summary>
+        [JsonIgnore]
         public Version? ModloaderVersion { get; set; }
+        
+        /// <summary>
+        /// String representation of <see cref="ModloaderVersion"/>
+        /// </summary>
+        [JsonProperty(PropertyName = "modloaderVersion")]
+        public string? ModloaderVersionString
+        {
+            get => ModloaderVersion?.ToString();
+            set => ModloaderVersion = value == null ? null : Version.Parse(value);
+        }
 
         /// <summary>
         /// A list of all the modified files in the APK
