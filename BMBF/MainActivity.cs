@@ -33,6 +33,7 @@ namespace BMBF
             intentFilter.AddAction(BMBFIntents.WebServerFailedToStartIntent);
             intentFilter.AddAction(BMBFIntents.TriggerPackageInstall);
             intentFilter.AddAction(BMBFIntents.TriggerPackageUninstall);
+            intentFilter.AddAction(BMBFIntents.Quit);
             if (_receiver == null)
             {
                 _receiver = new WebServerStartedReceiver();
@@ -43,6 +44,8 @@ namespace BMBF
                 // Make sure to inform of errors
                 _receiver.WebServerStartupFailed +=
                     (sender, error) => RunOnUiThread(() => OnFailedToLoad(error));
+
+                _receiver.Quit += (sender, args) => Finish();
 
                 _receiver.PackageInstallTriggered += (sender, apkPath) => TriggerPackageInstall(apkPath);
                 _receiver.PackageUninstallTriggered += (sender, packageId) => TriggerPackageUninstall(packageId);

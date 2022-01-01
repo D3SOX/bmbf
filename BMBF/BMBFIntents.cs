@@ -13,5 +13,7 @@
         public const string TriggerPackageInstall = "BMBFTriggerPackageInstall";
 
         public const string TriggerPackageUninstall = "BMBFTriggerPackageUninstall";
+
+        public const string Quit = "BMBFQuit";
     }
 }

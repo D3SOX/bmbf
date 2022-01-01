@@ -31,6 +31,11 @@ namespace BMBF
         /// Argument is package ID
         /// </summary>
         public event EventHandler<string>? PackageUninstallTriggered;
+
+        /// <summary>
+        /// Invoked when the service requests the activity to quit
+        /// </summary>
+        public event EventHandler? Quit;
         
         public override void OnReceive(Context? context, Intent? intent)
         {
@@ -51,6 +56,9 @@ namespace BMBF
             }   else if (intent.Action == BMBFIntents.TriggerPackageUninstall)
             {
                 PackageUninstallTriggered?.Invoke(this, intent.GetStringExtra("PackageId")!);
+            }   else if (intent.Action == BMBFIntents.Quit)
+            {
+                Quit?.Invoke(this, EventArgs.Empty);
             }
         }
     }
