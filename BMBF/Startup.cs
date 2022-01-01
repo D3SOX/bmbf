@@ -27,6 +27,7 @@ namespace BMBF
             services.AddSingleton<ISongService, SongService>();
             services.AddSingleton<IPlaylistService, PlaylistService>();
             services.AddSingleton<IBeatSaberService, BeatSaberService>();
+            services.AddSingleton<ISetupService, SetupService>();
             services.AddSingleton<IAssetService, AssetService>();
 
             var bmbfHttpClient = new HttpClient();
