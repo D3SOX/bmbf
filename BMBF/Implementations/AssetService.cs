@@ -12,6 +12,7 @@ using BMBF.Services;
 using Serilog;
 using UnityIndex = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>;
 using CoreModsIndex = System.Collections.Generic.Dictionary<string, BMBF.Resources.CoreMods>;
+using Version = SemanticVersioning.Version;
 
 namespace BMBF.Implementations
 {
@@ -126,14 +127,14 @@ namespace BMBF.Implementations
             return _cachedDiffs;
         }
 
-        private (Stream modloader, Stream main) OpenBuiltInModloader(bool is64Bit)
+        private (Stream modloader, Stream main, Version version) OpenBuiltInModloader(bool is64Bit)
         {
             var modloaderPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmodloader64.so" : "libmodloader32.so");
             var mainPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmain64.so" : "libmain32.so");
-            return (OpenAsset(modloaderPath), OpenAsset(mainPath));
+            return (OpenAsset(modloaderPath), OpenAsset(mainPath), Version.Parse(_builtInAssets.ModLoaderVersion));
         }
 
-        public async Task<(Stream modloader, Stream main)> GetModLoader(bool is64Bit)
+        public async Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit)
         {
             try
             {
@@ -149,7 +150,8 @@ namespace BMBF.Implementations
                 // TODO: This downloads to a MemoryStream, which is unnecessary but does reduce the headache of disposing the HttpResponseMessage
                 return (
                     await DownloadToMemoryStream(is64Bit ? modLoaderVersion.ModLoader64 : modLoaderVersion.ModLoader32),
-                    await DownloadToMemoryStream(is64Bit ? modLoaderVersion.Main64 : modLoaderVersion.Main32)
+                    await DownloadToMemoryStream(is64Bit ? modLoaderVersion.Main64 : modLoaderVersion.Main32),
+                    Version.Parse(modLoaderVersion.Version)
                 );
             }
             catch (Exception)

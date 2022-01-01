@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using BMBF.Resources;
 using System.Net.Http;
+using SemanticVersioning;
 
 namespace BMBF.Services
 {
@@ -47,14 +48,14 @@ namespace BMBF.Services
         Task<List<DiffInfo>> GetDiffs(bool refresh = false);
         
         /// <summary>
-        /// Gets streams of libmain.so and libmodloader.so
+        /// Gets streams of libmain.so and libmodloader.so, and the version of the modloader that they represent.
         /// Will use the inbuilt modloader if no internet is available, or if the modloader in BMBF resources
         /// is the same version as the inbuilt modloader
         ///
         /// Otherwise, the modloader will be downloaded
         /// </summary>
         /// <param name="is64Bit">Whether or not to use the 64 bit modloader</param>
-        Task<(Stream modloader, Stream main)> GetModLoader(bool is64Bit);
+        Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit);
 
         /// <summary>
         /// Gets a stream to read the unstripped libunity.so for the given Beat Saber version
