@@ -9,5 +9,9 @@
         public const string WebServerStartedIntent = "BMBFWebServerStarted";
 
         public const string WebServerFailedToStartIntent = "BMBFWebServerFailedToStart";
+
+        public const string TriggerPackageInstall = "BMBFTriggerPackageInstall";
+
+        public const string TriggerPackageUninstall = "BMBFTriggerPackageUninstall";
     }
 }

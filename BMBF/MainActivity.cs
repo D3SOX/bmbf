@@ -5,6 +5,7 @@ using Android.Content;
 using Android.OS;
 using Android.Support.V7.App;
 using Android.Support.V4.App;
+using Android.Support.V4.Content;
 using Android.Webkit;
 using Android.Widget;
 
@@ -13,7 +14,7 @@ namespace BMBF
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {
-        private WebServerStartedReceiver? _startupReceiver;
+        private WebServerStartedReceiver? _receiver;
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -26,23 +27,27 @@ namespace BMBF
         protected override void OnResume()
         {
             base.OnResume();
-            
             // Register a receiver for when the web server finishes starting up
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.AddAction(BMBFIntents.WebServerStartedIntent);
             intentFilter.AddAction(BMBFIntents.WebServerFailedToStartIntent);
-            if (_startupReceiver == null)
+            intentFilter.AddAction(BMBFIntents.TriggerPackageInstall);
+            intentFilter.AddAction(BMBFIntents.TriggerPackageUninstall);
+            if (_receiver == null)
             {
-                _startupReceiver = new WebServerStartedReceiver();
+                _receiver = new WebServerStartedReceiver();
                 // Navigate to the main page when WebServer startup finishes
-                _startupReceiver.WebServerStartupComplete +=
+                _receiver.WebServerStartupComplete +=
                     (sender, url) => RunOnUiThread(() => OnLoaded(url));
                 
                 // Make sure to inform of errors
-                _startupReceiver.WebServerStartupFailed +=
+                _receiver.WebServerStartupFailed +=
                     (sender, error) => RunOnUiThread(() => OnFailedToLoad(error));
+
+                _receiver.PackageInstallTriggered += (sender, apkPath) => TriggerPackageInstall(apkPath);
+                _receiver.PackageUninstallTriggered += (sender, packageId) => TriggerPackageUninstall(packageId);
             }
-            RegisterReceiver(_startupReceiver, intentFilter);
+            RegisterReceiver(_receiver, intentFilter);
             
             if (BMBFService.RunningUrl == null)
             {
@@ -55,6 +60,25 @@ namespace BMBF
                 OnLoaded(BMBFService.RunningUrl);
             }
         }
+
+        private void TriggerPackageInstall(string apkPath)
+        {
+            var intent = new Intent(Intent.ActionView);
+            var apkUri = FileProvider.GetUriForFile(this, PackageName + ".provider", new Java.IO.File(apkPath));
+            intent.SetDataAndType(apkUri, "application/vnd.android.package-archive");
+            intent.AddFlags(ActivityFlags.GrantReadUriPermission);
+            StartActivity(intent);
+        }
+
+        private void TriggerPackageUninstall(string packageId)
+        {
+            Intent intent = new Intent(
+                Intent.ActionDelete,
+                Android.Net.Uri.FromParts("package", packageId, null)
+            );
+            StartActivity(intent);
+        }
+        
 
         private void OnLoaded(string url)
         {
@@ -73,7 +97,7 @@ namespace BMBF
         protected override void OnPause()
         {
             base.OnPause();
-            UnregisterReceiver(_startupReceiver);
+            UnregisterReceiver(_receiver);
         }
     }
 }
