@@ -2,6 +2,7 @@
 
 namespace BMBF
 {
+    // ReSharper disable once InconsistentNaming
     public class BMBFSettings
     {
         public const string Position = "BMBFSettings";
