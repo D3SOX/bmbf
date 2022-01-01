@@ -66,21 +66,21 @@ namespace BMBF.Implementations
         private async Task<InstallationInfo?> LoadInstallationInfoAsync()
         {
             var packageInfo = _packageManager.GetInstalledPackages(0)?.FirstOrDefault(package => package.PackageName == _packageId);
+
             if (packageInfo == null)
             {
-                return _installationInfo;
+                return null;
             }
-
             var apkPath = packageInfo.ApplicationInfo?.PublicSourceDir;
             if (apkPath is null)
             {
-                return _installationInfo;
+                return null;
             }
 
             if (!File.Exists(apkPath))
             {
                 Log.Warning($"No APK existed for package {_packageId}");
-                return _installationInfo;
+                return null;
             }
 
             await using var apkStream = File.OpenRead(apkPath);
@@ -112,12 +112,12 @@ namespace BMBF.Implementations
                 if (context == null || intent == null)  { return; }
                 string? packageId = intent.Data?.EncodedSchemeSpecificPart;
                 if (packageId != _packageId) { return; }
-
-                if (intent.Type == Intent.ActionInstallPackage)
+                
+                if (intent.Action == Intent.ActionPackageAdded)
                 {
                     Log.Information($"{_packageId} installed");
                 }
-                else if(intent.Type == Intent.ActionUninstallPackage)
+                else if(intent.Action == Intent.ActionPackageRemoved)
                 {
                     Log.Information($"{_packageId} uninstalled");
                 }
