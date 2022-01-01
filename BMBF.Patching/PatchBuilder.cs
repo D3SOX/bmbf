@@ -22,7 +22,7 @@ namespace BMBF.Patching
 
         public PatchBuilder(string patcherName, Version patcherVersion, TagManager tagManager)
         {
-            _manifest = new PatchManifest(patcherName, patcherVersion);
+            _manifest = new PatchManifest(patcherName, patcherVersion.ToString());
             _tagManager = tagManager;
         }
 

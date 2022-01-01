@@ -58,10 +58,10 @@ namespace BMBF.Patching
         public HashSet<string> ModifiedFiles { get; set; } = new HashSet<string>();
         
         [JsonConstructor]
-        public PatchManifest(string patcherName, Version? patcherVersion)
+        public PatchManifest(string patcherName, string? patcherVersion)
         {
             PatcherName = patcherName;
-            PatcherVersion = patcherVersion;
+            PatcherVersionString = patcherVersion;
         }
     }
 }
