@@ -99,11 +99,11 @@ namespace BMBF.Patching
             else
             {
                 // Otherwise, we'll add a new feature attribute to the manifest
-                var permElement = new AxmlElement("uses-feature");
-                permElement.Attributes.Add(new AxmlAttribute("name", AndroidNamespace, NameAttributeResourceId, name));
-                permElement.Attributes.Add(new AxmlAttribute("required", AndroidNamespace, RequiredAttributeResourceId, required));
-                Manifest.Children.Add(permElement);
-                _existingPermissions[name] = permElement;
+                var featElement = new AxmlElement("uses-feature");
+                featElement.Attributes.Add(new AxmlAttribute("name", AndroidNamespace, NameAttributeResourceId, name));
+                featElement.Attributes.Add(new AxmlAttribute("required", AndroidNamespace, RequiredAttributeResourceId, required));
+                Manifest.Children.Add(featElement);
+                _existingFeatures[name] = featElement;
             }
         }
 
