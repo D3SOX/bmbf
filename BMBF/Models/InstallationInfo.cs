@@ -14,12 +14,15 @@ namespace BMBF.Models
         
         public PatchManifest? ModTag { get; set; }
         
-        [JsonConstructor]
-        public InstallationInfo(string version, int versionCode, PatchManifest? modTag)
+        [JsonIgnore]
+        public string ApkPath { get; set; }
+        
+        public InstallationInfo(string version, int versionCode, PatchManifest? modTag, string apkPath)
         {
             Version = version;
             VersionCode = versionCode;
             ModTag = modTag;
+            ApkPath = apkPath;
         }
     }
 }

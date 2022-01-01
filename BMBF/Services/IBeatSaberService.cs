@@ -16,12 +16,6 @@ namespace BMBF.Services
         Task<InstallationInfo?> GetInstallationInfoAsync();
 
         /// <summary>
-        /// Gets the path to the installed Beat Saber APK
-        /// </summary>
-        /// <returns>The path to the installed Beat Saber APK, or null if Beat Saber is not installed</returns>
-        string? GetApkPath();
-
-        /// <summary>
         /// Called whenever Beat Saber is uninstalled or installed
         /// </summary>
         event EventHandler<InstallationInfo?> AppChanged;
