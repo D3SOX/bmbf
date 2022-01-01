@@ -23,5 +23,7 @@ namespace BMBF
         public bool UpdateCacheAutomatically { get; set; }
         
         public string PatchingFolderName { get; set; }
+        
+        public ResourceUris Resources { get; set; }
     }
 }
