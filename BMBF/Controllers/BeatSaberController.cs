@@ -20,7 +20,7 @@ namespace BMBF.Controllers
             var installInfo = await _beatSaberService.GetInstallationInfoAsync();
             if (installInfo is null)
             {
-                return NotFound();
+                return NotFound("Beat Saber is not installed");
             }
             return new OkObjectResult(installInfo);
         }
