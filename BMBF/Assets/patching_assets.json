@@ -1,0 +1,31 @@
+﻿{
+  "beatSaberVersion": "1.17.1",
+  "modLoaderVersion": "1.2.3",
+  "coreMods": [
+    {
+      "id": "custom-types",
+      "version": "0.12.7",
+      "filename": "custom-types_v0_12_7.qmod"
+    },
+    {
+      "id": "codegen",
+      "version": "0.14.0",
+      "filename": "codegen_0_14_0.qmod"
+    },
+    {
+      "id": "songloader",
+      "version": "0.7.2",
+      "filename": "songloader_v0_7_2.qmod"
+    },
+    {
+      "id": "playlistmanager",
+      "version": "0.1.4",
+      "filename": "playlistmanager_v0_1_4.qmod"
+    },
+    {
+      "id": "questui",
+      "version": "0.11.1",
+      "filename": "questui_v0_11_1.qmod"
+    }
+  ]
+}

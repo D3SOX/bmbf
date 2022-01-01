@@ -93,5 +93,10 @@
         <ProjectReference Include="../BMBF.Patching/BMBF.Patching.csproj" />
         <ProjectReference Include="../BMBF.Resources/BMBF.Resources.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Assets\core_mods" />
+      <Folder Include="Assets\patching" />
+    </ItemGroup>
     <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

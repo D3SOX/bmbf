@@ -8490,6 +8490,9 @@ namespace BMBF
 			// aapt resource value: 0x7F0F0000
 			public const int network_security_config = 2131689472;
 			
+			// aapt resource value: 0x7F0F0001
+			public const int provider_paths = 2131689473;
+			
 			static Xml()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();

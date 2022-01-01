@@ -1,4 +1,6 @@
-﻿using BMBF.Implementations;
+﻿using System.Net.Http;
+using System.Reflection;
+using BMBF.Implementations;
 using BMBF.Patching;
 using BMBF.Services;
 using Microsoft.AspNetCore.Builder;
@@ -25,7 +27,12 @@ namespace BMBF
             services.AddSingleton<ISongService, SongService>();
             services.AddSingleton<IPlaylistService, PlaylistService>();
             services.AddSingleton<IBeatSaberService, BeatSaberService>();
+            services.AddSingleton<IAssetService, AssetService>();
 
+            var bmbfHttpClient = new HttpClient();
+            bmbfHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"BMBF/{Assembly.GetExecutingAssembly().GetName().Version}");
+            services.AddSingleton(bmbfHttpClient);
+            
             // Configure our legacy tags
             var tagManager = new TagManager();
             tagManager.RegisterLegacyTag("modded",
