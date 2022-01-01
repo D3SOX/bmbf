@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 using Serilog.Core;
 using Version = SemanticVersioning.Version;
 
@@ -89,7 +90,7 @@ namespace BMBF.Patching
             return this;
         }
 
-        private async Task DoFileModifications(ZipArchive apkArchive, Logger logger)
+        private async Task DoFileModifications(ZipArchive apkArchive, ILogger logger)
         {
             foreach (FileModification fileModification in _fileModifications)
             {
@@ -153,7 +154,7 @@ namespace BMBF.Patching
         /// </summary>
         /// <param name="apkPath">Path of the APK to patch</param>
         /// <param name="logger">Logger to print information to during patching</param>
-        public async Task Patch(string apkPath, Logger logger)
+        public async Task Patch(string apkPath, ILogger logger)
         {
             logger.Information($"Patching {Path.GetFileName(apkPath)}");
             using (var apkArchive = ZipFile.Open(apkPath, ZipArchiveMode.Update))
