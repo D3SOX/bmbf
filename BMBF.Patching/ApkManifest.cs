@@ -107,7 +107,7 @@ namespace BMBF.Patching
             }
         }
 
-        private void SetBooleanManifestAttribute(string name, int resourceId, bool value)
+        private void SetBooleanApplicationAttribute(string name, int resourceId, bool value)
         {
             var attribute = Manifest.Attributes.FirstOrDefault(e => e.Name == name);
             if (attribute != null)
@@ -117,7 +117,7 @@ namespace BMBF.Patching
             }
             else if(value) // Only bother adding the attribute if we actually want the APK to have it be true
             {
-                Manifest.Attributes.Add(new AxmlAttribute(name, AndroidNamespace, resourceId, value));
+                ApplicationElement.Attributes.Add(new AxmlAttribute(name, AndroidNamespace, resourceId, value));
             }
         }
 
@@ -127,7 +127,7 @@ namespace BMBF.Patching
         /// <param name="debuggable">Whether or not to make the APK debuggable</param>
         public void SetDebuggable(bool debuggable)
         {
-            SetBooleanManifestAttribute("debuggable", DebuggableAttributeResourceId, debuggable);
+            SetBooleanApplicationAttribute("debuggable", DebuggableAttributeResourceId, debuggable);
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace BMBF.Patching
         /// <param name="externalStorage">Whether or not the APK will request legacy external storage privileges</param>
         public void SetRequestLegacyExternalStorage(bool externalStorage)
         {
-            SetBooleanManifestAttribute("requestLegacyExternalStorage", LegacyStorageAttributeResourceId, externalStorage);
+            SetBooleanApplicationAttribute("requestLegacyExternalStorage", LegacyStorageAttributeResourceId, externalStorage);
         }
     }
 }
