@@ -67,6 +67,8 @@ namespace BMBF.Implementations
 
         public async Task LoadCurrentStatusAsync()
         {
+            if (CurrentStatus != null) return;
+            
             await _setupLock.WaitAsync();
             try
             {
