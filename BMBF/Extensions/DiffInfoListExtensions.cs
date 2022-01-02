@@ -24,7 +24,7 @@ namespace BMBF.Extensions
         {
             if (fromVersion == toVersion)
             {
-                return diffs;
+                return currentPath;
             }
 
             List<DiffInfo>? shortestPath = null;
