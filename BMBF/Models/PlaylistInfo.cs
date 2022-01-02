@@ -13,7 +13,6 @@ namespace BMBF.Models
         public string PlaylistAuthor { get; set; }
         public string PlaylistDescription { get; set; }
         
-        public PlaylistInfo() {}
         public PlaylistInfo(Playlist playlist)
         {
             PlaylistTitle = playlist.PlaylistTitle;
