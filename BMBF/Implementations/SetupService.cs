@@ -157,7 +157,8 @@ namespace BMBF.Implementations
                 await LoadSavedStatusAsync();
                 if (CurrentStatus?.Stage != SetupStage.Downgrading) throw new InvalidOperationException("Not at correct stage to downgrade APK");
                 CurrentStatus.DowngradingStatus ??= new DowngradingStatus { Path = downgradePath };
-                await ResumeDowngradeAsync();
+                ProcessStatusChange();
+                await ResumeDowngradeAsyncInternal();
             }
             finally
             {
@@ -211,9 +212,11 @@ namespace BMBF.Implementations
                         }
                     }
 
-                    _logger.Information($"Downgrading from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
+                    if(File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
+                    
+                    _logger.Information($"Applying patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
                     await using(var basisStream = File.OpenRead(_latestCompleteApkPath))
-                    await using(var tempStream = File.OpenWrite(_tempApkPath))
+                    await using(var tempStream = File.Open(_tempApkPath, FileMode.Create, FileAccess.ReadWrite))
                     {
                         deltaApplier.Apply(basisStream, new BinaryDeltaReader(deltaStream, new DummyProgressReporter()), tempStream);
                     }
@@ -298,7 +301,7 @@ namespace BMBF.Implementations
                 File.Move(_tempApkPath, _latestCompleteApkPath);
                 
                 // Trigger the next stage
-                UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync());
+                UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync(), true);
                 _logger.Information("Patching complete");
             }
             finally
@@ -313,13 +316,14 @@ namespace BMBF.Implementations
         /// or rolled forward to finalizing - depending on the new app
         /// </summary>
         /// <param name="installationInfo">The new Beat Saber install</param>
-        private void UpdateStatusPostPatching(InstallationInfo? installationInfo)
+        private void UpdateStatusPostPatching(InstallationInfo? installationInfo, bool force = false)
         {
             if (CurrentStatus == null) return;
             // If not in a post patching status, this can be safely skipped
             if (CurrentStatus.Stage != SetupStage.InstallingModded
                 && CurrentStatus.Stage != SetupStage.UninstallingOriginal
-                && CurrentStatus.Stage != SetupStage.Finalizing)
+                && CurrentStatus.Stage != SetupStage.Finalizing
+                && !force)
             {
                 return;
             }
