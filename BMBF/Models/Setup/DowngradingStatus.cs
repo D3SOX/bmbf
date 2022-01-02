@@ -13,6 +13,6 @@ namespace BMBF.Models.Setup
         /// <summary>
         /// The diff next to be downgraded using/currently being downgraded with
         /// </summary>
-        public int CurrentDiff { get; set; } = -1;
+        public int CurrentDiff { get; set; }
     }
 }
