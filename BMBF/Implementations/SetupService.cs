@@ -19,12 +19,16 @@ using Serilog;
 namespace BMBF.Implementations
 {
     /// <summary>
-    /// Probably will be fixed by just returning or throwing if a stage is already ongoing
+    /// Some notes about this implementation.
+    /// - During downgrading, the APK is copied to a new location each downgrade since Octodiff requires outputting to a
+    /// different file, I can't do much about this. The old APK is deleted once diff patching is done.
+    /// - During patching, the APK is again copied to a new location. This is in case patching fails - we would have to
+    /// redowngrade if we did not have a spare copy of the APK
     /// </summary>
     public class SetupService : ISetupService
     {
         public SetupStatus? CurrentStatus { get; private set; }
-        
+
         public event EventHandler<SetupStatus>? StatusChanged;
 
         public event EventHandler? SetupComplete;
@@ -37,10 +41,21 @@ namespace BMBF.Implementations
         private readonly string _statusFile;
         private readonly string _latestCompleteApkPath; // Stores the APK of the last completed stage
         private readonly string _tempApkPath; // Stores the APK of the currently executing stage
+        private readonly string _backupPath; // Beat Saber data backup used during uninstall and reinstall
         private readonly Context _context;
         private readonly string _packageId;
         private readonly ILogger _logger;
 
+        private string BeatSaberDataPath => $"/sdcard/Android/data/{_packageId}/files";
+
+        private static readonly string[] DataFiles =
+        {
+            "PlayerData.dat",
+            "settings.cfg",
+            "LocalLeaderboards.dat",
+            "LocalDailyLeaderboards.dat"
+        };
+        
         private bool _quitRequested;
 
         private readonly SemaphoreSlim _setupLock = new SemaphoreSlim(1);
@@ -55,6 +70,7 @@ namespace BMBF.Implementations
             _statusFile = Path.Combine(_setupDirName, "status.json");
             _latestCompleteApkPath = Path.Combine(_setupDirName, "PostCurrentStage.apk");
             _tempApkPath = Path.Combine(_setupDirName, "CurrentStage.apk");
+            _backupPath = Path.Combine(_setupDirName, "DataBackup");
             _packageId = settings.PackageId;
             _logger = new LoggerConfiguration()
                 .WriteTo.Logger(Log.Logger.ForContext<SetupService>())
@@ -318,6 +334,7 @@ namespace BMBF.Implementations
         /// or rolled forward to finalizing - depending on the new app
         /// </summary>
         /// <param name="installationInfo">The new Beat Saber install</param>
+        /// <param name="force">Whether or not to update the status even if not in a post-patch stage</param>
         private void UpdateStatusPostPatching(InstallationInfo? installationInfo, bool force = false)
         {
             if (CurrentStatus == null) return;
@@ -367,6 +384,16 @@ namespace BMBF.Implementations
             {            
                 await LoadSavedStatusAsync();
                 if (CurrentStatus?.Stage != SetupStage.UninstallingOriginal) throw new InvalidOperationException("Not at correct stage to uninstall original APK");
+
+                if (!Directory.Exists(_backupPath))
+                {
+                    Directory.CreateDirectory(_backupPath);
+                    foreach (string fileName in DataFiles)
+                    {
+                        _logger.Information($"Backing up {fileName}");
+                        File.Copy(Path.Combine(BeatSaberDataPath, fileName), Path.Combine(_backupPath, fileName));
+                    }
+                }
                 
                 Intent intent = new Intent(BMBFIntents.TriggerPackageUninstall);
                 intent.PutExtra("PackageId", _packageId);
@@ -412,6 +439,22 @@ namespace BMBF.Implementations
                 await LoadSavedStatusAsync();
                 if (CurrentStatus?.Stage != SetupStage.Finalizing)
                     throw new InvalidOperationException("Not at correct stage to finalize setup");
+
+                if (Directory.Exists(_backupPath))
+                {
+                    Directory.CreateDirectory(BeatSaberDataPath);
+                    var files = Directory.GetFiles(_backupPath);
+                    _logger.Information($"Restoring {files.Length} files");
+                    foreach (string file in files)
+                    {
+                        var fileName = Path.GetFileName(file);
+                        File.Copy(file, Path.Combine(BeatSaberDataPath, fileName));
+                    }
+                }
+                else
+                {
+                    _logger.Warning("Could not find backup to restore");
+                }
                 
                 // TODO: Install core mods, etc
                 // Install a song by default?
