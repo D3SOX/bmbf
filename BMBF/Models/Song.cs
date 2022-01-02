@@ -17,7 +17,7 @@ namespace BMBF.Models
         
         public string LevelAuthorName { get; }
         
-        public string Path { get; }
+        public string Path { get; set; }
         
         public string CoverImageFileName { get; }
         

@@ -195,10 +195,13 @@ namespace BMBF.Implementations
         {
             try
             {
-                Song? song = await SongUtil.TryLoadSongInfoAsync(path);
+                Song? song = await SongUtil.TryLoadSongInfoAsync(new DirectoryFolderProvider(path), path);
+                
                 // If the path was a valid song
                 if (song != null)
                 {
+                    song.Path = path;
+
                     // Check for an existing song with the same hash
                     if (cache.TryGetValue(song.Hash, out var existingSong))
                     {

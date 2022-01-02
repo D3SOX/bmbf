@@ -12,26 +12,24 @@ namespace BMBF.Util
     {
         private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
 
-        private static async Task<string?> TryGetSongHashAsync(string path, string infoDatPath, BeatmapInfoDat infoDat)
+        private static async Task<string?> TryGetSongHashAsync(IFolderProvider provider, Stream infoDatStream, BeatmapInfoDat infoDat)
         {
             using var hash = SHA1.Create();
             await using var dataStream = new MemoryStream();
 
-            using var infoDatStream = File.OpenRead(infoDatPath);
             await infoDatStream.CopyToAsync(dataStream);
 
             foreach (var difficultySet in infoDat.DifficultyBeatmapSets)
             {
                 foreach (var difficulty in difficultySet.DifficultyBeatmaps)
                 {
-                    string beatmapFilePath = Path.Combine(path, difficulty.BeatmapFilename);
-                    if (!File.Exists(beatmapFilePath))
+                    if (!provider.Exists(difficulty.BeatmapFilename))
                     {
                         Log.Warning($"Song missing beatmap difficulty file named {difficulty.BeatmapFilename}");
                         return null;
                     }
 
-                    await using var difficultyStream = File.OpenRead(beatmapFilePath);
+                    await using var difficultyStream = provider.Open(difficulty.BeatmapFilename);
                     await difficultyStream.CopyToAsync(dataStream);
                 }
             }
@@ -42,51 +40,49 @@ namespace BMBF.Util
         /// <summary>
         /// Attempts to load a song from the given path
         /// </summary>
-        /// <param name="path">The path of the song</param>
+        /// <param name="provider">Provider to load the song info from</param>
+        /// <param name="name">Name to use for logging purposes</param>
         /// <returns>The loaded Song model, or null if a song could not be loaded from the path</returns>
-        /// <exception cref="DirectoryNotFoundException">If the song directory does not exist</exception>
-        public static async Task<Models.Song?> TryLoadSongInfoAsync(string path)
+        public static async Task<Models.Song?> TryLoadSongInfoAsync(IFolderProvider provider, string? name = null)
         {
-            if (!Directory.Exists(path))
-            {
-                throw new DirectoryNotFoundException("Attempted to load song from folder which does not exist");
-            }
+            name ??= "<unknown>";
 
-            string infoDatPath = Path.Combine(path, "info.dat");
-            if (!File.Exists(infoDatPath))
+            string infoDatPath = "info.dat";
+            if (!provider.Exists(infoDatPath))
             {
                 infoDatPath = "Info.dat";
             }
 
-            if (!File.Exists(infoDatPath))
+            if (!provider.Exists(infoDatPath))
             {
-                Log.Warning($"Could not load song from {path} - missing info.dat/Info.dat");
+                Log.Warning($"Could not load song from {name} - missing info.dat/Info.dat");
                 return null;
             }
 
             BeatmapInfoDat? infoDat;
-            using (var reader = new StreamReader(infoDatPath))
+            using var infoDatStream = provider.Open(infoDatPath);
+            using var infoDatReader = new StreamReader(infoDatStream);
+            using var jsonReader = new JsonTextReader(infoDatReader);
+            infoDat = JsonSerializer.Deserialize<BeatmapInfoDat>(jsonReader);
+            if (infoDat == null)
             {
-                using var jsonReader = new JsonTextReader(reader);
-                infoDat = JsonSerializer.Deserialize<BeatmapInfoDat>(jsonReader);
-                if (infoDat == null)
-                {
-                    Log.Warning($"Info.dat for song {path} was null");
-                    return null;
-                }
+                Log.Warning($"Info.dat for song {name} was null");
+                return null;
             }
-            
-            if (!File.Exists(Path.Combine(path, infoDat.CoverImageFilename)))
+
+            if (!provider.Exists(infoDat.CoverImageFilename))
             {
                 Log.Warning($"Song missing cover {infoDat.CoverImageFilename}");
             }
 
-            string? hash = await TryGetSongHashAsync(path, infoDatPath, infoDat);
+            // Move back to the beginning of the stream             
+            infoDatStream.Position = 0;
+            string? hash = await TryGetSongHashAsync(provider, infoDatStream, infoDat);
             if (hash == null)
             {
                 return null;
             }
-            return new Models.Song(hash, infoDat.SongName, infoDat.SongSubName, infoDat.SongAuthorName, infoDat.LevelAuthorName, path, infoDat.CoverImageFilename);
+            return new Models.Song(hash, infoDat.SongName, infoDat.SongSubName, infoDat.SongAuthorName, infoDat.LevelAuthorName, null!, infoDat.CoverImageFilename);
         }
     }
 }
