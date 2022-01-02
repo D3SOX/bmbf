@@ -81,13 +81,17 @@ namespace BMBF.Implementations
             }
         }
         
-        public async Task<bool> DeletePlaylistAsync(string playlistPath)
+        public async Task<bool> DeletePlaylistAsync(string playlistId)
         {
             PlaylistCache playlists = await GetCacheAsync();
-            if (playlists.TryRemove(playlistPath, out var playlist))
+            var playlist = playlists.FirstOrDefault(p => p.Value.PlaylistId == playlistId);
+            
+            
+            if (playlist.Key != null)
             {
-                File.Delete(playlistPath);
-                PlaylistDeleted?.Invoke(this, playlist);
+                playlists.TryRemove(playlist.Key, out _);
+                File.Delete(playlist.Key);
+                PlaylistDeleted?.Invoke(this, playlist.Value);
                 return true;
             }
             return false;

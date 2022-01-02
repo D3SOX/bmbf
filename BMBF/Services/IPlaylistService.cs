@@ -30,9 +30,9 @@ namespace BMBF.Services
         /// <summary>
         /// Deletes the playlist with the given path if it is in the cache
         /// </summary>
-        /// <param name="playlistPath">Path of the playlist to delete</param>
+        /// <param name="playlistId">ID of the playlist to delete</param>
         /// <returns>Whether or not the playlist was contained within the cache</returns>
-        Task<bool> DeletePlaylistAsync(string playlistPath);
+        Task<bool> DeletePlaylistAsync(string playlistId);
 
         /// <summary>
         /// Invoked whenever a playlist is added
