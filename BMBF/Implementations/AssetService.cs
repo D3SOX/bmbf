@@ -54,6 +54,7 @@ namespace BMBF.Implementations
             resp.EnsureSuccessStatusCode();
             var memStream = new MemoryStream();
             await resp.Content.CopyToAsync(memStream);
+            memStream.Position = 0;
             return memStream;
         }
         
