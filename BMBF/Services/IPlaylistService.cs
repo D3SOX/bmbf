@@ -13,8 +13,15 @@ namespace BMBF.Services
         /// <summary>
         /// Gets or loads the playlists from the playlist folder
         /// </summary>
-        /// <returns>A dictionary of the loaded playlists. Key is playlist path</returns>
+        /// <returns>A dictionary of the loaded playlists. Key is playlist ID</returns>
         ValueTask<IReadOnlyDictionary<string, Playlist>> GetPlaylistsAsync();
+
+        /// <summary>
+        /// Adds a new playlist, assigning it a playlist ID.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">A playlist with this playlist's ID already exists</exception>
+        /// <returns>ID of the added playlist</returns>
+        Task<string> AddPlaylistAsync(Playlist playlist);
         
         /// <summary>
         /// Updates the current playlist cache

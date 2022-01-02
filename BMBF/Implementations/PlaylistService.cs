@@ -35,6 +35,28 @@ namespace BMBF.Implementations
             _automaticUpdates = settings.UpdateCacheAutomatically;
         }
 
+        public async Task<string> AddPlaylistAsync(Playlist playlist)
+        {
+            var playlists = await GetCacheAsync();
+            playlist.IsPendingSave = true;
+            return AddPlaylist(playlist, playlists, playlist.PlaylistTitle);
+        }
+        
+        private string AddPlaylist(Playlist playlist, PlaylistCache cache, string idSuggestion)
+        {
+            var originalId = new string(idSuggestion.Select(c => Playlist.LegalIdCharacters.Contains(c) ? c : '_').ToArray());
+            var playlistId = originalId;
+                    
+            // Find a playlist ID that isn't used yet
+            int i = 1;
+            while (!cache.TryAdd(playlistId, playlist))
+            {
+                playlistId = $"{originalId}_{i}";
+                i++;
+            }
+            return playlistId;
+        }
+
         public async Task UpdatePlaylistCacheAsync()
         {
             // Load the cache if not already loaded
@@ -62,36 +84,60 @@ namespace BMBF.Implementations
 
         public async Task SavePlaylistsAsync()
         {
-            Log.Information("Saving playlists");
-            foreach (var playlist in await GetPlaylistsAsync())
+            await _cacheUpdateLock.WaitAsync();
+            try
             {
-                if(!playlist.Value.IsPendingSave) { continue; }
-                Log.Debug($"Saving playlist {playlist.Key}");
+                Log.Information("Saving playlists");
+                foreach (var playlistPair in await GetPlaylistsAsync())
+                {
+                    var playlist = playlistPair.Value;
+                    if(!playlist.IsPendingSave) { continue; }
+                    Log.Debug($"Saving playlist {playlistPair.Key}");
 
-                try
-                {
-                    using var playlistStream = new StreamWriter(playlist.Key);
-                    using var jsonWriter = new JsonTextWriter(playlistStream);
-                    _serializer.Serialize(jsonWriter, playlist);
+                    try
+                    {
+                        // Find a path for the playlist if there isn't one already
+                        if (playlist.LoadedFrom == null)
+                        {
+                            string newPath = Path.Combine(_playlistsPath, playlistPair.Key + ".bplist");
+                            int i = 0;
+                            while (File.Exists(newPath))
+                            {
+                                newPath = Path.Combine(_playlistsPath, playlistPair.Key + "_" + i + ".bplist");
+                                i++;
+                            }
+                            playlist.LoadedFrom = newPath;
+                        }
+                        
+                        using var playlistStream = new StreamWriter(playlist.LoadedFrom);
+                        using var jsonWriter = new JsonTextWriter(playlistStream);
+                        await Task.Run(() => _serializer.Serialize(jsonWriter, playlist));
+                        playlist.IsPendingSave = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, $"Failed to save playlist {playlistPair.Key}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Failed to save playlist {playlist.Key}");
-                }
+            }
+            finally
+            {
+                _cacheUpdateLock.Release();
             }
         }
         
         public async Task<bool> DeletePlaylistAsync(string playlistId)
         {
             PlaylistCache playlists = await GetCacheAsync();
-            var playlist = playlists.FirstOrDefault(p => p.Value.PlaylistId == playlistId);
-            
-            
-            if (playlist.Key != null)
+
+            if (playlists.TryRemove(playlistId, out var playlist))
             {
-                playlists.TryRemove(playlist.Key, out _);
-                File.Delete(playlist.Key);
-                PlaylistDeleted?.Invoke(this, playlist.Value);
+                // If the playlist was actually loaded from a file, then delete it
+                if (playlist.LoadedFrom != null)
+                {
+                    File.Delete(playlist.LoadedFrom);
+                }
+                PlaylistDeleted?.Invoke(this, playlist);
                 return true;
             }
             return false;
@@ -133,9 +179,9 @@ namespace BMBF.Implementations
         {
             foreach(var entry in cache)
             {
-                if (!File.Exists(entry.Key))
+                if (!File.Exists(entry.Value.LoadedFrom))
                 {
-                    Log.Information($"Playlist {entry.Value.PlaylistTitle} deleted");
+                    Log.Information($"Playlist {entry.Key} deleted");
                     cache.Remove(entry.Key, out _);
                     if (notify)
                     {
@@ -146,15 +192,6 @@ namespace BMBF.Implementations
             
             foreach (string playlistPath in Directory.EnumerateFiles(_playlistsPath))
             {
-                // Don't bother reloading the playlist if its last load time is newer than the last write time
-                if (cache.TryGetValue(playlistPath, out var existing))
-                {
-                    if (File.GetLastWriteTimeUtc(playlistPath) < existing.LastLoadTime)
-                    {
-                        continue;
-                    }
-                }
-                
                 await ProcessNewPlaylistAsync(playlistPath, cache, notify);
             }
         }
@@ -162,22 +199,32 @@ namespace BMBF.Implementations
         private async Task ProcessNewPlaylistAsync(string path, PlaylistCache cache, bool notify)
         {
             try
-            {
+            { 
+                var existing = cache.FirstOrDefault(p => p.Value.LoadedFrom == path).Value;
+                // We can skip loading if:
+                // - The existing playlist is pending save - changes made in BMBF are prioritised over those on disk
+                // - The playlist file was modified at the same time (or further before) the playlist was loaded
+                if(existing != null && (existing.IsPendingSave || File.GetLastWriteTimeUtc(path) <= existing.LastLoadTime))
+                {
+                    return;
+                }
+                
                 using var streamReader = new StreamReader(path);
                 using var jsonReader = new JsonTextReader(streamReader);
-                var playlist = _serializer.Deserialize<Playlist>(jsonReader);
+                // No async with newtonsoft :/
+                var playlist = await Task.Run(() => _serializer.Deserialize<Playlist>(jsonReader));
                 if (playlist == null)
                 {
                     Log.Warning($"Deserialized playlist from {path} was null");
                     return;
                 }
-                
-                playlist.PlaylistId = new string(Path.GetFileNameWithoutExtension(path).Select(c => Char.IsWhiteSpace(c) ? '_' : c).ToArray());
+                playlist.LoadedFrom = path;
+                playlist.LastLoadTime = DateTime.UtcNow;
                 
                 // TODO: What to do with BPSongs that don't exist in the song cache?
 
                 // If a playlist with this path already exists, we need to copy over the new values
-                if (cache.TryGetValue(path, out var existing))
+                if (existing != null)
                 {
                     existing.PlaylistTitle = playlist.PlaylistTitle;
                     existing.Image = playlist.Image;
@@ -190,8 +237,8 @@ namespace BMBF.Implementations
                 }
                 else
                 {
-                    cache[path] = playlist;
-                    Log.Information($"Playlist ({playlist.PlaylistTitle}) loaded from {path}");
+                    string playlistId = AddPlaylist(playlist, cache, Path.GetFileNameWithoutExtension(path));
+                    Log.Information($"Playlist ({playlistId}) loaded from {path}");
                     if (notify)
                     {
                         PlaylistAdded?.Invoke(this, playlist);
@@ -213,17 +260,35 @@ namespace BMBF.Implementations
                 string fullPath = Path.Combine(_playlistsPath, name);
                 if (evnt.HasFlag(FileObserverEvents.Delete))
                 {
-                    if (_cache.TryRemove(fullPath, out var playlist))
+                    await _cacheUpdateLock.WaitAsync();
+                    try
                     {
-                        Log.Information($"Playlist {fullPath} deleted");
-                        PlaylistDeleted?.Invoke(this, playlist);
+                        var matching = _cache.FirstOrDefault(pair => pair.Value.LoadedFrom == fullPath);
+                        if (matching.Key != null)
+                        {
+                            _cache.TryRemove(matching.Key, out var playlist);
+                            Log.Information($"Playlist {fullPath} deleted");
+                            PlaylistDeleted?.Invoke(this, playlist);
+                        }
+                    }
+                    finally
+                    {
+                        _cacheUpdateLock.Release();
                     }
                 }
 
                 // If a playlist file has just been closed for writing, then we need to add it (if new), or process any changes and fire events accordingly
                 if (evnt.HasFlag(FileObserverEvents.CloseWrite) && !File.GetAttributes(fullPath).HasFlag(FileAttributes.Directory))
                 {
-                    await ProcessNewPlaylistAsync(fullPath, _cache, true);
+                    await _cacheUpdateLock.WaitAsync();
+                    try
+                    {
+                        await ProcessNewPlaylistAsync(fullPath, _cache, true);
+                    }
+                    finally
+                    {
+                        _cacheUpdateLock.Release();
+                    }
                 }
             }
             catch (Exception ex)

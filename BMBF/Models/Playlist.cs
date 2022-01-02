@@ -14,6 +14,8 @@ namespace BMBF.Models
     /// </summary>
     public class Playlist : INotifyPropertyChanged
     {
+        public const string LegalIdCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
+
         public string PlaylistTitle { get => _playlistTitle; set { if (_playlistTitle != value) { _playlistTitle = value; NotifyPropertyChanged(); } } }
         private string _playlistTitle;
         
@@ -75,9 +77,12 @@ namespace BMBF.Models
         /// </summary>
         [JsonIgnore]
         public DateTime LastLoadTime { get; set; }
-
-        [JsonIgnore] public string PlaylistId { get; set; } = null!;
-
+        
+        /// <summary>
+        /// Path that the playlist was loaded from
+        /// </summary>
+        public string? LoadedFrom { get; set; }
+        
         public event PropertyChangedEventHandler? PropertyChanged;
         
         private void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
