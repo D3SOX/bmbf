@@ -25,6 +25,8 @@ namespace BMBF
         
         public string PatchingFolderName { get; set; }
         
+        public string ConfigsPath { get; set; }
+        
         public ResourceUris Resources { get; set; }
     }
 }
