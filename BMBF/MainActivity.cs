@@ -87,6 +87,8 @@ namespace BMBF
         {
             SetContentView(Resource.Layout.activity_main);
             WebView webView = FindViewById<WebView>(Resource.Id.webView) ?? throw new NullReferenceException(nameof(WebView));
+            if (webView.Settings == null) throw new NullReferenceException(nameof(webView.Settings));
+            webView.Settings.JavaScriptEnabled = true;
             webView.LoadUrl(url);
         }
 
