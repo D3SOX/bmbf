@@ -170,5 +170,11 @@ namespace BMBF.Controllers
             }
             return Ok();
         }
+
+        [Route("quit")]
+        public async Task Quit()
+        {
+            await _setupService.QuitSetupAsync();
+        }
     }
 }
