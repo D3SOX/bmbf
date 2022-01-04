@@ -18,13 +18,13 @@ namespace BMBF.QMod
 
         internal Dictionary<string, QMod> Mods { get; } = new Dictionary<string, QMod>();
 
-        internal string PackageId { get; }
         internal string ModsPath { get; }
         internal string LibsPath { get; }
-        
         internal HttpClient HttpClient { get; }
         internal IFileSystem FileSystem { get; }
         internal SemaphoreSlim InstallLock { get; } = new SemaphoreSlim(1);
+
+        private readonly string _packageId;
 
         public event EventHandler<ModLoadedEventArgs>? ModLoaded;
 
@@ -39,7 +39,7 @@ namespace BMBF.QMod
 
         public QModProvider(string packageId, string modsPath, string libsPath, HttpClient httpClient, IFileSystem fileSystem)
         {
-            PackageId = packageId;
+            _packageId = packageId;
             ModsPath = modsPath;
             LibsPath = libsPath;
             HttpClient = httpClient;
@@ -126,9 +126,9 @@ namespace BMBF.QMod
             }
             
             // Make sure that the mod is for the correct app!
-            if (qMod.PackageId != PackageId)
+            if (qMod.PackageId != _packageId)
             {
-                throw new InstallationException($"Mod was for package id {qMod.PackageId}, not {PackageId}");
+                throw new InstallationException($"Mod was for package id {qMod.PackageId}, not {_packageId}");
             }
 
             var mod = new QMod(qMod, this);
