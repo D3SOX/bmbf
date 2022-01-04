@@ -94,6 +94,7 @@ namespace BMBF.QMod
         {
             if (Mods.Remove(mod.Id, out var removed))
             {
+                removed.Dispose();
                 ModUnloaded?.Invoke(this, removed);
                 return true;
             }

@@ -33,7 +33,7 @@ namespace BMBF.QMod.Tests
             }, false);
 
             var fileSystem = new MockFileSystem();
-            var provider = Util.CreateProvider(null, fileSystem);
+            using var provider = Util.CreateProvider(null, fileSystem);
 
             var mod = await provider.TryImportModAsync(modStream, "my-mod.qmod") ?? throw new NullReferenceException();
             await mod.InstallAsync();
@@ -54,7 +54,7 @@ namespace BMBF.QMod.Tests
             const string libFileName = "my-library.so";
             
             var fileSystem = new MockFileSystem();
-            var provider = Util.CreateProvider(null, fileSystem);
+            using var provider = Util.CreateProvider(null, fileSystem);
             var otherModStream = Util.CreateTestingMod(m =>
             {
                 m.Id = "other-mod";
@@ -79,7 +79,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldBeInstalledAfterInstall()
         {
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var mod = await provider.TryImportModAsync(Util.CreateTestingMod(), "my-mod.qmod") ?? throw new NullReferenceException();
             await mod.InstallAsync();
             Assert.True(mod.Installed);
@@ -88,7 +88,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldBeUninstalledAfterUninstall()
         {
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var mod = await provider.TryImportModAsync(Util.CreateTestingMod(), "my-mod.qmod") ?? throw new NullReferenceException();
             await mod.InstallAsync();
             await mod.UninstallAsync();
@@ -100,7 +100,7 @@ namespace BMBF.QMod.Tests
         {
             var dependencyStream = Util.CreateTestingMod(m => m.Id = DependencyId);
             // Make sure to mock the dependency download
-            var provider = Util.CreateProvider(Util.CreateHttpClientMock(dependencyStream));
+            using var provider = Util.CreateProvider(Util.CreateHttpClientMock(dependencyStream));
             var modStream = Util.CreateTestingMod(m =>
             {
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", "https://example.com/my-dependency.qmod"));
@@ -125,7 +125,7 @@ namespace BMBF.QMod.Tests
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0"));
             });
             var dependencyStream = Util.CreateTestingMod(m => m.Id = DependencyId);
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var dependency = await provider.TryImportModAsync(dependencyStream, "my-dependency.qmod") ?? throw new NullReferenceException();
             // The dependency is loaded, but not installed
             var mod = await provider.TryImportModAsync(modStream, "my-mod.qmod") ?? throw new NullReferenceException();
@@ -153,7 +153,7 @@ namespace BMBF.QMod.Tests
             var newDepStream = Util.CreateTestingMod(m => m.Id = DependencyId); 
             
             // Create an HttpClient that will mock the dependency download and inject it into our provider
-            var provider = Util.CreateProvider(Util.CreateHttpClientMock(newDepStream));
+            using var provider = Util.CreateProvider(Util.CreateHttpClientMock(newDepStream));
             var existingDependency = await provider.TryImportModAsync(oldDepStream, "my-dependency.qmod") ?? throw new NullReferenceException();
             var mod = await provider.TryImportModAsync(modStream, "my-mod.qmod") ?? throw new NullReferenceException();
             
@@ -174,7 +174,7 @@ namespace BMBF.QMod.Tests
                 // But does not state a download link to get the dependency if missing
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0"));
             });
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var mod = await provider.TryImportModAsync(modStream, "my-mod.qmod") ?? throw new NullReferenceException();
 
             await Assert.ThrowsAsync<InstallationException>(async () => await mod.InstallAsync());
@@ -191,7 +191,7 @@ namespace BMBF.QMod.Tests
                 m.Id = DependencyId;
                 m.Version = Version.Parse("0.5.0");
             });
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             await provider.TryImportModAsync(oldDepStream, "my-dependency.qmod");
             var mod = await provider.TryImportModAsync(modStream, "my-mod.qmod") ?? throw new NullReferenceException();
 
@@ -208,7 +208,7 @@ namespace BMBF.QMod.Tests
                 m.IsLibrary = true;
             });
             var modStream = Util.CreateTestingMod(m => m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0")));
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var lib = await provider.TryImportModAsync(libStream, "my-lib.qmod") ?? throw new NullReferenceException();
             var mod = await provider.TryImportModAsync(modStream, "my-mod.qmod") ?? throw new NullReferenceException();
 

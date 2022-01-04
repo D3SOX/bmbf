@@ -18,14 +18,14 @@ namespace BMBF.QMod.Tests
         [InlineData("", false)]
         public void ShouldBeImportable(string fileExtension, bool expected)
         {
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             Assert.Equal(expected, provider.CanAttemptImport($"my-file{fileExtension}"));
         }
         
         [Fact]
         public async Task ShouldInvokeModLoaded()
         {
-            var provider = Util.CreateProvider(new HttpClient(), new MockFileSystem());
+            using var provider = Util.CreateProvider(new HttpClient(), new MockFileSystem());
             var resultStream = new MemoryStream();
             provider.ModLoaded += (_, args) =>
             {
@@ -43,7 +43,7 @@ namespace BMBF.QMod.Tests
         public async Task ShouldThrowWithInvalidMod()
         {
             var emptyStream = new MemoryStream();
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             await Assert.ThrowsAsync<InstallationException>(async () =>
                 await provider.TryImportModAsync(emptyStream, "my-mod.qmod"));
         }
@@ -67,7 +67,7 @@ namespace BMBF.QMod.Tests
             if(libFileExists) fileSystem.AddFile($"/libs/{libPath}", MockFileData.NullObject);
             if(fileCopyExists) fileSystem.AddFile(fileCopyDestination, MockFileData.NullObject);
 
-            var provider = Util.CreateProvider(new HttpClient(), fileSystem);
+            using var provider = Util.CreateProvider(new HttpClient(), fileSystem);
 
             var modStream = Util.CreateTestingMod(m =>
             {
@@ -87,14 +87,14 @@ namespace BMBF.QMod.Tests
         public async Task ShouldFailWithIncorrectPackageId()
         {
             var mod = Util.CreateTestingMod(m => m.PackageId = "com.imposter.app");
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             await Assert.ThrowsAsync<InstallationException>(async () => await provider.TryImportModAsync(mod, "my-mod.qmod"));
         }
         
         [Fact]
         public async Task ShouldRemoveExistingMod()
         {
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
 
             // Loading a new mod with the same ID should uninstall the old mod
             var existingMod = await provider.TryImportModAsync(Util.CreateTestingMod(), "existing-mod.qmod");
@@ -110,7 +110,7 @@ namespace BMBF.QMod.Tests
         [InlineData("^1.0.0", "2.0.0", false)] // Otherwise, they should not have been reinstalled
         public async Task ShouldUninstallIncompatibleDependants(string versionRange, string newlyInstalled, bool shouldBeInstalled)
         {
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var dependantStream = Util.CreateTestingMod(m =>
             {
                 m.Id = "dependant-mod";
@@ -129,7 +129,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldInvokeModUnloaded()
         {
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var mod = await provider.TryImportModAsync(Util.CreateTestingMod(), "my-mod.qmod") ?? throw new NullReferenceException();
 
             IMod? removedMod = null;
@@ -142,7 +142,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldUninstallBeforeModRemoved()
         {
-            var provider = Util.CreateProvider();
+            using var provider = Util.CreateProvider();
             var mod = await provider.TryImportModAsync(Util.CreateTestingMod(), "my-mod.qmod") ?? throw new NullReferenceException();
             await mod.InstallAsync();
             
