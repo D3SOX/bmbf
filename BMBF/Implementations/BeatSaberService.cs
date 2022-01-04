@@ -27,6 +27,7 @@ namespace BMBF.Implementations
 
         private InstallationInfo? _installationInfo;
         private readonly SemaphoreSlim _appInfoLoadLock = new SemaphoreSlim(1);
+        private bool _disposed;
         
         public BeatSaberService(Service bmbfService, BMBFSettings bmbfSettings, TagManager tagManager)
         {
@@ -143,6 +144,10 @@ namespace BMBF.Implementations
 
         public new void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
+            
+            _appInfoLoadLock.Dispose();
             base.Dispose();
             try
             {

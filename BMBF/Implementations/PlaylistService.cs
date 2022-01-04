@@ -28,6 +28,8 @@ namespace BMBF.Implementations
 
         private readonly string _playlistsPath;
         private readonly bool _automaticUpdates;
+
+        private bool _disposed;
         
         public PlaylistService(BMBFSettings settings) : base(settings.PlaylistsPath, FileObserverEvents.CloseWrite | FileObserverEvents.Delete)
         {
@@ -299,7 +301,11 @@ namespace BMBF.Implementations
 
         public new void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
+            
             base.Dispose();
+            _cacheUpdateLock.Dispose();
             SavePlaylistsAsync().Wait();
         }
     }

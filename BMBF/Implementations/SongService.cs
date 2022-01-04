@@ -33,6 +33,7 @@ namespace BMBF.Implementations
         private readonly bool _deleteDuplicateSongs;
         private readonly bool _deleteInvalidFolders;
         private readonly bool _automaticUpdates;
+        private bool _disposed;
         
         private readonly JsonSerializer _jsonSerializer = new JsonSerializer
         {
@@ -277,6 +278,11 @@ namespace BMBF.Implementations
 
         public new void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
+            
+            _cacheUpdateLock.Dispose();
+            
             base.Dispose();
             // Save the cache
             if (_songs != null)

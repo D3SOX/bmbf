@@ -25,7 +25,7 @@ namespace BMBF.Implementations
     /// - During patching, the APK is again copied to a new location. This is in case patching fails - we would have to
     /// redowngrade if we did not have a spare copy of the APK
     /// </summary>
-    public class SetupService : ISetupService
+    public class SetupService : ISetupService, IDisposable
     {
         public SetupStatus? CurrentStatus { get; private set; }
 
@@ -57,6 +57,8 @@ namespace BMBF.Implementations
         };
         
         private bool _quitRequested;
+
+        private bool _disposed;
 
         private readonly SemaphoreSlim _setupLock = new SemaphoreSlim(1);
 
@@ -468,6 +470,14 @@ namespace BMBF.Implementations
             {
                 _setupLock.Release();
             }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            
+            _setupLock.Dispose();
         }
     }
 }
