@@ -34,8 +34,10 @@ namespace BMBF.ModManagement
         
         /// <summary>
         /// Attempts to import a mod.
+        /// NOTE: If this operation was successful, the caller should not dispose the stream. Ownership of the stream
+        /// is passed to the instance of <see cref="IModProvider"/>
         /// </summary>
-        /// <param name="stream">Stream to import the mod from</param>
+        /// <param name="stream">Stream to import the mod from.</param>
         /// <param name="fileName">File name of the mod</param>
         /// <returns>The loaded mod, or null if the provider detected that the mod was not the correct type for this provider</returns>
         /// <exception cref="InstallationException">If the mod was the correct mod type for this provider, but had another format issue</exception>
