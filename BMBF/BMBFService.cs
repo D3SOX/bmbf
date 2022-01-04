@@ -61,10 +61,19 @@ namespace BMBF
             }
         }
 
-        private void StopWebServer()
+        private async Task StopWebServerAsync()
         {
-            _webHost?.StopAsync().Wait();
-            _webHost?.Dispose();
+            if (_webHost == null) return;
+
+            try
+            {
+                await _webHost.StopAsync().ConfigureAwait(false);
+                _webHost.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to shutdown web host");
+            }
             RunningUrl = null;
         }
 
@@ -72,8 +81,8 @@ namespace BMBF
         {
             base.OnDestroy();
             
-            Log.Information("Shutting down BMBFService");
-            StopWebServer();
+            Log.Information("Shutting down web host");
+            StopWebServerAsync().Wait();
             Log.Information("Goodbye!");
             Log.CloseAndFlush(); 
         }
