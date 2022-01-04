@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.Resources", "BMBF.Reso
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.ModManagement", "BMBF.ModManagement\BMBF.ModManagement.csproj", "{F3C460A4-61E9-4B7A-8AE9-95B530EB6233}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.QMod", "BMBF.QMod\BMBF.QMod.csproj", "{8A7188BD-8692-499E-B6CA-200B438403BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,5 +49,9 @@ Global
 		{6302408B-6D32-46B2-8AF8-463704E0C7D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6302408B-6D32-46B2-8AF8-463704E0C7D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6302408B-6D32-46B2-8AF8-463704E0C7D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A7188BD-8692-499E-B6CA-200B438403BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A7188BD-8692-499E-B6CA-200B438403BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A7188BD-8692-499E-B6CA-200B438403BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A7188BD-8692-499E-B6CA-200B438403BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
