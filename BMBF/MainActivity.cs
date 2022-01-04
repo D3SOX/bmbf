@@ -34,6 +34,7 @@ namespace BMBF
             intentFilter.AddAction(BMBFIntents.TriggerPackageInstall);
             intentFilter.AddAction(BMBFIntents.TriggerPackageUninstall);
             intentFilter.AddAction(BMBFIntents.Quit);
+            intentFilter.AddAction(BMBFIntents.Restart);
             if (_receiver == null)
             {
                 _receiver = new WebServerStartedReceiver();
@@ -49,14 +50,13 @@ namespace BMBF
 
                 _receiver.PackageInstallTriggered += (sender, apkPath) => TriggerPackageInstall(apkPath);
                 _receiver.PackageUninstallTriggered += (sender, packageId) => TriggerPackageUninstall(packageId);
+                _receiver.Restart += (sender, packageId) => Restart();
             }
             RegisterReceiver(_receiver, intentFilter);
             
             if (BMBFService.RunningUrl == null)
             {
-                Intent intent = new Intent(this, typeof(BMBFService));
-                // TODO: Start as foreground or background depending on config option
-                StartService(intent);
+                StartMainService();
             }
             else
             {
@@ -81,7 +81,23 @@ namespace BMBF
             );
             StartActivity(intent);
         }
-        
+
+        private void StartMainService()
+        {
+            Intent intent = new Intent(this, typeof(BMBFService));
+            // TODO: Start as foreground or background depending on config option
+            StartService(intent);
+        }
+
+        private void Restart()
+        {
+            // Move back to the loading view while the service restarts
+            SetContentView(Resource.Layout.activity_loading);
+            
+            // Restart the service, which will send a broadcast to navigate us back to the frontend page
+            StopService(new Intent(this, typeof(BMBFService)));
+            StartMainService();
+        }
 
         private void OnLoaded(string url)
         {

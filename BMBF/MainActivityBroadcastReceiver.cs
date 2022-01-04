@@ -36,6 +36,11 @@ namespace BMBF
         /// Invoked when the service requests the activity to quit
         /// </summary>
         public event EventHandler? Quit;
+
+        /// <summary>
+        /// Invoked when the service requests the activity to restart itself
+        /// </summary>
+        public event EventHandler? Restart;
         
         public override void OnReceive(Context? context, Intent? intent)
         {
@@ -59,6 +64,9 @@ namespace BMBF
             }   else if (intent.Action == BMBFIntents.Quit)
             {
                 Quit?.Invoke(this, EventArgs.Empty);
+            }   else if (intent.Action == BMBFIntents.Restart)
+            {
+                Restart?.Invoke(this, EventArgs.Empty);
             }
         }
     }

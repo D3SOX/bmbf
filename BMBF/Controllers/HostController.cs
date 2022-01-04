@@ -41,5 +41,14 @@ namespace BMBF.Controllers
             // Actually stop BMBFService
             _bmbfService.StopSelf();
         }
+
+        [HttpPost]
+        [Route("restart")]
+        public void Restart()
+        {
+            // Tell frontend to restart BMBFService
+            Intent intent = new Intent(BMBFIntents.Restart);
+            _bmbfService.SendBroadcast(intent);
+        }
     }
 }
