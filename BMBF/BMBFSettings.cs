@@ -17,9 +17,13 @@ namespace BMBF
 
         public string SongsCacheName { get; set; }
         
+        public string ModsDirectoryName { get; set; }
+        
         public bool DeleteDuplicateSongs { get; set; }
         
         public bool DeleteInvalidSongs { get; set; }
+        
+        public bool DeleteInvalidMods { get; set; }
         
         public bool UpdateCacheAutomatically { get; set; }
         
