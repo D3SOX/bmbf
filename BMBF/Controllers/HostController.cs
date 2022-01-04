@@ -2,6 +2,7 @@
 using Android.App;
 using Android.Content;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace BMBF.Controllers
 {
@@ -49,6 +50,30 @@ namespace BMBF.Controllers
             // Tell frontend to restart BMBFService
             Intent intent = new Intent(BMBFIntents.Restart);
             _bmbfService.SendBroadcast(intent);
+        }
+
+        [HttpPost]
+        [Route("runInBackground")]
+        public void SetRunInBackground([FromBody] bool runInBackground)
+        {
+            bool currentlyEnabled = GetRunInBackground();
+            if (currentlyEnabled && !runInBackground)
+            {
+                Log.Information("Running in background disabled");
+                System.IO.File.Delete(Constants.RunForegroundConfig);
+            }
+            else if(!currentlyEnabled && runInBackground)
+            {
+                Log.Information("Running in background enabled");
+                System.IO.File.Create(Constants.RunForegroundConfig).Dispose();
+            }
+        }
+
+        [HttpGet]
+        [Route("runInBackground")]
+        public bool GetRunInBackground()
+        {
+            return System.IO.File.Exists(Constants.RunForegroundConfig);
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.OS;
+using Android.Support.V4.App;
+using Java.Lang;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -10,10 +12,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using Exception = System.Exception;
 
 namespace BMBF
 {
-    [Service(Label = "BMBFService", Name = "com.weareneutralaboutoculus.BMBFService")]
+    [Service(Name = "com.weareneutralaboutoculus.BMBFService", Label = "BMBFService")]
     // ReSharper disable once InconsistentNaming
     public class BMBFService : Service
     {
@@ -108,6 +111,41 @@ namespace BMBF
                 .UseUrls(Constants.BindAddress)
                 .UseSerilog()
                 .Build();
+        }
+        
+        private void SetupForegroundService()
+        {
+            var serviceChannel = new NotificationChannel(
+                "BMBF",
+                "BMBF",
+                NotificationImportance.Default
+            );
+
+            var manager = (NotificationManager) GetSystemService(Class.FromType(typeof(NotificationManager)))!;
+            manager.CreateNotificationChannel(serviceChannel);
+
+            var notificationIntent = new Intent(this, typeof(MainActivity));
+            var pendingIntent = PendingIntent.GetActivity(this, 0, notificationIntent, 0)!;
+
+            // Add a notification to prevent our service from getting killed
+            var notification = new NotificationCompat.Builder(this, "BMBF")
+                .SetContentTitle("BMBF Background Service")
+                .SetContentText("BMBF is running in the background")
+                .SetPriority(NotificationCompat.PriorityLow)
+                .SetContentIntent(pendingIntent)
+                .Build();
+            StartForeground(1, notification);
+        }
+        
+        public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags startCommandFlags, int startId) {
+            // If BMBF is configured to run in the background permanently, we are starting as a foreground service
+            // Foreground services run forever once they have a notification registered, so we register the notification now
+            if (System.IO.File.Exists(Constants.RunForegroundConfig))
+            {
+                SetupForegroundService();
+                return StartCommandResult.NotSticky;
+            }
+            return StartCommandResult.Sticky;
         }
     }
 }

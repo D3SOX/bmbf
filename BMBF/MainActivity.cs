@@ -8,10 +8,11 @@ using Android.Support.V4.App;
 using Android.Support.V4.Content;
 using Android.Webkit;
 using Android.Widget;
+using File = System.IO.File;
 
 namespace BMBF
 {
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
+    [Activity(Name = "com.weareneutralaboutoculus.BMBF.MainActivity", Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {
         private WebServerStartedReceiver? _receiver;
@@ -85,8 +86,14 @@ namespace BMBF
         private void StartMainService()
         {
             Intent intent = new Intent(this, typeof(BMBFService));
-            // TODO: Start as foreground or background depending on config option
-            StartService(intent);
+            if (File.Exists(Constants.RunForegroundConfig))
+            {
+                StartForegroundService(intent);
+            }
+            else
+            {
+                StartService(intent);
+            }
         }
 
         private void Restart()
