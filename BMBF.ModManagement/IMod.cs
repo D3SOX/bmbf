@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace BMBF.ModManagement
@@ -6,7 +7,7 @@ namespace BMBF.ModManagement
     /// <summary>
     /// Represents a mod from a mod provider
     /// </summary>
-    public interface IMod
+    public interface IMod : IDisposable
     {
         /// <summary>
         /// Identifier for the mod. Must not contain whitespace

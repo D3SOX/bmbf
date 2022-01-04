@@ -15,6 +15,12 @@ namespace BMBF.QMod
     public class QModProvider : IModProvider
     {
         public const string ModExtension = ".qmod";
+        
+        public event EventHandler<ModLoadedEventArgs>? ModLoaded;
+
+        public event EventHandler<IMod>? ModUnloaded;
+        
+        public event EventHandler<IMod>? ModStatusChanged;
 
         internal Dictionary<string, QMod> Mods { get; } = new Dictionary<string, QMod>();
 
@@ -25,12 +31,7 @@ namespace BMBF.QMod
         internal SemaphoreSlim InstallLock { get; } = new SemaphoreSlim(1);
 
         private readonly string _packageId;
-
-        public event EventHandler<ModLoadedEventArgs>? ModLoaded;
-
-        public event EventHandler<IMod>? ModUnloaded;
-        
-        public event EventHandler<IMod>? ModStatusChanged;
+        private bool _disposed;
 
         public bool CanAttemptImport(string fileName)
         {
@@ -173,6 +174,19 @@ namespace BMBF.QMod
             }
 
             return mod;
+        }
+        
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            
+            foreach (QMod mod in Mods.Values)
+            {
+                mod.Dispose();
+            }
+            
+            InstallLock.Dispose();
         }
     }
 }

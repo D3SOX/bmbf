@@ -26,6 +26,7 @@ namespace BMBF.QMod
         private HttpClient HttpClient => _provider.HttpClient;
         
         private readonly QModProvider _provider;
+        private bool _disposed;
         
         public QMod(QuestPatcher.QMod.QMod mod, QModProvider provider)
         {
@@ -262,6 +263,14 @@ namespace BMBF.QMod
             await using var destStream = FileSystem.File.OpenWrite(destination);
             
             await stream.CopyToAsync(destStream).ConfigureAwait(false);
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            
+            Mod.Dispose();
         }
     }
 }

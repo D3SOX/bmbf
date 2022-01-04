@@ -4,7 +4,11 @@ using System.Threading.Tasks;
 
 namespace BMBF.ModManagement
 {
-    public interface IModProvider
+    /// <summary>
+    /// Represents a class which can load mods.
+    /// NOTE: The implementation is responsible for disposing its mods when disposed
+    /// </summary>
+    public interface IModProvider : IDisposable
     {
         /// <summary>
         /// Invoked whenever a mod is imported by the provider
