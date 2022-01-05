@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
@@ -90,7 +91,7 @@ namespace BMBF.Patching
             return this;
         }
 
-        private async Task DoFileModifications(ZipArchive apkArchive, ILogger logger)
+        private async Task DoFileModifications(ZipArchive apkArchive, ILogger logger, CancellationToken ct)
         {
             foreach (FileModification fileModification in _fileModifications)
             {
@@ -107,7 +108,7 @@ namespace BMBF.Patching
                     await using var tempStream = new MemoryStream();
                     await using (var fileStream = fileEntry.Open())
                     {
-                        await fileStream.CopyToAsync(tempStream);
+                        await fileStream.CopyToAsync(tempStream, ct);
                     }
                     tempStream.Position = 0;
                     
@@ -139,8 +140,8 @@ namespace BMBF.Patching
                     }
 
                     // Create a new entry (since any existing entry must've been deleted by this point), and copy our source file into it
-                    using var fileStream = apkArchive.CreateEntry(fileModification.ApkFilePath).Open();
-                    await fileModification.OpenSourceFile().CopyToAsync(fileStream);
+                    await using var fileStream = apkArchive.CreateEntry(fileModification.ApkFilePath).Open();
+                    await fileModification.OpenSourceFile().CopyToAsync(fileStream, ct);
                     continue;
                 }
 
@@ -154,7 +155,8 @@ namespace BMBF.Patching
         /// </summary>
         /// <param name="apkPath">Path of the APK to patch</param>
         /// <param name="logger">Logger to print information to during patching</param>
-        public async Task Patch(string apkPath, ILogger logger)
+        /// <param name="ct">Token to cancel patching</param>
+        public async Task Patch(string apkPath, ILogger logger, CancellationToken ct)
         {
             logger.Information($"Patching {Path.GetFileName(apkPath)}");
             using (var apkArchive = ZipFile.Open(apkPath, ZipArchiveMode.Update))
@@ -162,7 +164,7 @@ namespace BMBF.Patching
                 _manifest.ModifiedFiles = _fileModifications.Select(f => f.ApkFilePath).ToHashSet();
                 
                 // Actually modify the APK
-                await DoFileModifications(apkArchive, logger);
+                await DoFileModifications(apkArchive, logger, ct);
                 
                 // Add the tag to the APK if configured
                 if (_tagManager != null)
@@ -175,7 +177,7 @@ namespace BMBF.Patching
             if (_signingCertificate != null)
             {
                 logger.Information("Signing APK");
-                await ApkSigner.SignApk(apkPath, _signingCertificate, _manifest.PatcherName);
+                await ApkSigner.SignApk(apkPath, _signingCertificate, _manifest.PatcherName, ct);
             }
         }
     }

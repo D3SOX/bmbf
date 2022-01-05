@@ -28,6 +28,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Cms;
@@ -126,7 +127,8 @@ namespace BMBF.Patching
         /// <param name="path">Path to the APK to sign</param>
         /// <param name="pemData">PEM of the certificate and private key</param>
         /// <param name="signerName">Name of the signer in the manifest</param>
-        public static async Task SignApk(string path, string pemData, string signerName)
+        /// <param name="ct">Token which can be used to cancel signing the APK</param>
+        public static async Task SignApk(string path, string pemData, string signerName, CancellationToken ct)
         {
             // Create streams to save the signature data to during the first path
             await using var manifestFile = new MemoryStream();
@@ -148,6 +150,7 @@ namespace BMBF.Patching
                 foreach(ZipArchiveEntry entry in apkArchive.Entries.Where(entry =>
                     !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
                 {
+                    ct.ThrowIfCancellationRequested();
                     await WriteEntryHash(entry, manifestFile, sigFileBody);
                 }
             }
@@ -168,7 +171,7 @@ namespace BMBF.Patching
                 manifestFile.Position = 0;
                 byte[] manifestHash = Sha.ComputeHash(manifestFile);
                 manifestFile.Position = 0;
-                await manifestFile.CopyToAsync(manifestStream);
+                await manifestFile.CopyToAsync(manifestStream, ct);
                 
                 await using(var signatureWriter = OpenStreamWriter(signaturesFile))
                 {
@@ -180,15 +183,15 @@ namespace BMBF.Patching
                 
                 // Copy the entry hashes into the signature file
                 sigFileBody.Position = 0;
-                await sigFileBody.CopyToAsync(signaturesFile);
+                await sigFileBody.CopyToAsync(signaturesFile, ct);
                 signaturesFile.Position = 0;
 
                 await using var sigFileMs = new MemoryStream();
-                await signaturesFile.CopyToAsync(sigFileMs);
+                await signaturesFile.CopyToAsync(sigFileMs, ct);
 
                 // Actually sign the digest file, and write to the RSA file
                 byte[] keyFile = GetSignature(sigFileMs.ToArray(), pemData);
-                await rsaFile.WriteAsync(keyFile);
+                await rsaFile.WriteAsync(keyFile, ct);
             }
         }
 

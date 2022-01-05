@@ -37,7 +37,7 @@ namespace BMBF.Services
         Task BeginSetupAsync();
 
         /// <summary>
-        /// Stops setup
+        /// Stops setup, if ongoing
         /// </summary>
         Task QuitSetupAsync();
 

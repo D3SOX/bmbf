@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using BMBF.Resources;
 using System.Net.Http;
+using System.Threading;
 using SemanticVersioning;
 
 namespace BMBF.Services
@@ -37,7 +38,8 @@ namespace BMBF.Services
         /// Downloads the given diff and returns a stream to read it
         /// </summary>
         /// <param name="diffInfo">The diff to download</param>
-        Task<Stream> GetDelta(DiffInfo diffInfo);
+        /// <param name="ct">Token to cancel the diff download</param>
+        Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct);
 
         /// <summary>
         /// Gets an index of diffs for downgrading
@@ -55,11 +57,13 @@ namespace BMBF.Services
         /// Otherwise, the modloader will be downloaded
         /// </summary>
         /// <param name="is64Bit">Whether or not to use the 64 bit modloader</param>
-        Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit);
+        /// <param name="ct">Token to cancel the modloader download</param>
+        Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct);
 
         /// <summary>
         /// Gets a stream to read the unstripped libunity.so for the given Beat Saber version
+        /// <param name="ct">Token to cancel the libunity.so download</param>
         /// </summary>
-        Task<Stream?> GetLibUnity(string beatSaberVersion);
+        Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct);
     }
 }

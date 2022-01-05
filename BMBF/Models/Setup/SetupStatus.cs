@@ -12,6 +12,8 @@
 
         public SetupStage Stage { get; set; } = SetupStage.Downgrading;
         
+        public bool IsInProgress { get; set; }
+        
         /// <summary>
         /// Currently downgraded to Beat Saber version
         /// </summary>

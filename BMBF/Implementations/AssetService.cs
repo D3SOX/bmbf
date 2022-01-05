@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Android.App;
 using Android.Content.Res;
@@ -48,12 +49,13 @@ namespace BMBF.Implementations
             return _assetManager.Open(path) ?? throw new NullReferenceException(nameof(Stream));
         }
 
-        private async Task<MemoryStream> DownloadToMemoryStream(Uri uri)
+        private async Task<MemoryStream> DownloadToMemoryStream(Uri uri, CancellationToken ct)
         {
-            using var resp = await _httpClient.GetAsync(uri);
+            using var resp = await _httpClient.GetAsync(uri, ct);
             resp.EnsureSuccessStatusCode();
             var memStream = new MemoryStream();
-            await resp.Content.CopyToAsync(memStream);
+            var respStream = await resp.Content.ReadAsStreamAsync();
+            await respStream.CopyToAsync(memStream, ct);
             memStream.Position = 0;
             return memStream;
         }
@@ -114,9 +116,10 @@ namespace BMBF.Implementations
             }
         }
 
-        public async Task<Stream> GetDelta(DiffInfo diffInfo)
+        public async Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct)
         {
-            return await DownloadToMemoryStream(new Uri(string.Format(_resourceUris.DeltaVersionTemplate, diffInfo.Name)));
+            var uri = new Uri(string.Format(_resourceUris.DeltaVersionTemplate, diffInfo.Name));
+            return await DownloadToMemoryStream(uri, ct);
         }
 
         public async Task<List<DiffInfo>> GetDiffs(bool refresh)
@@ -135,7 +138,7 @@ namespace BMBF.Implementations
             return (OpenAsset(modloaderPath), OpenAsset(mainPath), Version.Parse(_builtInAssets.ModLoaderVersion));
         }
 
-        public async Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit)
+        public async Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct)
         {
             try
             {
@@ -150,8 +153,8 @@ namespace BMBF.Implementations
                 Log.Information("Downloading modloader");
                 // TODO: This downloads to a MemoryStream, which is unnecessary but does reduce the headache of disposing the HttpResponseMessage
                 return (
-                    await DownloadToMemoryStream(is64Bit ? modLoaderVersion.ModLoader64 : modLoaderVersion.ModLoader32),
-                    await DownloadToMemoryStream(is64Bit ? modLoaderVersion.Main64 : modLoaderVersion.Main32),
+                    await DownloadToMemoryStream(is64Bit ? modLoaderVersion.ModLoader64 : modLoaderVersion.ModLoader32, ct),
+                    await DownloadToMemoryStream(is64Bit ? modLoaderVersion.Main64 : modLoaderVersion.Main32, ct),
                     Version.Parse(modLoaderVersion.Version)
                 );
             }
@@ -163,7 +166,7 @@ namespace BMBF.Implementations
             }
         }
 
-        public async Task<Stream?> GetLibUnity(string beatSaberVersion)
+        public async Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct)
         {
             if (beatSaberVersion == _builtInAssets.BeatSaberVersion)
             {
@@ -181,7 +184,8 @@ namespace BMBF.Implementations
             if (unityVersions.TryGetValue(beatSaberVersion, out var libUnityVersion))
             {
                 Log.Information($"Downloading libunity.so for Beat Saber v{beatSaberVersion}");
-                return await DownloadToMemoryStream(new Uri(string.Format(_resourceUris.LibUnityVersionTemplate, libUnityVersion)));
+                var uri = new Uri(string.Format(_resourceUris.LibUnityVersionTemplate, libUnityVersion));
+                return await DownloadToMemoryStream(uri, ct);
             }
 
             Log.Warning($"No libunity version found for {_packageId} v{beatSaberVersion}");

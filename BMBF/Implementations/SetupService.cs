@@ -55,12 +55,12 @@ namespace BMBF.Implementations
             "LocalLeaderboards.dat",
             "LocalDailyLeaderboards.dat"
         };
-        
-        private bool _quitRequested;
+
+        private CancellationTokenSource _cts = new CancellationTokenSource();
 
         private bool _disposed;
 
-        private readonly SemaphoreSlim _setupLock = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _stageBeginLock = new SemaphoreSlim(1);
 
         public SetupService(IBeatSaberService beatSaberService, IAssetService assetService, TagManager tagManager, BMBFSettings settings, Service service)
         {
@@ -87,14 +87,14 @@ namespace BMBF.Implementations
         {
             if (CurrentStatus != null) return;
             
-            await _setupLock.WaitAsync();
+            await _stageBeginLock.WaitAsync();
             try
             {
                 await LoadSavedStatusAsync();
             }
             finally
             {
-                _setupLock.Release();
+                _stageBeginLock.Release();
             }
         }
 
@@ -122,15 +122,17 @@ namespace BMBF.Implementations
 
         public async Task BeginSetupAsync()
         {
-            await _setupLock.WaitAsync();
+            await _stageBeginLock.WaitAsync();
             try
             {
+                _cts = new CancellationTokenSource();
+                
                 await LoadSavedStatusAsync();
                 if (CurrentStatus != null)
                 {
                     throw new InvalidOperationException("Setup already started");
                 }
-                
+
                 _logger.Information("Beginning setup");
                 if(Directory.Exists(_setupDirName)) Directory.Delete(_setupDirName, true);
                 Directory.CreateDirectory(_setupDirName);
@@ -144,136 +146,165 @@ namespace BMBF.Implementations
             }
             finally
             {
-                _setupLock.Release();
+                _stageBeginLock.Release();
             }
         }
 
         public async Task QuitSetupAsync()
         {
-            await _setupLock.WaitAsync();
-            _quitRequested = true;
+            await _stageBeginLock.WaitAsync();
             try
             {
+                if (CurrentStatus == null) return; // Setup not ongoing
+                if (CurrentStatus.IsInProgress)
+                {
+                    _cts.Cancel(); // Cancel the current setup stage
+                    Log.Warning("Attempted to quit setup while setup stage was in progress, waiting for the stage to pick up the cancellation");
+                    await Task.Delay(5000);
+                    if (CurrentStatus.IsInProgress)
+                    {
+                        Log.Warning("Setup stage did not shut down, quitting setup anyway");
+                    }
+                }
+                
                 QuitSetupInternal();
             }
             finally
             {
-                _quitRequested = false;
-                _setupLock.Release();
+                _stageBeginLock.Release();
             }
         }
 
         private void QuitSetupInternal()
         {
+            Log.Information("Quitting setup");
             Directory.Delete(_setupDirName, true);
             CurrentStatus = null;
+            _cts.Dispose();
         }
 
-        public async Task DowngradeAsync(List<DiffInfo> downgradePath)
+        private async Task<SetupStatus> BeginSetupStage(SetupStage beginningStage, SetupStage? allowStage = null, bool updateNow = true)
         {
-            await _setupLock.WaitAsync();
+            await _stageBeginLock.WaitAsync();
+
             try
             {
                 await LoadSavedStatusAsync();
-                if (CurrentStatus?.Stage != SetupStage.Downgrading) throw new InvalidOperationException("Not at correct stage to downgrade APK");
-                CurrentStatus.DowngradingStatus ??= new DowngradingStatus { Path = downgradePath };
-                ProcessStatusChange();
-                await ResumeDowngradeAsyncInternal();
-            }
-            finally
-            {
-                _setupLock.Release();
-            }
-        }
-
-        public async Task ResumeDowngradeAsync()
-        {
-            await _setupLock.WaitAsync();
-            try
-            {
-                await LoadSavedStatusAsync();
-                await ResumeDowngradeAsyncInternal();
-            }
-            finally
-            {
-                _setupLock.Release();
-            }
-        }
-
-        private async Task ResumeDowngradeAsyncInternal()
-        {
-            if (CurrentStatus?.DowngradingStatus == null) throw new InvalidOperationException("Downgrading not ongoing");
-
-            try
-            {
-                var deltaApplier = new DeltaApplier();
-                for (int i = CurrentStatus.DowngradingStatus.CurrentDiff; i < CurrentStatus.DowngradingStatus.Path.Count; i++)
+                if (CurrentStatus == null) throw new InvalidOperationException("Setup not ongoing"); 
+                if (CurrentStatus.Stage != beginningStage && CurrentStatus.Stage != allowStage) throw new InvalidOperationException("Incorrect setup stage");
+                
+                CurrentStatus.IsInProgress = true;
+                CurrentStatus.Stage = beginningStage;
+                if (updateNow)
                 {
-                    DiffInfo diffInfo = CurrentStatus.DowngradingStatus.Path[i];
-                    
+                    ProcessStatusChange();
+                }
+            }
+            finally
+            {
+                _stageBeginLock.Release();
+            }
+            return CurrentStatus;
+        }
+        
+        private void EndSetupStage()
+        {
+            if (CurrentStatus != null)
+            {
+                CurrentStatus.IsInProgress = false;
+                ProcessStatusChange();
+            }
+        }
+
+        public async Task DowngradeAsync(List<DiffInfo>? downgradePath)
+        {
+            var currentStatus = await BeginSetupStage(SetupStage.Downgrading, null, false);
+            try
+            {
+                if (downgradePath != null)
+                {
+                    currentStatus.DowngradingStatus = new DowngradingStatus { Path = downgradePath };
+                    ProcessStatusChange();
+                }
+
+                if (currentStatus.DowngradingStatus == null)
+                {
+                    throw new InvalidOperationException("Cannot resume downgrade - downgrade was not ongoing");
+                }
+                
+                var deltaApplier = new DeltaApplier();
+                for (int i = currentStatus.DowngradingStatus.CurrentDiff;
+                     i < currentStatus.DowngradingStatus.Path.Count;
+                     i++)
+                {
+                    DiffInfo diffInfo = currentStatus.DowngradingStatus.Path[i];
+
                     _logger.Information($"Downloading patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
                     Stream? deltaStream = null;
-                    
+
                     // Attempt to download the delta multiple times
-                    while(deltaStream == null)
+                    while (deltaStream == null)
                     {
-                        if (_quitRequested)
-                        {
-                            return;
-                        }
-                        
                         try
                         {
-                            deltaStream = await _assetService.GetDelta(diffInfo);
+                            deltaStream = await _assetService.GetDelta(diffInfo, _cts.Token);
                         }
                         catch (Exception ex)
                         {
+                            if (ex is OperationCanceledException) throw;
                             _logger.Error($"Failed to download diff: {ex.Message}");
                         }
+
+                        _cts.Token.ThrowIfCancellationRequested();
                     }
 
-                    if(File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
-                    
+                    if (File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
+
                     _logger.Information($"Applying patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
-                    await using(var basisStream = File.OpenRead(_latestCompleteApkPath))
-                    await using(var tempStream = File.Open(_tempApkPath, FileMode.Create, FileAccess.ReadWrite))
+                    await using (var basisStream = File.OpenRead(_latestCompleteApkPath))
+                    await using (var tempStream = File.Open(_tempApkPath, FileMode.Create, FileAccess.ReadWrite))
                     {
-                        deltaApplier.Apply(basisStream, new BinaryDeltaReader(deltaStream, new DummyProgressReporter()), tempStream);
+                        await Task.Run(() => deltaApplier.Apply(basisStream,
+                            new BinaryDeltaReader(deltaStream, new DummyProgressReporter()), tempStream));
                     }
-                
+
                     // Move our APK back to the latest complete path, then move to the next diff
                     File.Delete(_latestCompleteApkPath);
                     File.Move(_tempApkPath, _latestCompleteApkPath);
-                    
-                    CurrentStatus.DowngradingStatus.CurrentDiff = i + 1;
-                    CurrentStatus.CurrentBeatSaberVersion = diffInfo.ToVersion;
+
+                    currentStatus.DowngradingStatus.CurrentDiff = i + 1;
+                    currentStatus.CurrentBeatSaberVersion = diffInfo.ToVersion;
                     ProcessStatusChange(); // Save the new status for resuming later on
                 }
 
-                CurrentStatus.Stage = SetupStage.Patching;
-                ProcessStatusChange();
+                Log.Information("Downgrading complete");
+                currentStatus.Stage = SetupStage.Patching;
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.Information("Downgrading canceled");
             }
             finally
             {
-                CurrentStatus.DowngradingStatus = null;
+                currentStatus.DowngradingStatus = null;
+                // Move forward to the patching stage
+                EndSetupStage();
             }
         }
 
+        public Task ResumeDowngradeAsync() => DowngradeAsync(null);
+
         public async Task PatchAsync()
         {
-            await _setupLock.WaitAsync();
+            // Allow downgrading to be skipped
+            var currentStatus = await BeginSetupStage(SetupStage.Patching, SetupStage.Downgrading);
             try
             {
                 _logger.Information("Beginning patching");
-                await LoadSavedStatusAsync();
-                var stage = CurrentStatus?.Stage;
-                // Downgrading stage is allowed, since downgrading may be skipped in some cases
-                if (CurrentStatus == null || stage != SetupStage.Patching && stage != SetupStage.Downgrading) 
-                    throw new InvalidOperationException("Not at correct stage to patch APK");
 
-                if(File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
+                if (File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
                 File.Copy(_latestCompleteApkPath, _tempApkPath);
-            
+
                 var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
                 var semVersion =
                     new SemanticVersioning.Version(assemblyVersion.Major, assemblyVersion.Minor, assemblyVersion.Build);
@@ -281,10 +312,13 @@ namespace BMBF.Implementations
 
                 // Download/extract necessary files for patching
                 _logger.Information("Preparing modloader");
-                var (modloaderStream, mainStream, modloaderVersion) = await _assetService.GetModLoader(true);
+                var modloader = await _assetService.GetModLoader(true, _cts.Token);
+                await using var modloaderStream = modloader.modloader;
+                await using var mainStream = modloader.main;
+                var modloaderVersion = modloader.version;
 
                 _logger.Information("Preparing unstripped libunity.so");
-                var unityStream = await _assetService.GetLibUnity(CurrentStatus.CurrentBeatSaberVersion);
+                await using var unityStream = await _assetService.GetLibUnity(currentStatus.CurrentBeatSaberVersion, _cts.Token);
 
                 var builder = new PatchBuilder("BMBF", semVersion, _tagManager)
                     .WithModloader("QuestLoader", modloaderVersion)
@@ -307,26 +341,30 @@ namespace BMBF.Implementations
                 if (unityStream is null)
                 {
                     _logger.Warning(
-                        $"No libunity.so found for Beat Saber version {CurrentStatus.CurrentBeatSaberVersion}");
+                        $"No libunity.so found for Beat Saber version {currentStatus.CurrentBeatSaberVersion}");
                 }
                 else
                 {
                     builder.ModifyFile($"{libFolder}/libunity.so", OverwriteMode.MustExist, () => unityStream);
                 }
-                
-                await builder.Patch(_tempApkPath, _logger);
-            
-                // Move the current APK back to the latest complete, then trigger the next stage
+
+                await builder.Patch(_tempApkPath, _logger, _cts.Token);
+
+                // Move the current APK back to the latest complete
                 File.Delete(_latestCompleteApkPath);
                 File.Move(_tempApkPath, _latestCompleteApkPath);
-                
+
                 // Trigger the next stage
                 UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync(), true);
                 _logger.Information("Patching complete");
             }
+            catch (OperationCanceledException)
+            {
+                Log.Information("Patching canceled");
+            }
             finally
             {
-                _setupLock.Release();
+                EndSetupStage();
             }
         }
 
@@ -381,12 +419,9 @@ namespace BMBF.Implementations
 
         public async Task TriggerUninstallAsync()
         {
-            await _setupLock.WaitAsync();
+            await BeginSetupStage(SetupStage.UninstallingOriginal);
             try
-            {            
-                await LoadSavedStatusAsync();
-                if (CurrentStatus?.Stage != SetupStage.UninstallingOriginal) throw new InvalidOperationException("Not at correct stage to uninstall original APK");
-
+            {
                 if (!Directory.Exists(_backupPath))
                 {
                     Directory.CreateDirectory(_backupPath);
@@ -403,45 +438,30 @@ namespace BMBF.Implementations
             }
             finally
             {
-                _setupLock.Release();
+                EndSetupStage();
             }
         }
 
         public async Task TriggerInstallAsync()
         {
-            await _setupLock.WaitAsync();
+            await BeginSetupStage(SetupStage.InstallingModded);
             try
             {
-                await LoadSavedStatusAsync();
-                if (CurrentStatus?.Stage != SetupStage.InstallingModded) throw new InvalidOperationException("Not at correct stage to install modded APK");
-
-                
                 Intent intent = new Intent(BMBFIntents.TriggerPackageInstall);
                 intent.PutExtra("ApkPath", _latestCompleteApkPath);
                 _context.SendBroadcast(intent);
             }
             finally
             {
-                _setupLock.Release();
+                EndSetupStage();
             }
-        }
-
-        private void OnBeatSaberServiceAppChanged(object? sender, InstallationInfo? installationInfo)
-        {
-            if (CurrentStatus == null) return;
-            
-            UpdateStatusPostPatching(installationInfo);
         }
 
         public async Task FinalizeSetup()
         {
-            await _setupLock.WaitAsync();
+            await BeginSetupStage(SetupStage.Finalizing);
             try
             {
-                await LoadSavedStatusAsync();
-                if (CurrentStatus?.Stage != SetupStage.Finalizing)
-                    throw new InvalidOperationException("Not at correct stage to finalize setup");
-
                 if (Directory.Exists(_backupPath))
                 {
                     Directory.CreateDirectory(BeatSaberDataPath);
@@ -468,8 +488,15 @@ namespace BMBF.Implementations
             }
             finally
             {
-                _setupLock.Release();
+                EndSetupStage();
             }
+        }
+        
+        private void OnBeatSaberServiceAppChanged(object? sender, InstallationInfo? installationInfo)
+        {
+            if (CurrentStatus == null) return;
+            
+            UpdateStatusPostPatching(installationInfo);
         }
 
         public void Dispose()
@@ -477,7 +504,19 @@ namespace BMBF.Implementations
             if (_disposed) return;
             _disposed = true;
             
-            _setupLock.Dispose();
+            if (CurrentStatus is { IsInProgress: true })
+            {
+                Log.Information("Waiting for setup stage to finish");
+                _cts.Cancel();
+                Thread.Sleep(5000);
+
+                if (CurrentStatus.IsInProgress)
+                {
+                    Log.Warning("Setup stage took too long to shut down");
+                }
+            }
+            _cts.Dispose();
+            _stageBeginLock.Dispose();
         }
     }
 }
