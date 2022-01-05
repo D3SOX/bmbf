@@ -22,9 +22,9 @@ namespace BMBF.Controllers
             return (await _songService.GetSongsAsync()).Values;
         }
 
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> Delete([FromBody] string songHash)
+        [HttpDelete]
+        [Route("[action]/{songHash}")]
+        public async Task<IActionResult> Delete(string songHash)
         {
             if (await _songService.DeleteSongAsync(songHash))
             {
