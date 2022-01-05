@@ -104,8 +104,8 @@ namespace BMBF.Controllers
         
         
         [HttpDelete]
-        [Route("[action]")]
-        public async Task<IActionResult> Delete([FromBody] string playlistId)
+        [Route("[action]/{playlistId}")]
+        public async Task<IActionResult> Delete(string playlistId)
         {
             if (await _playlistService.DeletePlaylistAsync(playlistId))
             {
