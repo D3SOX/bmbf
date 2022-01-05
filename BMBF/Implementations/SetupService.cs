@@ -428,7 +428,13 @@ namespace BMBF.Implementations
                     foreach (string fileName in DataFiles)
                     {
                         _logger.Information($"Backing up {fileName}");
-                        File.Copy(Path.Combine(BeatSaberDataPath, fileName), Path.Combine(_backupPath, fileName));
+                        var filePath = Path.Combine(BeatSaberDataPath, fileName);
+                        var backupFilePath = Path.Combine(_backupPath, fileName);
+
+                        if (File.Exists(filePath))
+                        {
+                            File.Copy(filePath, backupFilePath);
+                        }
                     }
                 }
                 
