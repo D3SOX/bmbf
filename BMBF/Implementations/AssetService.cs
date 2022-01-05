@@ -51,7 +51,7 @@ namespace BMBF.Implementations
 
         private async Task<MemoryStream> DownloadToMemoryStream(Uri uri, CancellationToken ct)
         {
-            using var resp = await _httpClient.GetAsync(uri, ct);
+            using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
             resp.EnsureSuccessStatusCode();
             var memStream = new MemoryStream();
             var respStream = await resp.Content.ReadAsStreamAsync();
@@ -62,7 +62,7 @@ namespace BMBF.Implementations
         
         private async Task<T> DownloadJson<T>(Uri uri)
         {
-            using var resp = await _httpClient.GetAsync(uri);
+            using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
             resp.EnsureSuccessStatusCode();
             await using var respStream = await resp.Content.ReadAsStreamAsync();
             return respStream.ReadAsCamelCaseJson<T>();
