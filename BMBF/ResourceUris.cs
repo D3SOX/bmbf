@@ -17,5 +17,7 @@ namespace BMBF
         public Uri DeltaIndex { get; set; }
         
         public string DeltaVersionTemplate { get; set; }
+        
+        public Uri ExtensionsIndex { get; set; }
     }
 }
