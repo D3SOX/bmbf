@@ -65,5 +65,11 @@ namespace BMBF.Services
         /// <param name="ct">Token to cancel the libunity.so download</param>
         /// </summary>
         Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct);
+
+        /// <summary>
+        /// Gets or uses the inbuilt file copy extensions
+        /// </summary>
+        /// <returns>The inbuilt or downloaded file copy extensions</returns>
+        Task<FileExtensions> GetExtensions();
     }
 }

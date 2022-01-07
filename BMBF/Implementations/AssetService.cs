@@ -191,5 +191,19 @@ namespace BMBF.Implementations
             Log.Warning($"No libunity version found for {_packageId} v{beatSaberVersion}");
             return null;
         }
+
+        public async Task<FileExtensions> GetExtensions()
+        {
+            try
+            {
+                return await DownloadJson<FileExtensions>(_resourceUris.ExtensionsIndex);
+            }
+            catch (Exception)
+            {
+                Log.Warning("Could not fetch extensions from BMBF resources, using built in extensions instead!");
+                await using var extensionsStream = OpenAsset("extensions.json");
+                return extensionsStream.ReadAsCamelCaseJson<FileExtensions>();
+            }
+        }
     }
 }
