@@ -1,6 +1,5 @@
 ﻿{
   "outputDirectory": "./Output",
-  "accessToken": "<enter access-token of oculus graphql requests>",
   "additionalDiffs": [
     {
       "fromVersion": "1.19.0",

@@ -26,7 +26,7 @@ internal static class Program
         Formatting = Formatting.Indented
     };
 
-    private static async Task<SortedDictionary<Version, string>> DownloadVersions(Settings settings, List<OculusAppVersion> versions, string outputPath)
+    private static async Task<SortedDictionary<Version, string>> DownloadVersions(string accessToken, List<OculusAppVersion> versions, string outputPath)
     {
         Directory.CreateDirectory(outputPath);
         using var client = new HttpClient();
@@ -44,7 +44,7 @@ internal static class Program
             Console.WriteLine("Saving version " + version.Version + "...");
 
             using var saveFile = File.OpenWrite(savePath);
-            using var resp = await client.GetAsync($"https://securecdn.oculus.com/binaries/download/?id={version.Id}&access_token={settings.AccessToken}", HttpCompletionOption.ResponseHeadersRead);
+            using var resp = await client.GetAsync($"https://securecdn.oculus.com/binaries/download/?id={version.Id}&access_token={accessToken}", HttpCompletionOption.ResponseHeadersRead);
             resp.EnsureSuccessStatusCode();
             await resp.Content.CopyToAsync(saveFile);
         }
@@ -119,25 +119,37 @@ internal static class Program
     }
     
     
-    public static async Task Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
-        using var settingsReader = new StreamReader("settings.json");
-        using var jsonReader = new JsonTextReader(settingsReader);
-        var settings = JsonSerializer.Deserialize<Settings>(jsonReader);
-        if (settings == null)
+        Settings? settings;
+        using(var settingsReader = new StreamReader("settings.json"))
+        using (var jsonReader = new JsonTextReader(settingsReader))
         {
-            await Console.Error.WriteLineAsync("Settings were null!");
-            return;
+            settings = JsonSerializer.Deserialize<Settings>(jsonReader);
+            if (settings == null)
+            {
+                await Console.Error.WriteLineAsync("Settings were null!");
+                return 1;
+            }
         }
+
+        if (args.Length < 1)
+        {
+            await Console.Error.WriteLineAsync("Please pass your oculus access token as an argument");
+            return 1;
+        }
+
+        var accessToken = args[0];
         
         string apksDir = Path.Combine(settings.OutputDirectory, "APKs");
         string diffsPath = Path.Combine(settings.OutputDirectory, "Diffs");
         string diffIndexPath = Path.Combine(settings.OutputDirectory, "diffIndex.json");
         
-        var oculusVersions = await new AppVersionFinder(settings.AccessToken).GetAppVersions(2448060205267927);
-        var versionPaths = await DownloadVersions(settings, oculusVersions, apksDir);
+        var oculusVersions = await new AppVersionFinder(accessToken).GetAppVersions(2448060205267927);
+        var versionPaths = await DownloadVersions(accessToken, oculusVersions, apksDir);
 
         var diffs = GetDiffs(settings, versionPaths);
         await GenerateDiffs(versionPaths, diffs, diffIndexPath, diffsPath);
+        return 0;
     }
 }
