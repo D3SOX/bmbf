@@ -1,7 +1,6 @@
 ﻿{
   "outputDirectory": "./Output",
-  "accessToken": "<enter access-token header used during oculus graphql requests>",
-  "cookie": "<enter cookies used when downloading beat saber versions>",
+  "accessToken": "<enter access-token of oculus graphql requests>",
   "additionalDiffs": [
     {
       "fromVersion": "1.19.0",

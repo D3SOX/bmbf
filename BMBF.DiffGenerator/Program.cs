@@ -30,7 +30,6 @@ internal static class Program
     {
         Directory.CreateDirectory(outputPath);
         using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("Cookie", settings.Cookie);
 
         var result = new SortedDictionary<Version, string>();
         foreach (var version in versions)
@@ -45,7 +44,7 @@ internal static class Program
             Console.WriteLine("Saving version " + version.Version + "...");
 
             using var saveFile = File.OpenWrite(savePath);
-            using var resp = await client.GetAsync($"https://securecdn.oculus.com/binaries/download/?id={version.Id}");
+            using var resp = await client.GetAsync($"https://securecdn.oculus.com/binaries/download/?id={version.Id}&access_token={settings.AccessToken}", HttpCompletionOption.ResponseHeadersRead);
             resp.EnsureSuccessStatusCode();
             await resp.Content.CopyToAsync(saveFile);
         }
