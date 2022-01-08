@@ -2,10 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Android.OS;
+using BMBF.Extensions;
 using BMBF.Models;
 using BMBF.Services;
 using BMBF.Util;
@@ -67,6 +69,54 @@ namespace BMBF.Implementations
             try
             {
                 _songs = await GenerateOrUpdateCache(_songs, true);
+            }
+            finally
+            {
+                _cacheUpdateLock.Release();
+            }
+        }
+        
+        public async Task<FileImportResult> ImportSongAsync(ZipArchive zipArchive, string fileName)
+        {
+            var folderProvider = new ArchiveFolderProvider(zipArchive);
+
+            Song? song = await SongUtil.TryLoadSongInfoAsync(folderProvider, fileName);
+            if (song == null)
+            {
+                return FileImportResult.CreateError($"{fileName} was not a valid song");
+            }
+
+            await _cacheUpdateLock.WaitAsync();
+            try
+            {
+                // Early check to see if the song exists to avoid extracting the song unnecessarily
+                var cache = await GetSongCacheAsync();
+                if (cache.ContainsKey(song.Hash))
+                {
+                    return FileImportResult.CreateError($"{fileName} was not a valid song");
+                }
+                
+                var originalSavePath = Path.Combine(_songsPath, Path.GetFileNameWithoutExtension(fileName));
+                song.Path = originalSavePath;
+                int i = 1;
+                while (Directory.Exists(song.Path))
+                {
+                    song.Path = $"{originalSavePath}_{i}";
+                    i++;
+                }
+            
+                Log.Information($"Extracting {fileName} to {song.Path}");
+            
+                await Task.Run(() => zipArchive.ExtractToDirectory(song.Path));
+                
+                cache[song.Hash] = song;
+                Log.Information($"Song {song.SongName} import complete");
+                SongAdded?.Invoke(this, song);
+                return new FileImportResult
+                {
+                    Type = FileImportResultType.Song,
+                    ImportedSong = song
+                };
             }
             finally
             {
@@ -197,11 +247,24 @@ namespace BMBF.Implementations
             try
             {
                 Song? song = await SongUtil.TryLoadSongInfoAsync(new DirectoryFolderProvider(path), path);
-                
+
                 // If the path was a valid song
                 if (song != null)
                 {
                     song.Path = path;
+                    var existingWithPath = cache.Values.FirstOrDefault(s => s.Path == path);
+                    if (existingWithPath != null)
+                    {
+                        // Existing song with this path has the same hash, we can skip
+                        if (existingWithPath.Hash == song.Hash)
+                        {
+                            return;
+                        }
+                        
+                        // Remove the existing song with the same path but different hash to replace with our new song
+                        cache.TryRemove(existingWithPath.Hash, out _);
+                        SongRemoved?.Invoke(this, existingWithPath);
+                    }
 
                     // Check for an existing song with the same hash
                     if (cache.TryGetValue(song.Hash, out var existingSong))
@@ -248,25 +311,40 @@ namespace BMBF.Implementations
                     // We will wait for a configured period of time before attempting to load as a song
                     // TODO: A better check for this. Wait until no activity in the directory for a certain period of time
                     await Task.Delay(SongLoadDelay);
-                    
-                    await ProcessNewSongAsync(fullPath, _songs, true);
+
+                    await _cacheUpdateLock.WaitAsync();
+                    try
+                    {
+                        await ProcessNewSongAsync(fullPath, _songs, true);
+                    }
+                    finally
+                    {
+                        _cacheUpdateLock.Release();
+                    }
                 }
                 if (evnt.HasFlag(FileObserverEvents.Delete))
                 {
-                    Song? removed = null;
-                    foreach(Song song in _songs.Values)
+                    try
                     {
-                        if (song.Path == fullPath)
+                        Song? removed = null;
+                        foreach(Song song in _songs.Values)
                         {
-                            Log.Information($"Song {song.SongName} (Hash: {song.Hash}) was deleted");
-                            removed = song;
+                            if (song.Path == fullPath)
+                            {
+                                Log.Information($"Song {song.SongName} (Hash: {song.Hash}) was deleted");
+                                removed = song;
+                            }
+                        }
+
+                        if (removed != null)
+                        {
+                            _songs.Remove(removed.Hash, out _);
+                            SongRemoved?.Invoke(this, removed);
                         }
                     }
-
-                    if (removed != null)
+                    finally
                     {
-                        _songs.Remove(removed.Hash, out _);
-                        SongRemoved?.Invoke(this, removed);
+                        _cacheUpdateLock.Release();
                     }
                 }
             }

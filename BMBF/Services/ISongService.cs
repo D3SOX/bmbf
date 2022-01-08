@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using BMBF.Models;
 
@@ -21,6 +22,14 @@ namespace BMBF.Services
         /// Updates the current song cache
         /// </summary>
         Task UpdateSongCacheAsync();
+
+        /// <summary>
+        /// Attempts to import a song from the given ZipArchive.
+        /// </summary>
+        /// <returns>The result of the import operation, with an error message if the given archive was not a valid song, or if the song already existed</returns>
+        /// <param name="zipArchive">Archive to import the song from</param>
+        /// <param name="fileName">Name of the archive the song is being imported from</param>
+        Task<FileImportResult> ImportSongAsync(ZipArchive zipArchive, string fileName);
 
         /// <summary>
         /// Deletes the song(s) with the given hash, if a song with the hash is loaded.
