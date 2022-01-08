@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System.Net;
+using System.Reflection;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Microsoft.AspNetCore.Mvc;
@@ -74,6 +76,23 @@ namespace BMBF.Controllers
         public bool GetRunInBackground()
         {
             return System.IO.File.Exists(Constants.RunForegroundConfig);
+        }
+
+        [HttpGet]
+        [Route("logs")]
+        public async Task GetLogs()
+        {
+            var logsPath = Constants.LogPath;
+            if (System.IO.File.Exists(logsPath))
+            {
+                HttpContext.Response.StatusCode = (int) HttpStatusCode.OK;
+                HttpContext.Response.ContentType = "text/plain";
+                await using var logsStream = System.IO.File.OpenRead(logsPath);
+                await logsStream.CopyToAsync(HttpContext.Response.Body);
+                return;
+            }
+            
+            HttpContext.Response.StatusCode = (int) HttpStatusCode.NotFound;
         }
     }
 }
