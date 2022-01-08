@@ -86,11 +86,17 @@ namespace BMBF.Implementations
 
         public async Task SavePlaylistsAsync()
         {
+            if (_cache == null)
+            {
+                Log.Information("No playlists to save");
+                return;
+            }
+            
             await _cacheUpdateLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 Log.Information("Saving playlists");
-                foreach (var playlistPair in await GetPlaylistsAsync().ConfigureAwait(false))
+                foreach (var playlistPair in _cache)
                 {
                     var playlist = playlistPair.Value;
                     if(!playlist.IsPendingSave) { continue; }
