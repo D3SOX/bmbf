@@ -1,5 +1,7 @@
 ﻿#nullable disable
 
+using System;
+
 namespace BMBF
 {
     // ReSharper disable once InconsistentNaming
@@ -30,6 +32,8 @@ namespace BMBF
         public string PatchingFolderName { get; set; }
         
         public string ConfigsPath { get; set; }
+        
+        public Uri BeatSaverBaseUri { get; set; }
         
         public ResourceUris Resources { get; set; }
     }
