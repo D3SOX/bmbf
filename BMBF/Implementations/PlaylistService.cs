@@ -86,11 +86,11 @@ namespace BMBF.Implementations
 
         public async Task SavePlaylistsAsync()
         {
-            await _cacheUpdateLock.WaitAsync();
+            await _cacheUpdateLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 Log.Information("Saving playlists");
-                foreach (var playlistPair in await GetPlaylistsAsync())
+                foreach (var playlistPair in await GetPlaylistsAsync().ConfigureAwait(false))
                 {
                     var playlist = playlistPair.Value;
                     if(!playlist.IsPendingSave) { continue; }
@@ -113,7 +113,7 @@ namespace BMBF.Implementations
                         
                         using var playlistStream = new StreamWriter(playlist.LoadedFrom);
                         using var jsonWriter = new JsonTextWriter(playlistStream);
-                        await Task.Run(() => _serializer.Serialize(jsonWriter, playlist));
+                        await Task.Run(() => _serializer.Serialize(jsonWriter, playlist)).ConfigureAwait(false);
                         playlist.IsPendingSave = false;
                     }
                     catch (Exception ex)
@@ -305,8 +305,9 @@ namespace BMBF.Implementations
             _disposed = true;
             
             base.Dispose();
-            _cacheUpdateLock.Dispose();
             SavePlaylistsAsync().Wait();
+
+            _cacheUpdateLock.Dispose();
         }
     }
 }
