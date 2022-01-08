@@ -60,14 +60,16 @@ namespace BMBF.Util
             }
 
             BeatmapInfoDat? infoDat;
-            using var infoDatStream = provider.Open(infoDatPath);
-            using var infoDatReader = new StreamReader(infoDatStream);
-            using var jsonReader = new JsonTextReader(infoDatReader);
-            infoDat = JsonSerializer.Deserialize<BeatmapInfoDat>(jsonReader);
-            if (infoDat == null)
+            await using(var infoDatStream = provider.Open(infoDatPath))
+            using(var infoDatReader = new StreamReader(infoDatStream))
+            using (var jsonReader = new JsonTextReader(infoDatReader))
             {
-                Log.Warning($"Info.dat for song {name} was null");
-                return null;
+                infoDat = JsonSerializer.Deserialize<BeatmapInfoDat>(jsonReader);
+                if (infoDat == null)
+                {
+                    Log.Warning($"Info.dat for song {name} was null");
+                    return null;
+                }
             }
 
             if (!provider.Exists(infoDat.CoverImageFilename))
@@ -75,14 +77,19 @@ namespace BMBF.Util
                 Log.Warning($"Song missing cover {infoDat.CoverImageFilename}");
             }
 
-            // Move back to the beginning of the stream             
-            infoDatStream.Position = 0;
-            string? hash = await TryGetSongHashAsync(provider, infoDatStream, infoDat);
-            if (hash == null)
+            // Re-open info.dat from the beginning to calculate the song hash
+            // Note that we cannot seek as the result of provider.Open isn't necessarily seekable
+            await using (var infoDatStream = provider.Open(infoDatPath))
             {
-                return null;
+                string? hash = await TryGetSongHashAsync(provider, infoDatStream, infoDat);
+                if (hash == null)
+                {
+                    return null;
+                }
+
+                return new Models.Song(hash, infoDat.SongName, infoDat.SongSubName, infoDat.SongAuthorName,
+                    infoDat.LevelAuthorName, null!, infoDat.CoverImageFilename);
             }
-            return new Models.Song(hash, infoDat.SongName, infoDat.SongSubName, infoDat.SongAuthorName, infoDat.LevelAuthorName, null!, infoDat.CoverImageFilename);
         }
     }
 }
