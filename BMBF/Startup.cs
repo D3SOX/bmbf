@@ -1,8 +1,7 @@
-﻿using System.Net.Http;
-using System.Reflection;
-using BMBF.Implementations;
+﻿using BMBF.Implementations;
 using BMBF.Patching;
 using BMBF.Services;
+using BMBF.Util;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,11 +28,12 @@ namespace BMBF
             services.AddSingleton<IBeatSaberService, BeatSaberService>();
             services.AddSingleton<ISetupService, SetupService>();
             services.AddSingleton<IAssetService, AssetService>();
-
-            var bmbfHttpClient = new HttpClient();
-            bmbfHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"BMBF/{Assembly.GetExecutingAssembly().GetName().Version}");
-            services.AddSingleton(bmbfHttpClient);
             
+            services.AddSingleton(HttpClientUtil.CreateBMBFHttpClient());
+            services.AddSingleton<IExtensionsService, ExtensionsService>();
+            services.AddSingleton<IFileImporter, FileImporter>();
+            services.AddSingleton<IBeatSaverService, BeatSaverService>();
+
             // Configure our legacy tags
             var tagManager = new TagManager();
             tagManager.RegisterLegacyTag("modded",
