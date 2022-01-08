@@ -15,6 +15,7 @@ namespace BMBF.Models
         /// <summary>
         /// Name of the mod registering this extension, if any
         /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? ModId { get; set; }
         
         [JsonConstructor]
