@@ -91,6 +91,7 @@ namespace BMBF
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // Disable microsoft request logging
+                .MinimumLevel.Verbose()
                 .Enrich.FromLogContext()
                 .WriteTo.AndroidLog(LogEventLevel.Verbose, "{Message:l}{NewLine}{Exception:l}")
                 .WriteTo.File(Constants.LogPath, LogEventLevel.Verbose,
