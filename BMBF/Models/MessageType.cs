@@ -10,6 +10,8 @@
         PlaylistRemoved,
         
         SetupFinished,
-        SetupStatusUpdate
+        SetupStatusUpdate,
+        
+        InstallationUpdated
     }
 }
