@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using System.Collections.Immutable;
 using BMBF.Util.BPList;
 using Newtonsoft.Json;
 
@@ -12,17 +9,18 @@ namespace BMBF.Models
     /// Represents a playlist in the BMBF cache
     /// This format is compatible with BPList to make loading/saving easier
     /// </summary>
-    public class Playlist : INotifyPropertyChanged
+    public class Playlist
     {
+        
         public const string LegalIdCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
 
-        public string PlaylistTitle { get => _playlistTitle; set { if (_playlistTitle != value) { _playlistTitle = value; NotifyPropertyChanged(); } } }
+        public string PlaylistTitle { get => _playlistTitle; set { if (_playlistTitle != value) { _playlistTitle = value; NotifyInfoUpdated(); } } }
         private string _playlistTitle;
         
-        public string PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyPropertyChanged(); } } }
+        public string PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyInfoUpdated(); } } }
         private string _playlistAuthor;
         
-        public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyPropertyChanged(); } } }
+        public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyInfoUpdated(); } } }
         private string _playlistDescription;
 
         [JsonIgnore] public string Id { get; set; } = null!;
@@ -43,9 +41,21 @@ namespace BMBF.Models
                 }
             }
         }
-        
+
         [JsonIgnore]
-        public byte[]? Image { get; set; }
+        public byte[]? Image
+        {
+            get => _image;
+            set
+            {
+                if (_image != value)
+                {
+                    _image = value;
+                    NotifyUpdated(false, false, true);
+                }
+            }
+        }
+        private byte[]? _image;
         
         [JsonIgnore]
         public bool IsPendingSave { get; set; }
@@ -53,21 +63,18 @@ namespace BMBF.Models
         /// <summary>
         /// The songs within the playlist
         /// </summary>
-        public ObservableCollection<BPSong> Songs
+        public ImmutableList<BPSong> Songs
         {
             get => _songs; 
             set { 
                 if (_songs != value)
                 {
-                    _songs.CollectionChanged -= SongsCollectionChanged;
                     _songs = value;
-                    _songs.CollectionChanged += SongsCollectionChanged;
-                    NotifyPropertyChanged();
+                    NotifyUpdated(false, true, false);
                 }
             }
         }
-
-        private ObservableCollection<BPSong> _songs;
+        private ImmutableList<BPSong> _songs;
 
 
         // The below intentionally do not notify changes
@@ -83,29 +90,40 @@ namespace BMBF.Models
         /// Path that the playlist was loaded from
         /// </summary>
         public string? LoadedFrom { get; set; }
-        
-        public event PropertyChangedEventHandler? PropertyChanged;
-        
-        private void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
+
+        public event PlaylistUpdatedEventHandler? Updated;
+
+        private void NotifyInfoUpdated() => NotifyUpdated(true, false, false);
+
+        private void NotifyUpdated(bool infoUpdated, bool songsUpdated, bool coverUpdated)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            Updated?.Invoke(this, infoUpdated, songsUpdated, coverUpdated);
             IsPendingSave = true;
         }
 
-        private void SongsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
-        {
-            NotifyPropertyChanged(nameof(Songs));
-        }
-
         [JsonConstructor]
-        public Playlist(string playlistTitle, string playlistAuthor, string playlistDescription, ObservableCollection<BPSong> songs, string? image)
+        public Playlist(string playlistTitle, string playlistAuthor, string playlistDescription, ImmutableList<BPSong> songs, string? image)
         {
             _playlistTitle = playlistTitle;
             _playlistAuthor = playlistAuthor;
             _playlistDescription = playlistDescription;
             ImageString = image;
             _songs = songs;
-            _songs.CollectionChanged += SongsCollectionChanged;
+        }
+
+        /// <summary>
+        /// More efficiently sets the info of the playlist by verifying that <see cref="Updated"/> is only invoked once.
+        /// </summary>
+        /// <param name="playlistInfo"></param>
+        public void SetPlaylistInfo(PlaylistInfo playlistInfo)
+        {
+            // Update the properties first
+            _playlistTitle = playlistInfo.PlaylistTitle;
+            _playlistDescription = playlistInfo.PlaylistDescription;
+            _playlistAuthor = playlistInfo.PlaylistAuthor;
+            // ID is deliberately not reflected here - playlist ID should only be set once after playlist creation
+
+            NotifyInfoUpdated();
         }
     }
 }

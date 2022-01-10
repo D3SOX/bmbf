@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 using BMBF.Util.BPList;
 
 namespace BMBF.Models.Messages
@@ -10,7 +10,7 @@ namespace BMBF.Models.Messages
         /// <summary>
         /// The updated songs of the playlist, null if the songs did not change
         /// </summary>
-        public List<BPSong>? Songs { get; set; }
+        public ImmutableList<BPSong>? Songs { get; set; }
         
         /// <summary>
         /// The updated details of the playlist, null if they did not change

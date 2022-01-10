@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -69,7 +69,7 @@ namespace BMBF.Controllers
 
         [HttpPut]
         [Route("songs/{playlistId}")]
-        public async Task<IActionResult> PutPlaylistSongs(string playlistId, [FromBody] ObservableCollection<BPSong> songs)
+        public async Task<IActionResult> PutPlaylistSongs(string playlistId, [FromBody] ImmutableList<BPSong> songs)
         {
             if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
             {
@@ -85,10 +85,7 @@ namespace BMBF.Controllers
         {
             if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(newPlaylistInfo.Id, out var matching))
             {
-                matching.PlaylistTitle = newPlaylistInfo.PlaylistTitle;
-                matching.PlaylistAuthor = newPlaylistInfo.PlaylistAuthor;
-                matching.PlaylistDescription = newPlaylistInfo.PlaylistDescription;
-                // ID is deliberately not reflected here - playlist ID is managed by the backend
+                matching.SetPlaylistInfo(newPlaylistInfo);
                 return Ok();
             }
             return NotFound();
@@ -130,7 +127,7 @@ namespace BMBF.Controllers
                 playlistInfo.PlaylistTitle,
                 playlistInfo.PlaylistAuthor,
                 playlistInfo.PlaylistDescription,
-                new ObservableCollection<BPSong>(),
+                ImmutableList.Create<BPSong>(),
                 null
             );
             await _playlistService.AddPlaylistAsync(playlist);
