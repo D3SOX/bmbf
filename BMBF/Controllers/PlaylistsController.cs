@@ -24,10 +24,7 @@ namespace BMBF.Controllers
         [HttpGet]
         public async Task<IEnumerable<PlaylistInfo>> GetPlaylistsInfo()
         {
-            return (await _playlistService.GetPlaylistsAsync()).Select(playlistPair => new PlaylistInfo(playlistPair.Value)
-            {
-                PlaylistId = playlistPair.Key
-            });
+            return (await _playlistService.GetPlaylistsAsync()).Select(playlistPair => new PlaylistInfo(playlistPair.Value));
         }
 
         [HttpGet]
@@ -86,12 +83,7 @@ namespace BMBF.Controllers
         [Route("update/{playlistId}")]
         public async Task<IActionResult> UpdatePlaylistInfo([FromBody] PlaylistInfo newPlaylistInfo)
         {
-            if (newPlaylistInfo.PlaylistId == null)
-            {
-                return BadRequest("Must specify playlist ID");
-            }
-            
-            if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(newPlaylistInfo.PlaylistId, out var matching))
+            if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(newPlaylistInfo.Id, out var matching))
             {
                 matching.PlaylistTitle = newPlaylistInfo.PlaylistTitle;
                 matching.PlaylistAuthor = newPlaylistInfo.PlaylistAuthor;
