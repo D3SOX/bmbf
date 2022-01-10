@@ -47,16 +47,16 @@ namespace BMBF.Implementations
         private string AddPlaylist(Playlist playlist, PlaylistCache cache, string idSuggestion)
         {
             var originalId = new string(idSuggestion.Select(c => Playlist.LegalIdCharacters.Contains(c) ? c : '_').ToArray());
-            var playlistId = originalId;
+            playlist.Id = originalId;
                     
             // Find a playlist ID that isn't used yet
             int i = 1;
-            while (!cache.TryAdd(playlistId, playlist))
+            while (!cache.TryAdd(playlist.Id, playlist))
             {
-                playlistId = $"{originalId}_{i}";
+                playlist.Id = $"{originalId}_{i}";
                 i++;
             }
-            return playlistId;
+            return playlist.Id;
         }
 
         public async Task UpdatePlaylistCacheAsync()

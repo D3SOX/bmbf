@@ -24,8 +24,9 @@ namespace BMBF.Models
         
         public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyPropertyChanged(); } } }
         private string _playlistDescription;
-        
-        
+
+        [JsonIgnore] public string Id { get; set; } = null!;
+
         [JsonProperty("image")]
         public string? ImageString {
             get => Image == null ? null : "data:image/png;base64," + Convert.ToBase64String(Image);
