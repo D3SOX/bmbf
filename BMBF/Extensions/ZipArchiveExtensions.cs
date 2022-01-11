@@ -18,8 +18,12 @@ namespace BMBF.Extensions
             {
                 var extractPath = Path.Combine(path, entry.FullName);
                 var directoryName = Path.GetDirectoryName(extractPath);
+
                 if (directoryName != null && !Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
 
+                // Skip folder entries
+                if (directoryName?.TrimEnd(Path.DirectorySeparatorChar) == extractPath.TrimEnd(Path.DirectorySeparatorChar)) continue;
+                
                 if(File.Exists(extractPath)) File.Delete(extractPath);
                 using var outputStream = File.OpenWrite(extractPath);
                 using var entryStream = entry.Open();
