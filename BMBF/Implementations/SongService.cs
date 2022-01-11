@@ -86,11 +86,11 @@ namespace BMBF.Implementations
                 return FileImportResult.CreateError($"{fileName} was not a valid song");
             }
 
+            var cache = await GetSongCacheAsync();
             await _cacheUpdateLock.WaitAsync();
             try
             {
                 // Early check to see if the song exists to avoid extracting the song unnecessarily
-                var cache = await GetSongCacheAsync();
                 if (cache.ContainsKey(song.Hash))
                 {
                     return FileImportResult.CreateError($"{fileName} already existed");
