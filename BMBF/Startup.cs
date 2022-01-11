@@ -28,6 +28,7 @@ namespace BMBF
             services.AddSingleton<IBeatSaberService, BeatSaberService>();
             services.AddSingleton<ISetupService, SetupService>();
             services.AddSingleton<IAssetService, AssetService>();
+            services.AddSingleton<IMessageService, MessageService>();
             
             services.AddSingleton(HttpClientUtil.CreateBMBFHttpClient());
             services.AddSingleton<IExtensionsService, ExtensionsService>();
@@ -50,6 +51,8 @@ namespace BMBF
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseWebSockets();
             app.UseMiddleware<Middleware>();
             app.UseMvc();
         }
