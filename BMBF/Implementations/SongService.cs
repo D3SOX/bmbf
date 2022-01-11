@@ -93,7 +93,7 @@ namespace BMBF.Implementations
                 var cache = await GetSongCacheAsync();
                 if (cache.ContainsKey(song.Hash))
                 {
-                    return FileImportResult.CreateError($"{fileName} was not a valid song");
+                    return FileImportResult.CreateError($"{fileName} already existed");
                 }
                 
                 var originalSavePath = Path.Combine(_songsPath, Path.GetFileNameWithoutExtension(fileName));
