@@ -3,17 +3,15 @@ using Android;
 using Android.App;
 using Android.Content;
 using Android.OS;
-using Android.Support.V7.App;
-using Android.Support.V4.App;
-using Android.Support.V4.Content;
 using Android.Webkit;
 using Android.Widget;
+using AndroidX.Core.Content;
 using File = System.IO.File;
 
 namespace BMBF
 {
     [Activity(Name = "com.weareneutralaboutoculus.BMBF.MainActivity", Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
-    public class MainActivity : AppCompatActivity
+    public class MainActivity : Activity
     {
         private WebServerStartedReceiver? _receiver;
         protected override void OnCreate(Bundle? savedInstanceState)
@@ -22,7 +20,7 @@ namespace BMBF
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.activity_loading);
 
-            ActivityCompat.RequestPermissions(this, new[]{ Manifest.Permission.WriteExternalStorage, Manifest.Permission.ReadExternalStorage }, 1);
+            RequestPermissions(new[]{ Manifest.Permission.WriteExternalStorage, Manifest.Permission.ReadExternalStorage }, 1);
         }
 
         protected override void OnResume()
@@ -41,17 +39,17 @@ namespace BMBF
                 _receiver = new WebServerStartedReceiver();
                 // Navigate to the main page when WebServer startup finishes
                 _receiver.WebServerStartupComplete +=
-                    (sender, url) => RunOnUiThread(() => OnLoaded(url));
+                    (_, url) => RunOnUiThread(() => OnLoaded(url));
                 
                 // Make sure to inform of errors
                 _receiver.WebServerStartupFailed +=
-                    (sender, error) => RunOnUiThread(() => OnFailedToLoad(error));
+                    (_, error) => RunOnUiThread(() => OnFailedToLoad(error));
 
-                _receiver.Quit += (sender, args) => Finish();
+                _receiver.Quit += (_, _) => Finish();
 
-                _receiver.PackageInstallTriggered += (sender, apkPath) => TriggerPackageInstall(apkPath);
-                _receiver.PackageUninstallTriggered += (sender, packageId) => TriggerPackageUninstall(packageId);
-                _receiver.Restart += (sender, packageId) => Restart();
+                _receiver.PackageInstallTriggered += (_, apkPath) => TriggerPackageInstall(apkPath);
+                _receiver.PackageUninstallTriggered += (_, packageId) => TriggerPackageUninstall(packageId);
+                _receiver.Restart += (_, _) => Restart();
             }
             RegisterReceiver(_receiver, intentFilter);
             

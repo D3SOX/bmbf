@@ -306,6 +306,11 @@ namespace BMBF.Implementations
                 File.Copy(_latestCompleteApkPath, _tempApkPath);
 
                 var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+
+                if (assemblyVersion == null)
+                {
+                    throw new NullReferenceException("Assembly version could not be determined");
+                }
                 var semVersion =
                     new SemanticVersioning.Version(assemblyVersion.Major, assemblyVersion.Minor, assemblyVersion.Build);
                 var libFolder = "lib/arm64-v8a";

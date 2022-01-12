@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Android.Content.Res;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
@@ -30,19 +31,11 @@ namespace BMBF
                 return _assetManager.Open(_path) ?? throw new InvalidOperationException();
             }
 
-            public bool Exists
-            {
-                get
-                {
-                    // TODO: Find if there is a better way of doing this, opening a stream every time will not be fast
-                    using Stream? stream = _assetManager.Open(_path);
-                    return stream != null;
-                }
-            }
+            public bool Exists => _assetManager.List(Path.GetDirectoryName(_path) ?? "")?.Contains(_path) ?? false;
+
             /// <summary>
             /// Since our asset files are compressed, we can't use OpenFd to get a file descriptor that would tell us the length
             /// </summary>
-            /// <exception cref="InvalidOperationException"></exception>
             public long Length => throw new NotImplementedException();
             public string PhysicalPath => _path;
             public string Name => Path.GetFileName(_path);

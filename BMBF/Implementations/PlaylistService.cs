@@ -31,7 +31,7 @@ namespace BMBF.Implementations
 
         private bool _disposed;
         
-        public PlaylistService(BMBFSettings settings) : base(settings.PlaylistsPath, FileObserverEvents.CloseWrite | FileObserverEvents.Delete)
+        public PlaylistService(BMBFSettings settings) : base(new Java.IO.File(settings.PlaylistsPath), FileObserverEvents.CloseWrite | FileObserverEvents.Delete)
         {
             _playlistsPath = settings.PlaylistsPath;
             _automaticUpdates = settings.UpdateCacheAutomatically;
@@ -108,7 +108,7 @@ namespace BMBF.Implementations
                         if (playlist.LoadedFrom == null)
                         {
                             string newPath = Path.Combine(_playlistsPath, playlistPair.Key + ".bplist");
-                            int i = 0;
+                            int i = 1;
                             while (File.Exists(newPath))
                             {
                                 newPath = Path.Combine(_playlistsPath, playlistPair.Key + "_" + i + ".bplist");
@@ -228,6 +228,7 @@ namespace BMBF.Implementations
                 }
                 playlist.LoadedFrom = path;
                 playlist.LastLoadTime = DateTime.UtcNow;
+                playlist.IsPendingSave = false;
                 
                 // TODO: What to do with BPSongs that don't exist in the song cache?
 
@@ -274,9 +275,9 @@ namespace BMBF.Implementations
                         var matching = _cache.FirstOrDefault(pair => pair.Value.LoadedFrom == fullPath);
                         if (matching.Key != null)
                         {
-                            _cache.TryRemove(matching.Key, out var playlist);
+                            _cache.TryRemove(matching.Key, out _);
                             Log.Information($"Playlist {fullPath} deleted");
-                            PlaylistDeleted?.Invoke(this, playlist);
+                            PlaylistDeleted?.Invoke(this, matching.Value);
                         }
                     }
                     finally

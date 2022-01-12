@@ -12,11 +12,11 @@ namespace BMBF.Controllers
     public class HostController : Controller
     {
         // This is static to avoid reflecting multiple times
-        private static readonly string Version;
+        private static readonly string? Version;
         static HostController()
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            Version = $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
+            Version = assemblyVersion == null ? null : $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
         }
 
         private readonly Service _bmbfService;
@@ -28,9 +28,9 @@ namespace BMBF.Controllers
 
         [HttpGet]
         [Route("version")]
-        public string GetVersion()
+        public IActionResult GetVersion()
         {
-            return Version;
+            return Version != null ? Ok(Version) : NotFound();
         }
 
         [HttpPost]

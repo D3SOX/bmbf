@@ -1,105 +1,30 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <TargetFramework>net6.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>
+        <OutputType>Exe</OutputType>
         <Nullable>enable</Nullable>
+        <ApplicationId>com.weareneutralaboutoculus.BMBF</ApplicationId>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     </PropertyGroup>
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProductVersion>8.0.30703</ProductVersion>
-        <SchemaVersion>2.0</SchemaVersion>
-        <ProjectGuid>{9D432CC8-1BEC-4A21-B670-FA621C32A67B}</ProjectGuid>
-        <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>BMBF</RootNamespace>
-        <AssemblyName>BMBF</AssemblyName>
-        <FileAlignment>512</FileAlignment>
-        <AndroidApplication>True</AndroidApplication>
-        <AndroidResgenFile>Resources\Resource.Designer.cs</AndroidResgenFile>
-        <AndroidResgenClass>Resource</AndroidResgenClass>
-        <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-        <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-        <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
-        <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
-        <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-        <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-        <AndroidHttpClientHandlerType>Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
+    
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <DebugSymbols>True</DebugSymbols>
-        <DebugType>portable</DebugType>
-        <Optimize>False</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
-        <AndroidLinkMode>None</AndroidLinkMode>
-        <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <DebugSymbols>True</DebugSymbols>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>True</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <AndroidManagedSymbols>true</AndroidManagedSymbols>
-        <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
-        <AndroidLinkMode>SdkOnly</AndroidLinkMode>
-        <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
-    </PropertyGroup>
-    <ItemGroup>
-        <Reference Include="System" />
-        <Reference Include="System.Xml" />
-        <Reference Include="System.Core" />
-        <Reference Include="Mono.Android" />
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="**\*.cs" Exclude="obj\**" />
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="Resources\AboutResources.txt" />
-        <None Include="Properties\AndroidManifest.xml" />
-        <None Include="Assets\AboutAssets.txt" />
-    </ItemGroup>
-    <ItemGroup>
-        <AndroidResource Include="Resources\layout\activity_loading.xml" />
-        <AndroidResource Include="Resources\layout\activity_main.axml">
-            <SubType>Designer</SubType>
-        </AndroidResource>
-        <AndroidResource Include="Resources\layout\startup_failed.xml" />
-        <AndroidResource Include="Resources\values\colors.xml" />
-        <AndroidResource Include="Resources\values\ic_launcher_background.xml" />
-        <AndroidResource Include="Resources\values\strings.xml" />
-        <AndroidResource Include="Resources\values\styles.xml" />
-        <AndroidResource Include="Resources\xml\network_security_config.xml" />
-        <AndroidAsset Include="Assets\**" />
-        <AndroidResource Include="Resources\xml\provider_paths.xml" />
-        <PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="Xamarin.Android.Support.Design" Version="28.0.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
-        <PackageReference Include="System.Threading.Channels" Version="6.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
-        <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
-        <PackageReference Include="Serilog.Sinks.Xamarin" Version="0.2.0.64" />
-        <PackageReference Include="Octodiff" Version="1.2.36" />
-    </ItemGroup>
     
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
+        <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
+        <PackageReference Include="Serilog.Sinks.Xamarin" Version="0.2.0.64" />
+        <PackageReference Include="Octodiff" Version="1.2.36" />
+        <PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
+        <PackageReference Include="Serilog" Version="2.10.0" />
+        <PackageReference Include="Xamarin.AndroidX.Core" Version="1.6.0.3" />
+        
         <ProjectReference Include="../BMBF.Patching/BMBF.Patching.csproj" />
         <ProjectReference Include="../BMBF.Resources/BMBF.Resources.csproj" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <Folder Include="Assets\core_mods" />
-      <Folder Include="Assets\wwwroot" />
-      <Folder Include="Assets\patching" />
-    </ItemGroup>
-    <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

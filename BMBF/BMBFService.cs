@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.OS;
-using Android.Support.V4.App;
 using Java.Lang;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -105,7 +104,7 @@ namespace BMBF
             
             return WebHost.CreateDefaultBuilder()
                 .UseStartup<Startup>()
-                .ConfigureAppConfiguration((ctx, configBuilder) =>
+                .ConfigureAppConfiguration((_, configBuilder) =>
                 {
                     configBuilder.AddJsonFile(fileProvider, "appsettings.json", false, false);
                 })
@@ -138,10 +137,9 @@ namespace BMBF
             var pendingIntent = PendingIntent.GetActivity(this, 0, notificationIntent, 0)!;
 
             // Add a notification to prevent our service from getting killed
-            var notification = new NotificationCompat.Builder(this, "BMBF")
+            var notification = new Notification.Builder(this, "BMBF")
                 .SetContentTitle("BMBF Background Service")
                 .SetContentText("BMBF is running in the background")
-                .SetPriority(NotificationCompat.PriorityLow)
                 .SetContentIntent(pendingIntent)
                 .Build();
             StartForeground(1, notification);

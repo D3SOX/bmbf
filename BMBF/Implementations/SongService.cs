@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Android.OS;
-using BMBF.Extensions;
 using BMBF.Models;
 using BMBF.Services;
 using BMBF.Util;
@@ -47,7 +46,7 @@ namespace BMBF.Implementations
 
         private readonly SemaphoreSlim _cacheUpdateLock = new SemaphoreSlim(1);
 
-        public SongService(BMBFSettings bmbfSettings) : base(bmbfSettings.SongsPath, FileObserverEvents.Create | FileObserverEvents.Delete)
+        public SongService(BMBFSettings bmbfSettings) : base(new Java.IO.File(bmbfSettings.SongsPath), FileObserverEvents.Create | FileObserverEvents.Delete)
         {
             _songsPath = bmbfSettings.SongsPath;
             _cachePath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.SongsCacheName);

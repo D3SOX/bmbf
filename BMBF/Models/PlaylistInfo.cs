@@ -1,5 +1,4 @@
-﻿
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace BMBF.Models
 {
@@ -21,7 +20,7 @@ namespace BMBF.Models
         [JsonConstructor]
         public PlaylistInfo(string id, string playlistTitle, string playlistAuthor, string playlistDescription)
         {
-            Id = Id;
+            Id = id;
             PlaylistTitle = playlistTitle;
             PlaylistAuthor = playlistTitle;
             PlaylistDescription = playlistTitle;

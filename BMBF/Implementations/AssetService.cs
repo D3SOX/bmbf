@@ -133,8 +133,8 @@ namespace BMBF.Implementations
 
         private (Stream modloader, Stream main, Version version) OpenBuiltInModloader(bool is64Bit)
         {
-            var modloaderPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmodloader64.so" : "libmodloader32.so");
-            var mainPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmain64.so" : "libmain32.so");
+            var modloaderPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmodloader64" : "libmodloader32");
+            var mainPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmain64" : "libmain32");
             return (OpenAsset(modloaderPath), OpenAsset(mainPath), Version.Parse(_builtInAssets.ModLoaderVersion));
         }
 
@@ -171,7 +171,7 @@ namespace BMBF.Implementations
             if (beatSaberVersion == _builtInAssets.BeatSaberVersion)
             {
                 Log.Information($"Using built-in libunity.so for Beat Saber v{beatSaberVersion}");
-                return OpenAsset(Path.Combine(PatchingAssetsPath, "libunity.so"));
+                return OpenAsset(Path.Combine(PatchingAssetsPath, "libunity"));
             }
 
             var unityIndex = await DownloadJson<UnityIndex>(_resourceUris.LibUnityIndex);
