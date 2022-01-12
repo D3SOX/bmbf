@@ -1,28 +1,27 @@
 ﻿using BMBF.Patching;
 using Newtonsoft.Json;
 
-namespace BMBF.Models
+namespace BMBF.Models;
+
+/// <summary>
+/// Stores information about the current beat saber installation
+/// </summary>
+public class InstallationInfo
 {
-    /// <summary>
-    /// Stores information about the current beat saber installation
-    /// </summary>
-    public class InstallationInfo
+    public string Version { get; set; }
+        
+    public int VersionCode { get; set; }
+        
+    public PatchManifest? ModTag { get; set; }
+        
+    [JsonIgnore]
+    public string ApkPath { get; set; }
+        
+    public InstallationInfo(string version, int versionCode, PatchManifest? modTag, string apkPath)
     {
-        public string Version { get; set; }
-        
-        public int VersionCode { get; set; }
-        
-        public PatchManifest? ModTag { get; set; }
-        
-        [JsonIgnore]
-        public string ApkPath { get; set; }
-        
-        public InstallationInfo(string version, int versionCode, PatchManifest? modTag, string apkPath)
-        {
-            Version = version;
-            VersionCode = versionCode;
-            ModTag = modTag;
-            ApkPath = apkPath;
-        }
+        Version = version;
+        VersionCode = versionCode;
+        ModTag = modTag;
+        ApkPath = apkPath;
     }
 }

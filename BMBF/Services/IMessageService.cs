@@ -1,13 +1,12 @@
-﻿namespace BMBF.Services
+﻿namespace BMBF.Services;
+
+/// <summary>
+/// Manages creating and sending messages to the frontend for live updates.
+/// </summary>
+public interface IMessageService
 {
     /// <summary>
-    /// Manages creating and sending messages to the frontend for live updates.
+    /// Invoked whenever a message needs to be sent to the frontend
     /// </summary>
-    public interface IMessageService
-    {
-        /// <summary>
-        /// Invoked whenever a message needs to be sent to the frontend
-        /// </summary>
-        event MessageEventHandler MessageSend;
-    }
+    event MessageEventHandler MessageSend;
 }

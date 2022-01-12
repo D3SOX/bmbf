@@ -6,70 +6,69 @@ using System.Net.Http;
 using System.Threading;
 using SemanticVersioning;
 
-namespace BMBF.Services
+namespace BMBF.Services;
+
+/// <summary>
+/// Manages resource files that BMBF needs
+/// </summary>
+public interface IAssetService
 {
     /// <summary>
-    /// Manages resource files that BMBF needs
+    /// Gets the Beat Saber version that the built-in libunity.so and core mods are for.
+    /// Null if versioned-specific assets are not included with BMBF
     /// </summary>
-    public interface IAssetService
-    {
-        /// <summary>
-        /// Gets the Beat Saber version that the built-in libunity.so and core mods are for.
-        /// Null if versioned-specific assets are not included with BMBF
-        /// </summary>
-        string? BuiltInAssetsVersion { get; }
+    string? BuiltInAssetsVersion { get; }
 
-        /// <summary>
-        /// Gets the core mods that are currently available.
-        /// </summary>
-        /// <param name="refresh">Whether or not to redownload the core mods index if it has been fetched already</param>
-        /// <returns>The available core mods for different Beat Saber versions. This will be empty if no built-in core mods are available and internet is unavailable</returns>
-        Task<Dictionary<string, CoreMods>> GetCoreMods(bool refresh = false);
+    /// <summary>
+    /// Gets the core mods that are currently available.
+    /// </summary>
+    /// <param name="refresh">Whether or not to redownload the core mods index if it has been fetched already</param>
+    /// <returns>The available core mods for different Beat Saber versions. This will be empty if no built-in core mods are available and internet is unavailable</returns>
+    Task<Dictionary<string, CoreMods>> GetCoreMods(bool refresh = false);
 
-        /// <summary>
-        /// Extracts the given core mod to the given path.
-        /// This may download the core mod if it is not builtin
-        /// </summary>
-        /// <param name="coreMod">Core mod to download</param>
-        /// <param name="path">Path to extract or download the core mod to</param>
-        Task ExtractOrDownloadCoreMod(CoreMod coreMod, string path);
+    /// <summary>
+    /// Extracts the given core mod to the given path.
+    /// This may download the core mod if it is not builtin
+    /// </summary>
+    /// <param name="coreMod">Core mod to download</param>
+    /// <param name="path">Path to extract or download the core mod to</param>
+    Task ExtractOrDownloadCoreMod(CoreMod coreMod, string path);
 
-        /// <summary>
-        /// Downloads the given diff and returns a stream to read it
-        /// </summary>
-        /// <param name="diffInfo">The diff to download</param>
-        /// <param name="ct">Token to cancel the diff download</param>
-        Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct);
+    /// <summary>
+    /// Downloads the given diff and returns a stream to read it
+    /// </summary>
+    /// <param name="diffInfo">The diff to download</param>
+    /// <param name="ct">Token to cancel the diff download</param>
+    Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct);
 
-        /// <summary>
-        /// Gets an index of diffs for downgrading
-        /// </summary>
-        /// <param name="refresh">Whether or not to redownload the diff index if it has already been fetched</param>
-        /// <exception cref="HttpRequestException">If the diffs can not be fetched, for example due to lack of internet</exception>
-        /// <returns></returns>
-        Task<List<DiffInfo>> GetDiffs(bool refresh = false);
+    /// <summary>
+    /// Gets an index of diffs for downgrading
+    /// </summary>
+    /// <param name="refresh">Whether or not to redownload the diff index if it has already been fetched</param>
+    /// <exception cref="HttpRequestException">If the diffs can not be fetched, for example due to lack of internet</exception>
+    /// <returns></returns>
+    Task<List<DiffInfo>> GetDiffs(bool refresh = false);
         
-        /// <summary>
-        /// Gets streams of libmain.so and libmodloader.so, and the version of the modloader that they represent.
-        /// Will use the inbuilt modloader if no internet is available, or if the modloader in BMBF resources
-        /// is the same version as the inbuilt modloader
-        ///
-        /// Otherwise, the modloader will be downloaded
-        /// </summary>
-        /// <param name="is64Bit">Whether or not to use the 64 bit modloader</param>
-        /// <param name="ct">Token to cancel the modloader download</param>
-        Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct);
+    /// <summary>
+    /// Gets streams of libmain.so and libmodloader.so, and the version of the modloader that they represent.
+    /// Will use the inbuilt modloader if no internet is available, or if the modloader in BMBF resources
+    /// is the same version as the inbuilt modloader
+    ///
+    /// Otherwise, the modloader will be downloaded
+    /// </summary>
+    /// <param name="is64Bit">Whether or not to use the 64 bit modloader</param>
+    /// <param name="ct">Token to cancel the modloader download</param>
+    Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct);
 
-        /// <summary>
-        /// Gets a stream to read the unstripped libunity.so for the given Beat Saber version
-        /// <param name="ct">Token to cancel the libunity.so download</param>
-        /// </summary>
-        Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct);
+    /// <summary>
+    /// Gets a stream to read the unstripped libunity.so for the given Beat Saber version
+    /// <param name="ct">Token to cancel the libunity.so download</param>
+    /// </summary>
+    Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct);
 
-        /// <summary>
-        /// Gets or uses the inbuilt file copy extensions
-        /// </summary>
-        /// <returns>The inbuilt or downloaded file copy extensions</returns>
-        Task<FileExtensions> GetExtensions();
-    }
+    /// <summary>
+    /// Gets or uses the inbuilt file copy extensions
+    /// </summary>
+    /// <returns>The inbuilt or downloaded file copy extensions</returns>
+    Task<FileExtensions> GetExtensions();
 }

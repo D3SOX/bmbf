@@ -1,11 +1,11 @@
-﻿namespace BMBF.Util
+﻿namespace BMBF.Util;
+
+/// <summary>
+/// Contains certificates for use during patching
+/// </summary>
+public class CertificateProvider
 {
-    /// <summary>
-    /// Contains certificates for use during patching
-    /// </summary>
-    public class CertificateProvider
-    {
-        public static string DebugCertificate => @"-----BEGIN CERTIFICATE-----
+    public static string DebugCertificate => @"-----BEGIN CERTIFICATE-----
 MIICpjCCAY6gAwIBAgIIChLGAf39tnAwDQYJKoZIhvcNAQELBQAwEjEQMA4GA1UE
 AwwHVW5rbm93bjAgFw0xMjAxMDEwMDAwMDBaGA8yMDcyMDEwMTAwMDAwMFowEjEQ
 MA4GA1UEAwwHVW5rbm93bjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
@@ -49,5 +49,4 @@ LJ15AoGBANv9CfyGqkdiJIsFxK9PfQSGdHSdzUti3480pq1f02FwA67axXUvGKgH
 vp5uNRQw4CO8OqM6mXwp199M1d2F/WLfTsBgPc00zk4pFPLMenHvL87KWD7vP6HI
 l09ueZcDYSBwLqqzE0QPU3lUQfhVAbGzAHcIMyjaUoJbrMZp6OM7
 -----END RSA PRIVATE KEY-----";
-    }
 }

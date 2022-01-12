@@ -3,14 +3,13 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace BMBF.Util.Song
-{
-    public class DifficultyBeatmapSet
-    {
-        [JsonProperty("_difficultyBeatmaps")]
-        public List<DifficultyBeatmap> DifficultyBeatmaps { get; private set; } = new List<DifficultyBeatmap>();
+namespace BMBF.Util.Song;
 
-        [JsonProperty("_beatmapCharacteristicName")]
-        public string BeatmapCharacteristicName { get; set; }
-    }
+public class DifficultyBeatmapSet
+{
+    [JsonProperty("_difficultyBeatmaps")]
+    public List<DifficultyBeatmap> DifficultyBeatmaps { get; private set; } = new List<DifficultyBeatmap>();
+
+    [JsonProperty("_beatmapCharacteristicName")]
+    public string BeatmapCharacteristicName { get; set; }
 }

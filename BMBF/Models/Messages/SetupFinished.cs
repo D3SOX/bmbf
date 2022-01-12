@@ -1,7 +1,6 @@
-﻿namespace BMBF.Models.Messages
+﻿namespace BMBF.Models.Messages;
+
+public class SetupFinished : IMessage
 {
-    public class SetupFinished : IMessage
-    {
-        public MessageType Type => MessageType.SetupFinished;
-    }
+    public MessageType Type => MessageType.SetupFinished;
 }

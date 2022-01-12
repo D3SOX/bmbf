@@ -1,17 +1,16 @@
-﻿namespace BMBF.Models
+﻿namespace BMBF.Models;
+
+public enum MessageType
 {
-    public enum MessageType
-    {
-        SongAdded,
-        SongRemoved,
+    SongAdded,
+    SongRemoved,
         
-        PlaylistUpdated,
-        PlaylistAdded,
-        PlaylistRemoved,
+    PlaylistUpdated,
+    PlaylistAdded,
+    PlaylistRemoved,
         
-        SetupFinished,
-        SetupStatusUpdate,
+    SetupFinished,
+    SetupStatusUpdate,
         
-        InstallationUpdated
-    }
+    InstallationUpdated
 }
