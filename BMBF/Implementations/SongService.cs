@@ -6,7 +6,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Android.OS;
 using BMBF.Models;
 using BMBF.Services;
 using BMBF.Util;
@@ -19,7 +18,7 @@ namespace BMBF.Implementations;
 /// <summary>
 /// Manages the BMBF song cache
 /// </summary>
-public class SongService : FileObserver, IDisposable, ISongService
+public class SongService : IDisposable, ISongService
 {
     /// <summary>
     /// Time between a song directory being created and attempting to load that directory as a song, in milliseconds.
@@ -36,17 +35,18 @@ public class SongService : FileObserver, IDisposable, ISongService
     private readonly bool _automaticUpdates;
     private bool _disposed;
         
-    private readonly JsonSerializer _jsonSerializer = new JsonSerializer
+    private readonly JsonSerializer _jsonSerializer = new()
     {
         NullValueHandling = NullValueHandling.Ignore
     };
+    private readonly FileSystemWatcher _fileSystemWatcher = new();
 
     public event EventHandler<Song>? SongAdded; 
     public event EventHandler<Song>? SongRemoved;
 
-    private readonly SemaphoreSlim _cacheUpdateLock = new SemaphoreSlim(1);
+    private readonly SemaphoreSlim _cacheUpdateLock = new(1);
 
-    public SongService(BMBFSettings bmbfSettings) : base(new Java.IO.File(bmbfSettings.SongsPath), FileObserverEvents.Create | FileObserverEvents.Delete)
+    public SongService(BMBFSettings bmbfSettings)
     {
         _songsPath = bmbfSettings.SongsPath;
         _cachePath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.SongsCacheName);
@@ -191,6 +191,15 @@ public class SongService : FileObserver, IDisposable, ISongService
         }
     }
 
+    private void StartWatching()
+    {
+        _fileSystemWatcher.Path = _songsPath;
+        _fileSystemWatcher.NotifyFilter = NotifyFilters.DirectoryName;
+        _fileSystemWatcher.Deleted += OnSongDirectoryDelete;
+        _fileSystemWatcher.Created += OnSongDirectoryCreate;
+        _fileSystemWatcher.EnableRaisingEvents = true;
+    }
+
     private SongCache? LoadCache()
     {
         using var reader = new StreamReader(_cachePath);
@@ -296,76 +305,79 @@ public class SongService : FileObserver, IDisposable, ISongService
         }
     }
 
-    public override async void OnEvent(FileObserverEvents evnt, string? name)
+    private async void OnSongDirectoryDelete(object? sender, FileSystemEventArgs args)
     {
+        if (_songs == null) return;
+        
+        await _cacheUpdateLock.WaitAsync();
         try
         {
-            if (name == null || _songs == null) { return; }
-
-            string fullPath = Path.Combine(_songsPath, name);
-            if (evnt.HasFlag(FileObserverEvents.Create) && File.GetAttributes(fullPath).HasFlag(FileAttributes.Directory))
+            Song? removed = null;
+            foreach(Song song in _songs.Values)
             {
-                // At this point, a song directory has just been created
-                // Chances are, the files of the song haven't actually been added yet
-                // We will wait for a configured period of time before attempting to load as a song
-                // TODO: A better check for this. Wait until no activity in the directory for a certain period of time
-                await Task.Delay(SongLoadDelay);
-
-                await _cacheUpdateLock.WaitAsync();
-                try
+                if (song.Path == args.FullPath)
                 {
-                    await ProcessNewSongAsync(fullPath, _songs, true);
-                }
-                finally
-                {
-                    _cacheUpdateLock.Release();
+                    Log.Information($"Song {song.SongName} (Hash: {song.Hash}) was deleted");
+                    removed = song;
                 }
             }
-            if (evnt.HasFlag(FileObserverEvents.Delete))
-            {
-                try
-                {
-                    Song? removed = null;
-                    foreach(Song song in _songs.Values)
-                    {
-                        if (song.Path == fullPath)
-                        {
-                            Log.Information($"Song {song.SongName} (Hash: {song.Hash}) was deleted");
-                            removed = song;
-                        }
-                    }
 
-                    if (removed != null)
-                    {
-                        _songs.Remove(removed.Hash, out _);
-                        SongRemoved?.Invoke(this, removed);
-                    }
-                }
-                finally
-                {
-                    _cacheUpdateLock.Release();
-                }
+            if (removed != null)
+            {
+                _songs.Remove(removed.Hash, out _);
+                SongRemoved?.Invoke(this, removed);
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to process song cache update");
+            Log.Error(ex, $"Failed to process song directory delete ({args.FullPath})");
+        }
+        finally
+        {
+            _cacheUpdateLock.Release();
         }
     }
 
-    public new void Dispose()
+    private async void OnSongDirectoryCreate(object? sender, FileSystemEventArgs args)
+    {
+        if (_songs == null) return;
+        
+        // Wait some time for the song to be fully copied into the folder
+        // TODO: This wait time may be insufficient in some circumstances, we should wait until there is no activity
+        // in the directory for a certain period of time
+        await Task.Delay(SongLoadDelay);
+        
+        await _cacheUpdateLock.WaitAsync();
+        try
+        {
+            await ProcessNewSongAsync(args.FullPath, _songs, true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Failed to process song directory create ({args.FullPath})");
+        }
+        finally
+        {
+            _cacheUpdateLock.Release();
+        }
+    }
+
+    public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
             
         _cacheUpdateLock.Dispose();
-            
-        base.Dispose();
+        _fileSystemWatcher.Dispose();
+        
         // Save the cache
         if (_songs != null)
         {
             try
             {
+                var cacheDirectory = Path.GetDirectoryName(_cachePath);
+                if (cacheDirectory != null) Directory.CreateDirectory(cacheDirectory);
+                
                 using var writer = new StreamWriter(_cachePath);
                 using var jsonWriter = new JsonTextWriter(writer);
                 _jsonSerializer.Serialize(jsonWriter, _songs);
