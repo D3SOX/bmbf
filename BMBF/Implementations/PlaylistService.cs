@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Android.OS;
 using BMBF.Models;
 using BMBF.Services;
 using Newtonsoft.Json;
@@ -14,14 +13,14 @@ using PlaylistCache = System.Collections.Concurrent.ConcurrentDictionary<string,
 
 namespace BMBF.Implementations;
 
-public class PlaylistService : FileObserver, IPlaylistService, IDisposable
+public class PlaylistService : IPlaylistService, IDisposable
 {
     public event EventHandler<Playlist>? PlaylistAdded;
     public event EventHandler<Playlist>? PlaylistDeleted;
 
     private PlaylistCache? _cache;
-    private readonly SemaphoreSlim _cacheUpdateLock = new SemaphoreSlim(1);
-    private readonly JsonSerializer _serializer = new JsonSerializer
+    private readonly SemaphoreSlim _cacheUpdateLock = new(1);
+    private readonly JsonSerializer _serializer = new()
     {
         ContractResolver = new CamelCasePropertyNamesContractResolver()
     };
@@ -29,9 +28,11 @@ public class PlaylistService : FileObserver, IPlaylistService, IDisposable
     private readonly string _playlistsPath;
     private readonly bool _automaticUpdates;
 
+    private readonly FileSystemWatcher _fileSystemWatcher = new();
+
     private bool _disposed;
         
-    public PlaylistService(BMBFSettings settings) : base(new Java.IO.File(settings.PlaylistsPath), FileObserverEvents.CloseWrite | FileObserverEvents.Delete)
+    public PlaylistService(BMBFSettings settings)
     {
         _playlistsPath = settings.PlaylistsPath;
         _automaticUpdates = settings.UpdateCacheAutomatically;
@@ -182,6 +183,16 @@ public class PlaylistService : FileObserver, IPlaylistService, IDisposable
 
         return _cache;
     }
+    
+    private void StartWatching()
+    {
+        _fileSystemWatcher.Path = _playlistsPath;
+        _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+        _fileSystemWatcher.Filter = "*.*";
+        _fileSystemWatcher.Deleted += OnPlaylistFileDeleted;
+        _fileSystemWatcher.Changed += OnPlaylistFileChanged;
+        _fileSystemWatcher.EnableRaisingEvents = true;
+    }
 
     private async Task UpdateCacheAsync(PlaylistCache cache, bool notify)
     {
@@ -204,20 +215,23 @@ public class PlaylistService : FileObserver, IPlaylistService, IDisposable
         }
     }
 
-    private async Task ProcessNewPlaylistAsync(string path, PlaylistCache cache, bool notify)
+    private async Task ProcessNewPlaylistAsync(string path, PlaylistCache cache, bool notify, bool logFailToRead = true)
     {
         try
-        { 
+        {
             var existing = cache.FirstOrDefault(p => p.Value.LoadedFrom == path).Value;
             // We can skip loading if:
             // - The existing playlist is pending save - changes made in BMBF are prioritised over those on disk
             // - The playlist file was modified at the same time (or further before) the playlist was loaded
-            if(existing != null && (existing.IsPendingSave || File.GetLastWriteTimeUtc(path) <= existing.LastLoadTime))
+            if (existing != null && (existing.IsPendingSave || File.GetLastWriteTimeUtc(path) <= existing.LastLoadTime))
             {
                 return;
             }
-                
-            using var streamReader = new StreamReader(path);
+
+            // FileShare.Read is used here, since we don't want to attempt to open a playlist while it is still being written
+            await using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            using var streamReader = new StreamReader(fileStream);
             using var jsonReader = new JsonTextReader(streamReader);
             // No async with newtonsoft :/
             var playlist = await Task.Run(() => _serializer.Deserialize<Playlist>(jsonReader));
@@ -226,10 +240,11 @@ public class PlaylistService : FileObserver, IPlaylistService, IDisposable
                 Log.Warning($"Deserialized playlist from {path} was null");
                 return;
             }
+
             playlist.LoadedFrom = path;
             playlist.LastLoadTime = DateTime.UtcNow;
             playlist.IsPendingSave = false;
-                
+
             // TODO: What to do with BPSongs that don't exist in the song cache?
 
             // If a playlist with this path already exists, we need to copy over the new values
@@ -254,66 +269,79 @@ public class PlaylistService : FileObserver, IPlaylistService, IDisposable
                 }
             }
         }
+        catch (IOException)
+        {
+            if (logFailToRead)
+            {
+                Log.Warning($"Failed to read playlist from {path} due to an IO error");
+            }
+        }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to load playlist {Path.GetFileName(path)}");
+            Log.Error(ex, $"Failed to load playlist {path}");
         }
     }
 
-    public override async void OnEvent(FileObserverEvents evnt, string? name)
+    private async void OnPlaylistFileChanged(object? sender, FileSystemEventArgs args)
     {
+        if (_cache == null) { return; }
+
+        await _cacheUpdateLock.WaitAsync();
         try
         {
-            if (name == null || _cache == null) { return; }
+            // Skip, playlist file was deleted while waiting for the lock
+            if (!File.Exists(args.FullPath)) return;
+            
+            // Make sure to NOT log failing to read the file
+            // This is because the Changed event may be fired when the file hasn't yet finished being written to, thus
+            // yielding an IOException since the file is already in use
+            await ProcessNewPlaylistAsync(args.FullPath, _cache, true, false);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Failed to load playlist {args.Name}");
+        }
+        finally
+        {
+            _cacheUpdateLock.Release();
+        }
+    }
 
-            string fullPath = Path.Combine(_playlistsPath, name);
-            if (evnt.HasFlag(FileObserverEvents.Delete))
-            {
-                await _cacheUpdateLock.WaitAsync();
-                try
-                {
-                    var matching = _cache.FirstOrDefault(pair => pair.Value.LoadedFrom == fullPath);
-                    if (matching.Key != null)
-                    {
-                        _cache.TryRemove(matching.Key, out _);
-                        Log.Information($"Playlist {fullPath} deleted");
-                        PlaylistDeleted?.Invoke(this, matching.Value);
-                    }
-                }
-                finally
-                {
-                    _cacheUpdateLock.Release();
-                }
-            }
+    private async void OnPlaylistFileDeleted(object? sender, FileSystemEventArgs args)
+    {
+        if (_cache == null) { return; }
 
-            // If a playlist file has just been closed for writing, then we need to add it (if new), or process any changes and fire events accordingly
-            if (evnt.HasFlag(FileObserverEvents.CloseWrite) && !File.GetAttributes(fullPath).HasFlag(FileAttributes.Directory))
+        await _cacheUpdateLock.WaitAsync();
+        try
+        {
+            // Skip, file was recreated while waiting for the lock
+            if (File.Exists(args.FullPath)) return;
+            
+            var matching = _cache.FirstOrDefault(pair => pair.Value.LoadedFrom == args.FullPath);
+            if (matching.Key != null)
             {
-                await _cacheUpdateLock.WaitAsync();
-                try
-                {
-                    await ProcessNewPlaylistAsync(fullPath, _cache, true);
-                }
-                finally
-                {
-                    _cacheUpdateLock.Release();
-                }
+                _cache.TryRemove(matching.Key, out _);
+                Log.Information($"Playlist {args.FullPath} deleted");
+                PlaylistDeleted?.Invoke(this, matching.Value);
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to process playlist cache update");
+            Log.Error(ex, $"Failed to process playlist file delete ({args.FullPath})");
+        }
+        finally
+        {
+            _cacheUpdateLock.Release();
         }
     }
-
-    public new void Dispose()
+    public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
             
-        base.Dispose();
         SavePlaylistsAsync().Wait();
 
         _cacheUpdateLock.Dispose();
+        _fileSystemWatcher.Dispose();
     }
 }
