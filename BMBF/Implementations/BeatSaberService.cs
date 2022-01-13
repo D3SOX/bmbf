@@ -26,7 +26,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
     public event EventHandler<InstallationInfo?>? AppChanged;
 
     private InstallationInfo? _installationInfo;
-    private readonly SemaphoreSlim _appInfoLoadLock = new SemaphoreSlim(1);
+    private readonly SemaphoreSlim _appInfoLoadLock = new(1);
     private bool _disposed;
         
     public BeatSaberService(Service bmbfService, BMBFSettings bmbfSettings, TagManager tagManager)
@@ -40,6 +40,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.AddAction(Intent.ActionPackageAdded);
         intentFilter.AddAction(Intent.ActionPackageRemoved);
+        intentFilter.AddAction(Intent.ActionPackageReplaced);
         intentFilter.AddDataScheme("package");
         _bmbfService.RegisterReceiver(this, intentFilter);
     }
@@ -66,7 +67,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
         
     private async Task<InstallationInfo?> LoadInstallationInfoAsync()
     {
-        var packageInfo = _packageManager.GetInstalledPackages(0)?.FirstOrDefault(package => package.PackageName == _packageId);
+        var packageInfo = _packageManager.GetInstalledPackages(0).FirstOrDefault(package => package.PackageName == _packageId);
 
         if (packageInfo == null)
         {
@@ -113,7 +114,12 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
             if (context == null || intent == null)  { return; }
             string? packageId = intent.Data?.EncodedSchemeSpecificPart;
             if (packageId != _packageId) { return; }
-                
+
+            if (intent.Action == Intent.ActionPackageReplaced)
+            {
+                Log.Information($"{_packageId} replaced");
+            }
+            
             if (intent.Action == Intent.ActionPackageAdded)
             {
                 Log.Information($"{_packageId} installed");
