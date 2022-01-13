@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.OS;
+using BMBF.Services;
 using Java.Lang;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -17,7 +18,7 @@ namespace BMBF;
 
 [Service(Name = "com.weareneutralaboutoculus.BMBFService", Label = "BMBFService")]
 // ReSharper disable once InconsistentNaming
-public class BMBFService : Service
+public class BMBFService : Service, IBMBFService
 {
     public static string? RunningUrl { get; private set; }
         
@@ -116,6 +117,7 @@ public class BMBFService : Service
             {
                 services.AddSingleton(Assets);
                 services.AddSingleton<Service>(this);
+                services.AddSingleton<IBMBFService>(this);
             })
             .UseUrls(Constants.BindAddress)
             .UseSerilog()
@@ -154,5 +156,22 @@ public class BMBFService : Service
             return StartCommandResult.NotSticky;
         }
         return StartCommandResult.Sticky;
+    }
+
+    public void Restart()
+    {
+        // Tell frontend to restart BMBFService
+        Intent intent = new Intent(BMBFIntents.Restart);
+        SendBroadcast(intent);
+    }
+
+    public void Quit()
+    {
+        // Tell frontend to quit too
+        Intent intent = new Intent(BMBFIntents.Quit);
+        SendBroadcast(intent);
+            
+        // Actually stop BMBFService
+        StopSelf();
     }
 }

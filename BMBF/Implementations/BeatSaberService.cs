@@ -22,7 +22,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
     private readonly PackageManager _packageManager;
     private readonly string _packageId;
     private readonly TagManager _tagManager;
-        
+
     public event EventHandler<InstallationInfo?>? AppChanged;
 
     private InstallationInfo? _installationInfo;
@@ -63,8 +63,21 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
         }
         return _installationInfo;
     }
-        
-        
+
+    public void TriggerInstall(string apkPath)
+    {
+        Intent intent = new Intent(BMBFIntents.TriggerPackageInstall);
+        intent.PutExtra("ApkPath", apkPath);
+        _bmbfService.SendBroadcast(intent);
+    }
+
+    public void TriggerUninstall()
+    {
+        Intent intent = new Intent(BMBFIntents.TriggerPackageUninstall);
+        intent.PutExtra("PackageId", _packageId);
+        _bmbfService.SendBroadcast(intent);
+    }
+    
     private async Task<InstallationInfo?> LoadInstallationInfoAsync()
     {
         var packageInfo = _packageManager.GetInstalledPackages(0).FirstOrDefault(package => package.PackageName == _packageId);

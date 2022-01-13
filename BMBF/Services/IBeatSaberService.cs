@@ -16,6 +16,17 @@ public interface IBeatSaberService
     Task<InstallationInfo?> GetInstallationInfoAsync();
 
     /// <summary>
+    /// Prompts the user to install Beat Saber from the given APK
+    /// </summary>
+    /// <param name="apkPath">Path to the Beat Saber APK to install</param>
+    void TriggerInstall(string apkPath);
+
+    /// <summary>
+    /// Prompts the user to uninstall Beat Saber
+    /// </summary>
+    void TriggerUninstall();
+
+    /// <summary>
     /// Called whenever Beat Saber is uninstalled or installed
     /// </summary>
     event EventHandler<InstallationInfo?> AppChanged;

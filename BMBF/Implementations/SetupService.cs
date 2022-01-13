@@ -4,8 +4,6 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Android.App;
-using Android.Content;
 using BMBF.Extensions;
 using BMBF.Models;
 using BMBF.Models.Setup;
@@ -42,7 +40,6 @@ public class SetupService : ISetupService, IDisposable
     private readonly string _latestCompleteApkPath; // Stores the APK of the last completed stage
     private readonly string _tempApkPath; // Stores the APK of the currently executing stage
     private readonly string _backupPath; // Beat Saber data backup used during uninstall and reinstall
-    private readonly Context _context;
     private readonly string _packageId;
     private readonly ILogger _logger;
 
@@ -56,18 +53,17 @@ public class SetupService : ISetupService, IDisposable
         "LocalDailyLeaderboards.dat"
     };
 
-    private CancellationTokenSource _cts = new CancellationTokenSource();
+    private CancellationTokenSource _cts = new();
 
     private bool _disposed;
 
-    private readonly SemaphoreSlim _stageBeginLock = new SemaphoreSlim(1);
+    private readonly SemaphoreSlim _stageBeginLock = new(1);
 
-    public SetupService(IBeatSaberService beatSaberService, IAssetService assetService, TagManager tagManager, BMBFSettings settings, Service service)
+    public SetupService(IBeatSaberService beatSaberService, IAssetService assetService, TagManager tagManager, BMBFSettings settings)
     {
         _beatSaberService = beatSaberService;
         _assetService = assetService;
         _tagManager = tagManager;
-        _context = service;
         _setupDirName = Path.Combine(settings.RootDataPath, settings.PatchingFolderName);
         _statusFile = Path.Combine(_setupDirName, "status.json");
         _latestCompleteApkPath = Path.Combine(_setupDirName, "PostCurrentStage.apk");
@@ -443,9 +439,7 @@ public class SetupService : ISetupService, IDisposable
                 }
             }
                 
-            Intent intent = new Intent(BMBFIntents.TriggerPackageUninstall);
-            intent.PutExtra("PackageId", _packageId);
-            _context.SendBroadcast(intent);
+            _beatSaberService.TriggerUninstall();
         }
         finally
         {
@@ -458,9 +452,7 @@ public class SetupService : ISetupService, IDisposable
         await BeginSetupStage(SetupStage.InstallingModded);
         try
         {
-            Intent intent = new Intent(BMBFIntents.TriggerPackageInstall);
-            intent.PutExtra("ApkPath", _latestCompleteApkPath);
-            _context.SendBroadcast(intent);
+            _beatSaberService.TriggerInstall(_latestCompleteApkPath);
         }
         finally
         {
