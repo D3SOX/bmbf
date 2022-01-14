@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Models;
 using BMBF.Services;
+using BMBF.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
@@ -29,13 +30,16 @@ public class PlaylistService : IPlaylistService, IDisposable
     private readonly bool _automaticUpdates;
 
     private readonly FileSystemWatcher _fileSystemWatcher = new();
+    private readonly Debouncey _autoUpdateDebouncey;
 
     private bool _disposed;
         
     public PlaylistService(BMBFSettings settings)
     {
         _playlistsPath = settings.PlaylistsPath;
-        _automaticUpdates = settings.UpdateCacheAutomatically;
+        _automaticUpdates = settings.UpdateCachesAutomatically;
+        _autoUpdateDebouncey = new Debouncey(settings.PlaylistFolderDebounceDelay);
+        _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
     }
 
     public async Task<string> AddPlaylistAsync(Playlist playlist)
@@ -223,7 +227,8 @@ public class PlaylistService : IPlaylistService, IDisposable
             // We can skip loading if:
             // - The existing playlist is pending save - changes made in BMBF are prioritised over those on disk
             // - The playlist file was modified at the same time (or further before) the playlist was loaded
-            if (existing != null && (existing.IsPendingSave || File.GetLastWriteTimeUtc(path) <= existing.LastLoadTime))
+            var lastWriteTime = File.GetLastWriteTimeUtc(path);
+            if (existing != null && (existing.IsPendingSave || lastWriteTime <= existing.LastLoadTime))
             {
                 return;
             }
@@ -242,7 +247,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             }
 
             playlist.LoadedFrom = path;
-            playlist.LastLoadTime = DateTime.UtcNow;
+            playlist.LastLoadTime = lastWriteTime;
             playlist.IsPendingSave = false;
 
             // TODO: What to do with BPSongs that don't exist in the song cache?
@@ -250,10 +255,8 @@ public class PlaylistService : IPlaylistService, IDisposable
             // If a playlist with this path already exists, we need to copy over the new values
             if (existing != null)
             {
-                existing.PlaylistTitle = playlist.PlaylistTitle;
+                existing.SetPlaylistInfo(new PlaylistInfo(playlist));
                 existing.Image = playlist.Image;
-                existing.PlaylistDescription = playlist.PlaylistDescription;
-                existing.PlaylistAuthor = playlist.PlaylistAuthor;
                 existing.Songs = playlist.Songs;
                 existing.LastLoadTime = playlist.LastLoadTime;
                 existing.IsPendingSave = false;
@@ -281,59 +284,24 @@ public class PlaylistService : IPlaylistService, IDisposable
             Log.Error(ex, $"Failed to load playlist {path}");
         }
     }
-
-    private async void OnPlaylistFileChanged(object? sender, FileSystemEventArgs args)
+    
+    private async void AutoUpdateDebounceyTriggered(object? sender, EventArgs args)
     {
-        if (_cache == null) { return; }
-
-        await _cacheUpdateLock.WaitAsync();
         try
         {
-            // Skip, playlist file was deleted while waiting for the lock
-            if (!File.Exists(args.FullPath)) return;
-            
-            // Make sure to NOT log failing to read the file
-            // This is because the Changed event may be fired when the file hasn't yet finished being written to, thus
-            // yielding an IOException since the file is already in use
-            await ProcessNewPlaylistAsync(args.FullPath, _cache, true, false);
+            Log.Debug("Playlist update debounced");
+            await UpdatePlaylistCacheAsync();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to load playlist {args.Name}");
-        }
-        finally
-        {
-            _cacheUpdateLock.Release();
+            Log.Error(ex, "Failed to process song cache update");
         }
     }
 
-    private async void OnPlaylistFileDeleted(object? sender, FileSystemEventArgs args)
-    {
-        if (_cache == null) { return; }
+    private void OnPlaylistFileChanged(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
 
-        await _cacheUpdateLock.WaitAsync();
-        try
-        {
-            // Skip, file was recreated while waiting for the lock
-            if (File.Exists(args.FullPath)) return;
-            
-            var matching = _cache.FirstOrDefault(pair => pair.Value.LoadedFrom == args.FullPath);
-            if (matching.Key != null)
-            {
-                _cache.TryRemove(matching.Key, out _);
-                Log.Information($"Playlist {args.FullPath} deleted");
-                PlaylistDeleted?.Invoke(this, matching.Value);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"Failed to process playlist file delete ({args.FullPath})");
-        }
-        finally
-        {
-            _cacheUpdateLock.Release();
-        }
-    }
+    private void OnPlaylistFileDeleted(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
+    
     public void Dispose()
     {
         if (_disposed) return;
@@ -343,5 +311,6 @@ public class PlaylistService : IPlaylistService, IDisposable
 
         _cacheUpdateLock.Dispose();
         _fileSystemWatcher.Dispose();
+        _autoUpdateDebouncey.Dispose();
     }
 }

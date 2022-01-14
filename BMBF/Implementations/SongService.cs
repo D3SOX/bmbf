@@ -20,12 +20,6 @@ namespace BMBF.Implementations;
 /// </summary>
 public class SongService : IDisposable, ISongService
 {
-    /// <summary>
-    /// Time between a song directory being created and attempting to load that directory as a song, in milliseconds.
-    /// </summary>
-    private const int SongLoadDelay = 5000;
-        
-        
     // Keys are song hash, values song corresponding to hash
     private SongCache? _songs;
     private readonly string _songsPath;
@@ -45,6 +39,7 @@ public class SongService : IDisposable, ISongService
     public event EventHandler<Song>? SongRemoved;
 
     private readonly SemaphoreSlim _cacheUpdateLock = new(1);
+    private readonly Debouncey _autoUpdateDebouncey;
 
     public SongService(BMBFSettings bmbfSettings)
     {
@@ -52,7 +47,9 @@ public class SongService : IDisposable, ISongService
         _cachePath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.SongsCacheName);
         _deleteDuplicateSongs = bmbfSettings.DeleteDuplicateSongs;
         _deleteInvalidFolders = bmbfSettings.DeleteInvalidSongs;
-        _automaticUpdates = bmbfSettings.UpdateCacheAutomatically;
+        _automaticUpdates = bmbfSettings.UpdateCachesAutomatically;
+        _autoUpdateDebouncey = new Debouncey(bmbfSettings.SongFolderDebounceDelay);
+        _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
     }
 
     public async Task UpdateSongCacheAsync()
@@ -241,7 +238,6 @@ public class SongService : IDisposable, ISongService
         }
 
         // If the songs haven't loaded, we need to load them for the first time now
-        Log.Information($"Loading songs from {_songsPath}");
         foreach (string songPath in songsToLoad)
         {
             await ProcessNewSongAsync(songPath, songs, notify);
@@ -305,62 +301,22 @@ public class SongService : IDisposable, ISongService
         }
     }
 
-    private async void OnSongDirectoryDelete(object? sender, FileSystemEventArgs args)
+    private async void AutoUpdateDebounceyTriggered(object? sender, EventArgs args)
     {
-        if (_songs == null) return;
-        
-        await _cacheUpdateLock.WaitAsync();
         try
         {
-            Song? removed = null;
-            foreach(Song song in _songs.Values)
-            {
-                if (song.Path == args.FullPath)
-                {
-                    Log.Information($"Song {song.SongName} (Hash: {song.Hash}) was deleted");
-                    removed = song;
-                }
-            }
-
-            if (removed != null)
-            {
-                _songs.Remove(removed.Hash, out _);
-                SongRemoved?.Invoke(this, removed);
-            }
+            Log.Debug("Song update debounced");
+            await UpdateSongCacheAsync();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to process song directory delete ({args.FullPath})");
-        }
-        finally
-        {
-            _cacheUpdateLock.Release();
+            Log.Error(ex, "Failed to process song cache update");
         }
     }
 
-    private async void OnSongDirectoryCreate(object? sender, FileSystemEventArgs args)
-    {
-        if (_songs == null) return;
-        
-        // Wait some time for the song to be fully copied into the folder
-        // TODO: This wait time may be insufficient in some circumstances, we should wait until there is no activity
-        // in the directory for a certain period of time
-        await Task.Delay(SongLoadDelay);
-        
-        await _cacheUpdateLock.WaitAsync();
-        try
-        {
-            await ProcessNewSongAsync(args.FullPath, _songs, true);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"Failed to process song directory create ({args.FullPath})");
-        }
-        finally
-        {
-            _cacheUpdateLock.Release();
-        }
-    }
+    private void OnSongDirectoryDelete(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
+
+    private void OnSongDirectoryCreate(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
 
     public void Dispose()
     {
@@ -369,6 +325,7 @@ public class SongService : IDisposable, ISongService
             
         _cacheUpdateLock.Dispose();
         _fileSystemWatcher.Dispose();
+        _autoUpdateDebouncey.Dispose();
         
         // Save the cache
         if (_songs != null)

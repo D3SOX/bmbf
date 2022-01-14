@@ -27,7 +27,11 @@ public class BMBFSettings
         
     public bool DeleteInvalidMods { get; set; }
         
-    public bool UpdateCacheAutomatically { get; set; }
+    public bool UpdateCachesAutomatically { get; set; }
+    
+    public int SongFolderDebounceDelay { get; set; }
+    
+    public int PlaylistFolderDebounceDelay { get; set; }
         
     public string PatchingFolderName { get; set; }
         
