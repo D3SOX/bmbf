@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
-using BMBF.Resources;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
+using BMBF.Resources;
 using SemanticVersioning;
 
-namespace BMBF.Services;
+namespace BMBF.Backend.Services;
 
 /// <summary>
 /// Manages resource files that BMBF needs

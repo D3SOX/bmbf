@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BMBF.Models;
-using BMBF.Services;
+using BMBF.Backend.Models;
+using BMBF.Backend.Services;
 
-namespace BMBF.Implementations;
+namespace BMBF.Backend.Implementations;
 
 public class ExtensionsService : IExtensionsService
 {

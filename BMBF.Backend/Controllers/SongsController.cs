@@ -2,11 +2,11 @@
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using BMBF.Models;
-using BMBF.Services;
+using BMBF.Backend.Models;
+using BMBF.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BMBF.Controllers;
+namespace BMBF.Backend.Controllers;
 
 [Route("[controller]")]
 public class SongsController : Controller

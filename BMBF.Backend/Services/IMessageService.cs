@@ -1,4 +1,4 @@
-﻿namespace BMBF.Services;
+﻿namespace BMBF.Backend.Services;
 
 /// <summary>
 /// Manages creating and sending messages to the frontend for live updates.

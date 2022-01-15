@@ -1,4 +1,4 @@
-﻿namespace BMBF.Util;
+﻿namespace BMBF.Backend.Util;
 
 /// <summary>
 /// Contains certificates for use during patching

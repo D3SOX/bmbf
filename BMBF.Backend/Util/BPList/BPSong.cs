@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace BMBF.Util.BPList;
+namespace BMBF.Backend.Util.BPList;
 
 // ReSharper disable once InconsistentNaming
 public class BPSong

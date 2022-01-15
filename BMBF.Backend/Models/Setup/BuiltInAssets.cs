@@ -2,7 +2,7 @@
 using BMBF.Resources;
 using Newtonsoft.Json;
 
-namespace BMBF.Models.Setup;
+namespace BMBF.Backend.Models.Setup;
 
 /// <summary>
 /// Stores information about the patching assets built into BMBF

@@ -1,7 +1,8 @@
-﻿using BMBF.Configuration;
-using BMBF.Extensions;
+﻿using BMBF.Backend.Configuration;
+using BMBF.Backend.Extensions;
+using BMBF.Backend.Services;
+using BMBF.Configuration;
 using BMBF.Implementations;
-using BMBF.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;

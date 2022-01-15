@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace BMBF.Util.Song;
+namespace BMBF.Backend.Util.Song;
 
 [JsonConverter(typeof(StringEnumConverter))]
 public enum Difficulty

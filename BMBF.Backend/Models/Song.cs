@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace BMBF.Models;
+namespace BMBF.Backend.Models;
 
 /// <summary>
 /// Represents a Beat Saber song

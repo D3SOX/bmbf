@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BMBF;
+namespace BMBF.Backend;
 
 public class ImportException : Exception
 {

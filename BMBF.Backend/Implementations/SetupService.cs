@@ -4,18 +4,18 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using BMBF.Configuration;
-using BMBF.Extensions;
-using BMBF.Models;
-using BMBF.Models.Setup;
+using BMBF.Backend.Configuration;
+using BMBF.Backend.Extensions;
+using BMBF.Backend.Models;
+using BMBF.Backend.Models.Setup;
+using BMBF.Backend.Services;
+using BMBF.Backend.Util;
 using BMBF.Patching;
 using BMBF.Resources;
-using BMBF.Services;
-using BMBF.Util;
 using Octodiff.Core;
 using Serilog;
 
-namespace BMBF.Implementations;
+namespace BMBF.Backend.Implementations;
 
 /// <summary>
 /// Some notes about this implementation.

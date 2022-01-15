@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BMBF.Models;
+using BMBF.Backend.Models;
 
-namespace BMBF.Services;
+namespace BMBF.Backend.Services;
 
 /// <summary>
 /// Manages the BMBF playlist cache (in-memory only, we do not save it to disk since loading playlists is not particularly expensive)

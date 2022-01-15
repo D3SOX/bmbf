@@ -5,15 +5,15 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using BMBF.Models.Messages;
-using BMBF.Services;
+using BMBF.Backend.Models.Messages;
+using BMBF.Backend.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 
-namespace BMBF.Controllers;
+namespace BMBF.Backend.Controllers;
 
 public class WebSocketController : ControllerBase
 {

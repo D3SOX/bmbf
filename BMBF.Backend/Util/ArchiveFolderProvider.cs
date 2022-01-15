@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.IO.Compression;
 
-namespace BMBF.Util;
+namespace BMBF.Backend.Util;
 
 /// <summary>
 /// Folder provider that uses a ZipArchive

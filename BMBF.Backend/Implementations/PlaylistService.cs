@@ -4,16 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BMBF.Configuration;
-using BMBF.Models;
-using BMBF.Services;
-using BMBF.Util;
+using BMBF.Backend.Configuration;
+using BMBF.Backend.Models;
+using BMBF.Backend.Services;
+using BMBF.Backend.Util;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
-using PlaylistCache = System.Collections.Concurrent.ConcurrentDictionary<string, BMBF.Models.Playlist>;
+using PlaylistCache = System.Collections.Concurrent.ConcurrentDictionary<string, BMBF.Backend.Models.Playlist>;
 
-namespace BMBF.Implementations;
+namespace BMBF.Backend.Implementations;
 
 public class PlaylistService : IPlaylistService, IDisposable
 {

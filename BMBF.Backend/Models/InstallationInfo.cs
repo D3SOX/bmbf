@@ -1,7 +1,7 @@
 ﻿using BMBF.Patching;
 using Newtonsoft.Json;
 
-namespace BMBF.Models;
+namespace BMBF.Backend.Models;
 
 /// <summary>
 /// Stores information about the current beat saber installation

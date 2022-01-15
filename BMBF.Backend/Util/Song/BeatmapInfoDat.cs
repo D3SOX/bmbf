@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace BMBF.Util.Song;
+namespace BMBF.Backend.Util.Song;
 
 public class BeatmapInfoDat
 {

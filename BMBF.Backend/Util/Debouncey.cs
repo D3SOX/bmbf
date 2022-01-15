@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace BMBF.Util;
+namespace BMBF.Backend.Util;
 
 /// <summary>
 /// Utility class for debouncing events.

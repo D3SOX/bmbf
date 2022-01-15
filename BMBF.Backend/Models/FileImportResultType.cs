@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace BMBF.Models;
+namespace BMBF.Backend.Models;
 
 [JsonConverter(typeof(StringEnumConverter))]
 public enum FileImportResultType

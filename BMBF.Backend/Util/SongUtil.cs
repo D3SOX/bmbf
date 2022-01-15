@@ -2,11 +2,11 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using BMBF.Util.Song;
+using BMBF.Backend.Util.Song;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace BMBF.Util;
+namespace BMBF.Backend.Util;
 
 public static class SongUtil
 {
@@ -43,7 +43,7 @@ public static class SongUtil
     /// <param name="provider">Provider to load the song info from</param>
     /// <param name="name">Name to use for logging purposes</param>
     /// <returns>The loaded Song model, or null if a song could not be loaded from the path</returns>
-    public static async Task<Models.Song?> TryLoadSongInfoAsync(IFolderProvider provider, string? name = null)
+    public static async Task<Backend.Models.Song?> TryLoadSongInfoAsync(IFolderProvider provider, string? name = null)
     {
         name ??= "<unknown>";
 
@@ -87,7 +87,7 @@ public static class SongUtil
                 return null;
             }
 
-            return new Models.Song(hash, infoDat.SongName, infoDat.SongSubName, infoDat.SongAuthorName,
+            return new Backend.Models.Song(hash, infoDat.SongName, infoDat.SongSubName, infoDat.SongAuthorName,
                 infoDat.LevelAuthorName, null!, infoDat.CoverImageFilename);
         }
     }

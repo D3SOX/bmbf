@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace BMBF.Util;
+namespace BMBF.Backend.Util;
 
 /// <summary>
 /// Folder provider using an actual directory on disk

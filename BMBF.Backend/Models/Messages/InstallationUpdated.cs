@@ -1,4 +1,4 @@
-﻿namespace BMBF.Models.Messages;
+﻿namespace BMBF.Backend.Models.Messages;
 
 public class InstallationUpdated : IMessage
 {

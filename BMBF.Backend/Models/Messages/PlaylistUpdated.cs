@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
-using BMBF.Util.BPList;
+using BMBF.Backend.Util.BPList;
 
-namespace BMBF.Models.Messages;
+namespace BMBF.Backend.Models.Messages;
 
 public class PlaylistUpdated : IMessage
 {

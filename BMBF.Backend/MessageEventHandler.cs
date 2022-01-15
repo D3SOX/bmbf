@@ -1,5 +1,5 @@
-﻿using BMBF.Models.Messages;
+﻿using BMBF.Backend.Models.Messages;
 
-namespace BMBF;
+namespace BMBF.Backend;
 
 public delegate void MessageEventHandler(IMessage message);

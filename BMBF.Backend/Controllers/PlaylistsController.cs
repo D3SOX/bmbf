@@ -4,12 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using BMBF.Models;
-using BMBF.Services;
-using BMBF.Util.BPList;
+using BMBF.Backend.Models;
+using BMBF.Backend.Services;
+using BMBF.Backend.Util.BPList;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BMBF.Controllers;
+namespace BMBF.Backend.Controllers;
 
 [Route("[controller]")]
 public class PlaylistsController : Controller

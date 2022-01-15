@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace BMBF.Models;
+namespace BMBF.Backend.Models;
 
 /// <summary>
 /// Minimal format for initially sending playlists to the frontend

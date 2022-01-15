@@ -3,7 +3,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace BMBF.Extensions;
+namespace BMBF.Backend.Extensions;
 
 public static class JsonExtensions
 {

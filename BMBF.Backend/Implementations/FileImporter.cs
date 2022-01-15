@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
-using BMBF.Configuration;
-using BMBF.Extensions;
-using BMBF.Models;
-using BMBF.Services;
-using BMBF.Util.BPList;
+using BMBF.Backend.Configuration;
+using BMBF.Backend.Extensions;
+using BMBF.Backend.Models;
+using BMBF.Backend.Services;
+using BMBF.Backend.Util.BPList;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace BMBF.Implementations;
+namespace BMBF.Backend.Implementations;
 
 public class FileImporter : IFileImporter
 {

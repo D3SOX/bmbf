@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Threading.Tasks;
-using BMBF.Models;
+using BMBF.Backend.Models;
 
-namespace BMBF.Services;
+namespace BMBF.Backend.Services;
 
 /// <summary>
 /// Manages the BMBF song cache

@@ -1,6 +1,6 @@
-﻿using BMBF.Models.Setup;
+﻿using BMBF.Backend.Models.Setup;
 
-namespace BMBF.Models.Messages;
+namespace BMBF.Backend.Models.Messages;
 
 public class SetupStatusUpdate : IMessage
 {

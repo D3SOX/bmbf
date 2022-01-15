@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BMBF.Extensions;
+using BMBF.Backend.Extensions;
+using BMBF.Backend.Services;
 using BMBF.Resources;
-using BMBF.Services;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
-namespace BMBF.Controllers;
+namespace BMBF.Backend.Controllers;
 
 [Route("[controller]")]
 public class SetupController : Controller

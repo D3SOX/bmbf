@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using BMBF.Resources;
 
-namespace BMBF.Models.Setup;
+namespace BMBF.Backend.Models.Setup;
 
 public class DowngradingStatus
 {

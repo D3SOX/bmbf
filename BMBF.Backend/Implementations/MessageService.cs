@@ -1,10 +1,10 @@
 ﻿using System;
-using BMBF.Models;
-using BMBF.Models.Messages;
-using BMBF.Models.Setup;
-using BMBF.Services;
+using BMBF.Backend.Models;
+using BMBF.Backend.Models.Messages;
+using BMBF.Backend.Models.Setup;
+using BMBF.Backend.Services;
 
-namespace BMBF.Implementations;
+namespace BMBF.Backend.Implementations;
 
 public class MessageService : IMessageService
 {

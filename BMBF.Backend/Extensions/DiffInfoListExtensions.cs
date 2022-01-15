@@ -2,7 +2,7 @@
 using System.Linq;
 using BMBF.Resources;
 
-namespace BMBF.Extensions;
+namespace BMBF.Backend.Extensions;
 
 public static class DiffInfoListExtensions
 {

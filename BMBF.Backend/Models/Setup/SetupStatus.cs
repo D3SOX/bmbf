@@ -1,4 +1,4 @@
-﻿namespace BMBF.Models.Setup;
+﻿namespace BMBF.Backend.Models.Setup;
 
 /// <summary>
 /// Represents the current point in setup BMBF is at

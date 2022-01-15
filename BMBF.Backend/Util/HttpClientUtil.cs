@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 using System.Reflection;
 
-namespace BMBF.Util;
+namespace BMBF.Backend.Util;
 
 public static class HttpClientUtil
 {

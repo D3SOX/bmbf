@@ -1,6 +1,6 @@
 ﻿using Octodiff.Diagnostics;
 
-namespace BMBF.Implementations;
+namespace BMBF.Backend.Implementations;
 
 public class DummyProgressReporter : IProgressReporter
 {

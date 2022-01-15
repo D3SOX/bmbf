@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
-using BMBF.Services;
+using BMBF.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BMBF.Controllers;
+namespace BMBF.Backend.Controllers;
 
 [Route("[controller]")]
 public class BeatSaberController : Controller

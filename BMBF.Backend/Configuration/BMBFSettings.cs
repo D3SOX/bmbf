@@ -2,7 +2,7 @@
 
 using System;
 
-namespace BMBF.Configuration;
+namespace BMBF.Backend.Configuration;
 
 // ReSharper disable once InconsistentNaming
 public class BMBFSettings

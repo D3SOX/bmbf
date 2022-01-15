@@ -1,4 +1,4 @@
-﻿namespace BMBF.Models;
+﻿namespace BMBF.Backend.Models;
 
 public enum MessageType
 {

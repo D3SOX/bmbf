@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
-using BMBF.Util.BPList;
+using BMBF.Backend.Util.BPList;
 using Newtonsoft.Json;
 
-namespace BMBF.Models;
+namespace BMBF.Backend.Models;
 
 /// <summary>
 /// Represents a playlist in the BMBF cache

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BMBF.Models.Setup;
+using BMBF.Backend.Models.Setup;
 using BMBF.Resources;
 
-namespace BMBF.Services;
+namespace BMBF.Backend.Services;
 
 public interface ISetupService
 {

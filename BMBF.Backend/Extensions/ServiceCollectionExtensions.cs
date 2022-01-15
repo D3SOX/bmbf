@@ -1,10 +1,10 @@
-﻿using BMBF.Implementations;
+﻿using BMBF.Backend.Implementations;
+using BMBF.Backend.Services;
+using BMBF.Backend.Util;
 using BMBF.Patching;
-using BMBF.Services;
-using BMBF.Util;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BMBF.Extensions;
+namespace BMBF.Backend.Extensions;
 
 public static class ServiceCollectionExtensions
 {

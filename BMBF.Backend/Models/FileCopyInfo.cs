@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace BMBF.Models;
+namespace BMBF.Backend.Models;
 
 /// <summary>
 /// Stores information about a particular file type that is copied to a directory on the quest

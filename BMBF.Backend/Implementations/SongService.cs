@@ -6,15 +6,15 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BMBF.Configuration;
-using BMBF.Models;
-using BMBF.Services;
-using BMBF.Util;
+using BMBF.Backend.Configuration;
+using BMBF.Backend.Models;
+using BMBF.Backend.Services;
+using BMBF.Backend.Util;
 using Newtonsoft.Json;
 using Serilog;
 
-using SongCache = System.Collections.Concurrent.ConcurrentDictionary<string, BMBF.Models.Song>;
-namespace BMBF.Implementations;
+using SongCache = System.Collections.Concurrent.ConcurrentDictionary<string, BMBF.Backend.Models.Song>;
+namespace BMBF.Backend.Implementations;
 
 /// <summary>
 /// Manages the BMBF song cache

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
-namespace BMBF.Services;
+namespace BMBF.Backend.Services;
 
 /// <summary>
 /// Represents the BeatSaver song repository.

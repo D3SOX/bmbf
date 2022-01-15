@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace BMBF.Util;
+namespace BMBF.Backend.Util;
 
 /// <summary>
 /// Small abstraction over the files in a folder

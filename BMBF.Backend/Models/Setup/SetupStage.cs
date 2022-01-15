@@ -1,4 +1,4 @@
-﻿namespace BMBF.Models.Setup;
+﻿namespace BMBF.Backend.Models.Setup;
 
 public enum SetupStage
 {
