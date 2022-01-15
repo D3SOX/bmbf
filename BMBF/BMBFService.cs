@@ -8,6 +8,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -114,6 +115,7 @@ public class BMBFService : Service
             .ConfigureServices(services =>
             {
                 services.AddSingleton<Service>(this);
+                services.AddSingleton<IFileProvider>(fileProvider);
             })
             .UseStartup<Startup>()
             .UseUrls(Constants.BindAddress)

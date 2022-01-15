@@ -26,7 +26,6 @@ public class Startup
         
         services.AddBMBF();
         services.AddSingleton<IBeatSaberService, BeatSaberService>();
-        services.AddSingleton<IAssetProvider, AndroidAssetProvider>();
         services.AddSingleton(_configuration.GetSection(BMBFResources.Position).Get<BMBFResources>());
         services.AddSingleton(_configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>());
     }

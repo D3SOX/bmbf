@@ -3,12 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Android.App;
-using Android.Content.Res;
 using Microsoft.AspNetCore.Http;
-using FileNotFoundException = Java.IO.FileNotFoundException;
+using Microsoft.Extensions.FileProviders;
 
-namespace BMBF;
+namespace BMBF.Backend;
 
 /// <summary>
 /// BMBF middleware which reroutes requests to the API path to go to ASP.NET core MVC.
@@ -20,12 +18,12 @@ public class Middleware
     private const string AssetsWebRoot = "wwwroot/";
         
     private readonly RequestDelegate _next;
-    private readonly AssetManager _assetManager;
+    private readonly IFileProvider _assetProvider;
         
-    public Middleware(RequestDelegate next, Service bmbfService)
+    public Middleware(RequestDelegate next, IFileProvider assetProvider)
     {
         _next = next;
-        _assetManager = bmbfService.Assets ?? throw new NullReferenceException("Asset manager was null");
+        _assetProvider = assetProvider;
     }
 
     public async Task Invoke(HttpContext context)
@@ -34,7 +32,7 @@ public class Middleware
         {
             throw new NullReferenceException(nameof(context));
         }
-            
+
         // If this is an API request, forward it to ASP.NET core MVC
         if (context.Request.Path.StartsWithSegments(ApiPath, out var matchedPath, out var remainingPath))
         {
@@ -59,21 +57,23 @@ public class Middleware
             {
                 context.Request.Path = "/index.html";
             }
+
             // Otherwise, we need to return the appropriate file from assets
             string assetFilePath = Path.Combine(AssetsWebRoot, context.Request.Path.Value.Substring(1));
-            try
+            var assetFile = _assetProvider.GetFileInfo(assetFilePath);
+            if (assetFile.Exists)
             {
-                await using Stream assetFile = _assetManager.Open(assetFilePath);
+                await using var assetFileStream = assetFile.CreateReadStream();
                 
-                context.Response.StatusCode = (int) HttpStatusCode.OK;
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
                 string lastPathSection = context.Request.Path.Value.Split("/").Last();
                 // Find the appropriate content type and copy to the response body
                 context.Response.ContentType = MimeTypes.MimeTypeMap.GetMimeType(lastPathSection);
-                await assetFile.CopyToAsync(context.Response.Body);
+                await assetFileStream.CopyToAsync(context.Response.Body);
             }
-            catch (FileNotFoundException)
+            else
             {
-                context.Response.StatusCode = (int) HttpStatusCode.NotFound;
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
             }
         }
     }

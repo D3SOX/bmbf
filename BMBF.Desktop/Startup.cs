@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 
 namespace BMBF.Desktop;
 
@@ -43,7 +44,7 @@ public class Startup
         services.AddSingleton(_configuration.GetSection(BMBFResources.Position).Get<BMBFResources>());
 
         services.AddSingleton<IBeatSaberService, BeatSaberService>();
-        services.AddSingleton<IAssetProvider, LocalAssetProvider>();
+        services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Path.GetFullPath(desktopSettings.AssetsPath)));
     }
 
     public void Configure(IApplicationBuilder app, IHostingEnvironment env)

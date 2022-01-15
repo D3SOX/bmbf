@@ -9,6 +9,7 @@ using BMBF.Backend.Extensions;
 using BMBF.Backend.Models.Setup;
 using BMBF.Backend.Services;
 using BMBF.Resources;
+using Microsoft.Extensions.FileProviders;
 using Serilog;
 using UnityIndex = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>;
 using CoreModsIndex = System.Collections.Generic.Dictionary<string, BMBF.Resources.CoreMods>;
@@ -24,7 +25,7 @@ public class AssetService : IAssetService
     private readonly BMBFResources _bmbfResources;
     private readonly string _packageId;
 
-    private readonly IAssetProvider _assetProvider;
+    private readonly IFileProvider _assetProvider;
     
 
     private List<DiffInfo>? _cachedDiffs;
@@ -32,7 +33,7 @@ public class AssetService : IAssetService
 
     public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
         
-    public AssetService(IAssetProvider assetProvider, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
+    public AssetService(IFileProvider assetProvider, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
     {
         _assetProvider = assetProvider;
         _httpClient = httpClient;
@@ -46,7 +47,7 @@ public class AssetService : IAssetService
 
     private Stream OpenAsset(string path)
     {
-        return _assetProvider.Open(path);
+        return _assetProvider.GetFileInfo(path).CreateReadStream();
     }
 
     private async Task<MemoryStream> DownloadToMemoryStream(Uri uri, CancellationToken ct)
