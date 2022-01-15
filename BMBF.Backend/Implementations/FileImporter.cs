@@ -88,6 +88,10 @@ public class FileImporter : IFileImporter
                 {
                     Log.Error($"Failed to import song {bpSong.Hash}: {importResult.Error}");
                 }
+                else if(importResult.ImportedSong?.Hash != bpSong.Hash)
+                {
+                    Log.Warning($"Downloaded song {importResult.ImportedSong?.SongName} did NOT match expected hash of {bpSong.Hash}");
+                }
             }
             catch (Exception ex)
             {

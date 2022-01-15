@@ -90,10 +90,14 @@ public class SongService : IDisposable, ISongService
             // Early check to see if the song exists to avoid extracting the song unnecessarily
             if (cache.ContainsKey(song.Hash))
             {
-                return FileImportResult.CreateError($"{fileName} already existed");
+                return FileImportResult.CreateError("Song already existed");
             }
-                
-            var originalSavePath = Path.Combine(_songsPath, Path.GetFileNameWithoutExtension(fileName));
+
+            var invalidNameChars = Path.GetInvalidFileNameChars();
+            
+            var fixedFileName = new string(fileName.Select(c => invalidNameChars.Contains(c) ? '_' : c).ToArray());
+            var originalSavePath = Path.Combine(_songsPath, Path.GetFileNameWithoutExtension(fixedFileName));
+
             song.Path = originalSavePath;
             int i = 1;
             while (Directory.Exists(song.Path))
