@@ -22,6 +22,12 @@ public class Startup
         _configuration = configuration;
     }
 
+    private string CombineDisableAbsolute(string path1, string path2)
+    {
+        if (Path.IsPathRooted(path2)) path2 = path2.Substring(1);
+        return Path.Combine(path1, path2);
+    }
+    
     public void ConfigureServices(IServiceCollection services)
     {
         var backendAssembly = typeof(ServiceCollectionExtensions).Assembly;
@@ -34,17 +40,16 @@ public class Startup
         var deviceRoot = desktopSettings.DeviceRoot;
         
         // Update paths in the settings to make sure they're all within our device directory
-        settings.ConfigsPath = Path.Combine(deviceRoot, settings.ConfigsPath);        
-        settings.SongsPath = Path.Combine(deviceRoot, settings.SongsPath);        
-        settings.PlaylistsPath = Path.Combine(deviceRoot, settings.PlaylistsPath);        
-        settings.RootDataPath = Path.Combine(deviceRoot, settings.RootDataPath);
+        settings.ConfigsPath = CombineDisableAbsolute(deviceRoot, settings.ConfigsPath);        
+        settings.SongsPath = CombineDisableAbsolute(deviceRoot, settings.SongsPath);        
+        settings.PlaylistsPath = CombineDisableAbsolute(deviceRoot, settings.PlaylistsPath);        
+        settings.RootDataPath = CombineDisableAbsolute(deviceRoot, settings.RootDataPath);
 
         services.AddSingleton(settings);
         services.AddSingleton(desktopSettings);
         services.AddSingleton(_configuration.GetSection(BMBFResources.Position).Get<BMBFResources>());
 
         services.AddSingleton<IBeatSaberService, BeatSaberService>();
-        services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Path.GetFullPath(desktopSettings.AssetsPath)));
     }
 
     public void Configure(IApplicationBuilder app, IHostingEnvironment env)

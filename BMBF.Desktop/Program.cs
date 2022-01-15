@@ -1,7 +1,11 @@
 ﻿using System;
+using System.IO;
 using BMBF.Desktop;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -10,12 +14,28 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .MinimumLevel.Verbose() // Enable debug logs
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // Avoid spammy request logging
-    .CreateLogger(); 
+    .CreateLogger();
 
+var assetsProvider = new PhysicalFileProvider(Path.GetFullPath("../BMBF/Assets"));
 using var host = WebHost.CreateDefaultBuilder()
     .ConfigureLogging((_, logging) =>
     {
         logging.ClearProviders();
+    })
+    .ConfigureAppConfiguration(configBuilder =>
+    {
+        // Clear the existing appsettings.json
+        configBuilder.Sources.Clear();
+        
+        // Make sure to add the BMBF.Desktop appsettings AFTER those from regular BMBF
+        // This is to allow us to override file paths
+        configBuilder.AddJsonFile(assetsProvider, "appsettings.json", false, false); 
+        configBuilder.AddJsonFile("appsettings.json");
+    })
+    .ConfigureServices(services =>
+    {
+        // Use the assets file provider
+        services.AddSingleton<IFileProvider>(assetsProvider);
     })
     .UseStartup<Startup>()
     .UseUrls("http://localhost:50006")

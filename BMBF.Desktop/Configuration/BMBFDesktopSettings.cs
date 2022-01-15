@@ -10,6 +10,4 @@ public class BMBFDesktopSettings
     public string DeviceRoot { get; set; }
     
     public string ApkPath { get; set; }
-    
-    public string AssetsPath { get; set; }
 }
