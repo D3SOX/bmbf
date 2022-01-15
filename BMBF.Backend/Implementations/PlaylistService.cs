@@ -196,6 +196,7 @@ public class PlaylistService : IPlaylistService, IDisposable
         _fileSystemWatcher.Filter = "*.*";
         _fileSystemWatcher.Deleted += OnPlaylistFileDeleted;
         _fileSystemWatcher.Changed += OnPlaylistFileChanged;
+        _fileSystemWatcher.Renamed += OnPlaylistFileRenamed;
         _fileSystemWatcher.EnableRaisingEvents = true;
     }
 
@@ -302,6 +303,8 @@ public class PlaylistService : IPlaylistService, IDisposable
     private void OnPlaylistFileChanged(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
 
     private void OnPlaylistFileDeleted(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
+
+    private void OnPlaylistFileRenamed(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
     
     public void Dispose()
     {
