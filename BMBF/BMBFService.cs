@@ -3,9 +3,11 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.OS;
+using BMBF.Implementations;
 using BMBF.Services;
 using Java.Lang;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +20,7 @@ namespace BMBF;
 
 [Service(Name = "com.weareneutralaboutoculus.BMBFService", Label = "BMBFService")]
 // ReSharper disable once InconsistentNaming
-public class BMBFService : Service, IBMBFService
+public class BMBFService : Service
 {
     public static string? RunningUrl { get; private set; }
         
@@ -104,7 +106,6 @@ public class BMBFService : Service, IBMBFService
         var fileProvider = new AssetFileProvider(Assets ?? throw new NullReferenceException("Asset manager was null"));
             
         return WebHost.CreateDefaultBuilder()
-            .UseStartup<Startup>()
             .ConfigureAppConfiguration((_, configBuilder) =>
             {
                 configBuilder.AddJsonFile(fileProvider, "appsettings.json", false, false);
@@ -115,10 +116,9 @@ public class BMBFService : Service, IBMBFService
             })
             .ConfigureServices(services =>
             {
-                services.AddSingleton(Assets);
                 services.AddSingleton<Service>(this);
-                services.AddSingleton<IBMBFService>(this);
             })
+            .UseStartup<Startup>()
             .UseUrls(Constants.BindAddress)
             .UseSerilog()
             .Build();
@@ -156,22 +156,5 @@ public class BMBFService : Service, IBMBFService
             return StartCommandResult.NotSticky;
         }
         return StartCommandResult.Sticky;
-    }
-
-    public void Restart()
-    {
-        // Tell frontend to restart BMBFService
-        Intent intent = new Intent(BMBFIntents.Restart);
-        SendBroadcast(intent);
-    }
-
-    public void Quit()
-    {
-        // Tell frontend to quit too
-        Intent intent = new Intent(BMBFIntents.Quit);
-        SendBroadcast(intent);
-            
-        // Actually stop BMBFService
-        StopSelf();
     }
 }

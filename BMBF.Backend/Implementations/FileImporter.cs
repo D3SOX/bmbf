@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
+using BMBF.Configuration;
 using BMBF.Extensions;
 using BMBF.Models;
 using BMBF.Services;
@@ -116,15 +117,7 @@ public class FileImporter : IFileImporter
     {
         Log.Information($"Importing {fileName}");
             
-        var extension = Path.GetExtension(fileName)?.ToLowerInvariant().Substring(1);
-        if (extension == null)
-        {
-            return new FileImportResult
-            {
-                Type = FileImportResultType.Failed,
-                Error = "Cannot import file without file extension"
-            };
-        }
+        var extension = Path.GetExtension(fileName).ToLowerInvariant().Substring(1);
 
         if (extension == "zip")
         {

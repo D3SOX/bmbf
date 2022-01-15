@@ -2,10 +2,13 @@
 
 #nullable disable
 
-namespace BMBF;
+namespace BMBF.Configuration;
 
-public class ResourceUris
+// ReSharper disable once InconsistentNaming
+public class BMBFResources
 {
+    public const string Position = "BMBFResources";
+
     public Uri CoreModsIndex { get; set; }
         
     public Uri ModLoaderVersion { get; set; }

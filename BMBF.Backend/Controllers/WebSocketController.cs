@@ -18,7 +18,7 @@ namespace BMBF.Controllers;
 public class WebSocketController : ControllerBase
 {
     private readonly IApplicationLifetime _appLifetime;
-    private readonly JsonSerializer _serializer = new JsonSerializer()
+    private readonly JsonSerializer _serializer = new()
     {
         ContractResolver = new CamelCasePropertyNamesContractResolver()
     };

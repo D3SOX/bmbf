@@ -10,7 +10,7 @@ namespace BMBF.Util;
 
 public static class SongUtil
 {
-    private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
+    private static readonly JsonSerializer JsonSerializer = new();
 
     private static async Task<string?> TryGetSongHashAsync(IFolderProvider provider, Stream infoDatStream, BeatmapInfoDat infoDat)
     {

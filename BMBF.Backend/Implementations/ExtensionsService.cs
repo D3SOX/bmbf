@@ -10,7 +10,7 @@ namespace BMBF.Implementations;
 public class ExtensionsService : IExtensionsService
 {
     public ConcurrentDictionary<string, FileCopyInfo> CopyExtensions { get; } =
-        new ConcurrentDictionary<string, FileCopyInfo>();
+        new();
     public HashSet<string> PlaylistExtensions { get; private set; } = new HashSet<string>();
     public HashSet<string> ConfigExtensions { get; private set; } = new HashSet<string>();
 

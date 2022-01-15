@@ -1,7 +1,8 @@
 ﻿using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
-using BMBF.Services;
+using Android.App;
+using Android.Content;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -18,9 +19,9 @@ public class HostController : Controller
         Version = assemblyVersion == null ? null : $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}";
     }
 
-    private readonly IBMBFService _bmbfService;
+    private readonly Service _bmbfService;
 
-    public HostController(IBMBFService bmbfService)
+    public HostController(Service bmbfService)
     {
         _bmbfService = bmbfService;
     }
@@ -34,11 +35,24 @@ public class HostController : Controller
 
     [HttpPost]
     [Route("quit")]
-    public void Quit() => _bmbfService.Quit();
+    public void Quit()
+    {
+        // Tell frontend to quit too
+        Intent intent = new Intent(BMBFIntents.Quit);
+        _bmbfService.SendBroadcast(intent);
+            
+        // Actually stop BMBFService
+        _bmbfService.StopSelf();
+    }
 
     [HttpPost]
     [Route("restart")]
-    public void Restart() => _bmbfService.Restart();
+    public void Restart()
+    {
+        // Tell frontend to restart BMBFService
+        Intent intent = new Intent(BMBFIntents.Restart);
+        _bmbfService.SendBroadcast(intent);
+    }
 
     [HttpPost]
     [Route("runInBackground")]

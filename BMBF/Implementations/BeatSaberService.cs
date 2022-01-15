@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using BMBF.Configuration;
 using BMBF.Models;
 using BMBF.Patching;
 using BMBF.Services;

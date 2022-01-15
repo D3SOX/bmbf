@@ -2,7 +2,7 @@
 
 using System;
 
-namespace BMBF;
+namespace BMBF.Configuration;
 
 // ReSharper disable once InconsistentNaming
 public class BMBFSettings
@@ -38,6 +38,4 @@ public class BMBFSettings
     public string ConfigsPath { get; set; }
         
     public Uri BeatSaverBaseUri { get; set; }
-        
-    public ResourceUris Resources { get; set; }
 }

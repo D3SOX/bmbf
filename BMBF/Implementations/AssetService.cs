@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Android.App;
 using Android.Content.Res;
+using BMBF.Configuration;
 using BMBF.Extensions;
 using BMBF.Models.Setup;
 using BMBF.Resources;
@@ -24,7 +25,7 @@ public class AssetService : IAssetService
     private readonly AssetManager _assetManager;
     private readonly BuiltInAssets _builtInAssets;
     private readonly HttpClient _httpClient;
-    private readonly ResourceUris _resourceUris;
+    private readonly BMBFResources _bmbfResources;
     private readonly string _packageId;
 
     private List<DiffInfo>? _cachedDiffs;
@@ -32,7 +33,7 @@ public class AssetService : IAssetService
 
     public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
         
-    public AssetService(Service bmbfService, HttpClient httpClient, BMBFSettings bmbfSettings)
+    public AssetService(Service bmbfService, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
     {
         _assetManager = bmbfService.Assets ?? throw new NullReferenceException("Asset manager was null");
         _httpClient = httpClient;
@@ -40,7 +41,7 @@ public class AssetService : IAssetService
         using var patchingIndexStream = OpenAsset("patching_assets.json");
         _builtInAssets = patchingIndexStream.ReadAsCamelCaseJson<BuiltInAssets>();
 
-        _resourceUris = bmbfSettings.Resources;
+        _bmbfResources = bmbfResources;
         _packageId = bmbfSettings.PackageId;
     }
 
@@ -54,7 +55,7 @@ public class AssetService : IAssetService
         using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
         resp.EnsureSuccessStatusCode();
         var memStream = new MemoryStream();
-        var respStream = await resp.Content.ReadAsStreamAsync();
+        var respStream = await resp.Content.ReadAsStreamAsync(ct);
         await respStream.CopyToAsync(memStream, ct);
         memStream.Position = 0;
         return memStream;
@@ -74,8 +75,8 @@ public class AssetService : IAssetService
         {
             if (_cachedCoreMods == null || refresh)
             {
-                Log.Information($"Downloading core mods index from {_resourceUris.CoreModsIndex}");
-                _cachedCoreMods = await DownloadJson<CoreModsIndex>(_resourceUris.CoreModsIndex);
+                Log.Information($"Downloading core mods index from {_bmbfResources.CoreModsIndex}");
+                _cachedCoreMods = await DownloadJson<CoreModsIndex>(_bmbfResources.CoreModsIndex);
             }
 
             return _cachedCoreMods;
@@ -118,7 +119,7 @@ public class AssetService : IAssetService
 
     public async Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct)
     {
-        var uri = new Uri(string.Format(_resourceUris.DeltaVersionTemplate, diffInfo.Name));
+        var uri = new Uri(string.Format(_bmbfResources.DeltaVersionTemplate, diffInfo.Name));
         return await DownloadToMemoryStream(uri, ct);
     }
 
@@ -126,7 +127,7 @@ public class AssetService : IAssetService
     {
         if (refresh || _cachedDiffs == null)
         {
-            _cachedDiffs = await DownloadJson<List<DiffInfo>>(_resourceUris.DeltaIndex);
+            _cachedDiffs = await DownloadJson<List<DiffInfo>>(_bmbfResources.DeltaIndex);
         }
         return _cachedDiffs;
     }
@@ -142,7 +143,7 @@ public class AssetService : IAssetService
     {
         try
         {
-            var modLoaderVersion = await DownloadJson<ModLoaderVersion>(_resourceUris.ModLoaderVersion);
+            var modLoaderVersion = await DownloadJson<ModLoaderVersion>(_bmbfResources.ModLoaderVersion);
             // If our inbuilt modloader is the same as the latest in resources, we can also skip downloading
             if (modLoaderVersion.Version == _builtInAssets.ModLoaderVersion)
             {
@@ -174,7 +175,7 @@ public class AssetService : IAssetService
             return OpenAsset(Path.Combine(PatchingAssetsPath, "libunity"));
         }
 
-        var unityIndex = await DownloadJson<UnityIndex>(_resourceUris.LibUnityIndex);
+        var unityIndex = await DownloadJson<UnityIndex>(_bmbfResources.LibUnityIndex);
         if (!unityIndex.TryGetValue(_packageId, out var unityVersions))
         {
             Log.Warning($"Unity index did not contain any versions for the package ID {_packageId}");
@@ -184,7 +185,7 @@ public class AssetService : IAssetService
         if (unityVersions.TryGetValue(beatSaberVersion, out var libUnityVersion))
         {
             Log.Information($"Downloading libunity.so for Beat Saber v{beatSaberVersion}");
-            var uri = new Uri(string.Format(_resourceUris.LibUnityVersionTemplate, libUnityVersion));
+            var uri = new Uri(string.Format(_bmbfResources.LibUnityVersionTemplate, libUnityVersion));
             return await DownloadToMemoryStream(uri, ct);
         }
 
@@ -196,7 +197,7 @@ public class AssetService : IAssetService
     {
         try
         {
-            return await DownloadJson<FileExtensions>(_resourceUris.ExtensionsIndex);
+            return await DownloadJson<FileExtensions>(_bmbfResources.ExtensionsIndex);
         }
         catch (Exception)
         {

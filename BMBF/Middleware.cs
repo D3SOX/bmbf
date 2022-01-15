@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Android.App;
 using Android.Content.Res;
 using Microsoft.AspNetCore.Http;
 using FileNotFoundException = Java.IO.FileNotFoundException;
@@ -21,10 +22,10 @@ public class Middleware
     private readonly RequestDelegate _next;
     private readonly AssetManager _assetManager;
         
-    public Middleware(RequestDelegate next, AssetManager assetManager)
+    public Middleware(RequestDelegate next, Service bmbfService)
     {
         _next = next;
-        _assetManager = assetManager;
+        _assetManager = bmbfService.Assets ?? throw new NullReferenceException("Asset manager was null");
     }
 
     public async Task Invoke(HttpContext context)
