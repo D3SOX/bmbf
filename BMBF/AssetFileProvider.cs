@@ -25,13 +25,13 @@ public class AssetFileProvider : IFileProvider
             _path = path;
             _assetManager = assetManager;
         }
-            
+
         public Stream CreateReadStream()
         {
             return _assetManager.Open(_path) ?? throw new InvalidOperationException();
         }
 
-        public bool Exists => _assetManager.List(Path.GetDirectoryName(_path) ?? "")?.Contains(_path) ?? false;
+        public bool Exists => _assetManager.List(Path.GetDirectoryName(_path) ?? "")?.Contains(Path.GetFileName(_path)) ?? false;
 
         /// <summary>
         /// Since our asset files are compressed, we can't use OpenFd to get a file descriptor that would tell us the length
