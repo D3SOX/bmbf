@@ -7,6 +7,13 @@
         <ApplicationId>com.weareneutralaboutoculus.BMBF</ApplicationId>
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        
+        <!-- 
+            We need set the target SDK version to 29 in order to allow us to use legacy external storage 
+            Therefore we supress the warning that API level 31 will be used for ACW compilation,
+            and that the targetSdkVersion in the manifest does not match TargetFrameworkVersion
+        -->
+        <NoWarn>XA4211;XA1006</NoWarn>
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
