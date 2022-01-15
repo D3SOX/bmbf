@@ -10,7 +10,6 @@ using Android.Content.PM;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
-using BMBF.Configuration;
 using BMBF.Patching;
 using Java.Lang;
 using Serilog;

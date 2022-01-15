@@ -4,39 +4,37 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Android.App;
-using Android.Content.Res;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
 using BMBF.Backend.Models.Setup;
 using BMBF.Backend.Services;
-using BMBF.Configuration;
 using BMBF.Resources;
 using Serilog;
 using UnityIndex = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>;
 using CoreModsIndex = System.Collections.Generic.Dictionary<string, BMBF.Resources.CoreMods>;
 using Version = SemanticVersioning.Version;
 
-namespace BMBF.Implementations;
+namespace BMBF.Backend.Implementations;
 
 public class AssetService : IAssetService
 {
     private const string PatchingAssetsPath = "patching";
-        
-    private readonly AssetManager _assetManager;
     private readonly BuiltInAssets _builtInAssets;
     private readonly HttpClient _httpClient;
     private readonly BMBFResources _bmbfResources;
     private readonly string _packageId;
+
+    private readonly IAssetProvider _assetProvider;
+    
 
     private List<DiffInfo>? _cachedDiffs;
     private CoreModsIndex? _cachedCoreMods;
 
     public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
         
-    public AssetService(Service bmbfService, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
+    public AssetService(IAssetProvider assetProvider, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
     {
-        _assetManager = bmbfService.Assets ?? throw new NullReferenceException("Asset manager was null");
+        _assetProvider = assetProvider;
         _httpClient = httpClient;
 
         using var patchingIndexStream = OpenAsset("patching_assets.json");
@@ -48,7 +46,7 @@ public class AssetService : IAssetService
 
     private Stream OpenAsset(string path)
     {
-        return _assetManager.Open(path) ?? throw new NullReferenceException(nameof(Stream));
+        return _assetProvider.Open(path);
     }
 
     private async Task<MemoryStream> DownloadToMemoryStream(Uri uri, CancellationToken ct)

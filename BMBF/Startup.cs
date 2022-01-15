@@ -1,7 +1,7 @@
-﻿using BMBF.Backend.Configuration;
+﻿using BMBF.Backend;
+using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
 using BMBF.Backend.Services;
-using BMBF.Configuration;
 using BMBF.Implementations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -26,7 +26,7 @@ public class Startup
         
         services.AddBMBF();
         services.AddSingleton<IBeatSaberService, BeatSaberService>();
-        services.AddSingleton<IAssetService, AssetService>();
+        services.AddSingleton<IAssetProvider, AndroidAssetProvider>();
         services.AddSingleton(_configuration.GetSection(BMBFResources.Position).Get<BMBFResources>());
         services.AddSingleton(_configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>());
     }

@@ -26,4 +26,8 @@
         <PackageReference Include="Xamarin.AndroidX.Core" Version="1.6.0.3" />
         <ProjectReference Include="../BMBF.Backend/BMBF.Backend.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <AndroidAsset Include="../EmbeddedResources/**" />
+    </ItemGroup>
 </Project>
