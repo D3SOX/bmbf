@@ -22,6 +22,12 @@ public class Startup
         _configuration = configuration;
     }
 
+    /// <summary>
+    /// Combines two paths.
+    /// This method is identical to <see cref="System.IO.Path.Combine(string, string)"/> except if <paramref name="path2"/> is an absolute path,
+    /// the prepending directory separator will be removed - it will be treated as a relative path.
+    /// </summary>
+    /// <returns>A combination of the two paths</returns>
     private string CombineDisableAbsolute(string path1, string path2)
     {
         if (Path.IsPathRooted(path2)) path2 = path2.Substring(1);

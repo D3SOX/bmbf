@@ -101,12 +101,13 @@ public class BMBFService : Service
 
     private IWebHost CreateHostBuilder()
     {
-        var fileProvider = new AssetFileProvider(Assets ?? throw new NullReferenceException("Asset manager was null"));
+        var assetFileProvider = new AssetFileProvider(Assets ?? throw new NullReferenceException("Asset manager was null"));
             
         return WebHost.CreateDefaultBuilder()
-            .ConfigureAppConfiguration((_, configBuilder) =>
+            .ConfigureAppConfiguration(configBuilder =>
             {
-                configBuilder.AddJsonFile(fileProvider, "appsettings.json", false, false);
+                configBuilder.Sources.Clear();
+                configBuilder.AddJsonFile(assetFileProvider, "appsettings.json", false, false);
             })
             .ConfigureLogging((_, logging) =>
             {
@@ -115,7 +116,7 @@ public class BMBFService : Service
             .ConfigureServices(services =>
             {
                 services.AddSingleton<Service>(this);
-                services.AddSingleton<IFileProvider>(fileProvider);
+                services.AddSingleton<IFileProvider>(assetFileProvider);
             })
             .UseStartup<Startup>()
             .UseUrls(Constants.BindAddress)
