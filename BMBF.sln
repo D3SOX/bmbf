@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.QMod", "BMBF.QMod\BMBF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.QMod.Tests", "BMBF.QMod.Tests\BMBF.QMod.Tests.csproj", "{4F5C8026-B3B8-482E-93C6-5FA0A1F247E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.Backend", "BMBF.Backend\BMBF.Backend.csproj", "{3B83E73A-AFC9-488A-B633-D0D34BA61E2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.Desktop", "BMBF.Desktop\BMBF.Desktop.csproj", "{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,5 +63,13 @@ Global
 		{4F5C8026-B3B8-482E-93C6-5FA0A1F247E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F5C8026-B3B8-482E-93C6-5FA0A1F247E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F5C8026-B3B8-482E-93C6-5FA0A1F247E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B83E73A-AFC9-488A-B633-D0D34BA61E2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B83E73A-AFC9-488A-B633-D0D34BA61E2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B83E73A-AFC9-488A-B633-D0D34BA61E2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B83E73A-AFC9-488A-B633-D0D34BA61E2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
