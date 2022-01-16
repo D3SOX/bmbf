@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
@@ -9,7 +10,7 @@ using QuestPatcher.QMod;
 
 namespace BMBF.QMod
 {
-    public class QMod : IMod
+    internal class QMod : IMod
     {
         public string Id => Mod.Id;
         public string Name => Mod.Name;
@@ -26,6 +27,7 @@ namespace BMBF.QMod
         private HttpClient HttpClient => _provider.HttpClient;
         
         private readonly QModProvider _provider;
+        
         private bool _disposed;
         
         public QMod(QuestPatcher.QMod.QMod mod, QModProvider provider)
@@ -33,31 +35,53 @@ namespace BMBF.QMod
             Mod = mod;
             _provider = provider;
         }
+
+        private bool VerifyRegistered()
+        {
+            if (_provider.Mods.TryGetValue(Id, out var mod))
+            {
+                if (mod == this)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         
         
         public async Task InstallAsync()
         {
-            await _provider.InstallLock.WaitAsync();
+            await _provider.ModManager.InstallLock.WaitAsync();
             try
             {
+                if (!VerifyRegistered())
+                {
+                    throw new InvalidOperationException("Cannot install a mod which is not registered to a provider");
+                }
+                
                 await InstallAsyncInternal(new HashSet<string>());
             }
             finally
             {
-                _provider.InstallLock.Release();
+                _provider.ModManager.InstallLock.Release();
             }
         }
         
         public async Task UninstallAsync()
         {
-            await _provider.InstallLock.WaitAsync();
+            await _provider.ModManager.InstallLock.WaitAsync();
             try
             {
+                if (!VerifyRegistered())
+                {
+                    throw new InvalidOperationException("Cannot uninstall a mod which is not registered to a provider");
+                }
+                
                 await UninstallAsyncInternal();
             }
             finally
             {
-                _provider.InstallLock.Release();
+                _provider.ModManager.InstallLock.Release();
             }
         }
         
@@ -239,16 +263,17 @@ namespace BMBF.QMod
                 using var resp = await HttpClient.GetAsync(dependency.DownloadIfMissing).ConfigureAwait(false);
                 await using var content = await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-                var installedDep = await _provider.ImportModAsyncInternal(content, installPath);
+                var loadedDep = (QMod) await _provider.ModManager.CacheAndImportMod(_provider, content, $"{dependency.Id}.qmod");
+                
                 // Quick sanity check to avoid people putting invalid download links and not noticing
-                if (!dependency.VersionRange.IsSatisfied(installedDep.Version))
+                if (!dependency.VersionRange.IsSatisfied(loadedDep.Version))
                 {
                     throw new InstallationException(
-                        $"Dependency downloaded from {dependency.DownloadIfMissing} had version {installedDep.Version}, which did not satisfy {dependency.VersionRange}");
+                        $"Dependency downloaded from {dependency.DownloadIfMissing} had version {loadedDep.Version}, which did not satisfy {dependency.VersionRange}");
                 }
 
                 // Actually install the dependency, which may involve installing more dependencies 
-                await installedDep.InstallAsyncInternal(installPath).ConfigureAwait(false);
+                await loadedDep.InstallAsyncInternal(installPath).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {

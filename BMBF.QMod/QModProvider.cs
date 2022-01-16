@@ -5,7 +5,6 @@ using System.IO.Abstractions;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
 using QuestPatcher.QMod;
@@ -16,9 +15,9 @@ namespace BMBF.QMod
     {
         public const string ModExtension = ".qmod";
         
-        public event EventHandler<ModLoadedEventArgs>? ModLoaded;
+        public event EventHandler<IMod>? ModLoaded;
 
-        public event EventHandler<IMod>? ModUnloaded;
+        public event EventHandler<string>? ModUnloaded;
         
         public event EventHandler<IMod>? ModStatusChanged;
 
@@ -28,7 +27,7 @@ namespace BMBF.QMod
         internal string LibsPath { get; }
         internal HttpClient HttpClient { get; }
         internal IFileSystem FileSystem { get; }
-        internal SemaphoreSlim InstallLock { get; } = new SemaphoreSlim(1);
+        internal IModManager ModManager { get; }
 
         private readonly string _packageId;
         private bool _disposed;
@@ -38,51 +37,72 @@ namespace BMBF.QMod
             return Path.GetExtension(fileName).ToLower() == ModExtension;
         }
 
-        public QModProvider(string packageId, string modsPath, string libsPath, HttpClient httpClient, IFileSystem fileSystem)
+        public QModProvider(string packageId, string modsPath, string libsPath, HttpClient httpClient, IFileSystem fileSystem, IModManager modManager)
         {
             _packageId = packageId;
             ModsPath = modsPath;
             LibsPath = libsPath;
             HttpClient = httpClient;
             FileSystem = fileSystem;
+            ModManager = modManager;
         }
 
-        public async ValueTask<IMod?> TryImportModAsync(Stream stream, string fileName)
+        public async Task<IMod?> TryParseModAsync(Stream stream)
         {
-            if (Path.GetExtension(fileName).ToLower() != ModExtension)
-            {
-                // Can't process mods which aren't qmod files
-                return null;
-            }
-
-            await InstallLock.WaitAsync();
+            ZipArchive? modArchive = null;
+            QuestPatcher.QMod.QMod? qMod = null;
             try
             {
-                return await ImportModAsyncInternal(stream, new HashSet<string>());
+                try
+                {
+                    modArchive = new ZipArchive(stream, ZipArchiveMode.Read);
+                }
+                catch (InvalidDataException)
+                {
+                    throw new InstallationException("Mod was not a valid ZIP archive");
+                }
+            
+                try
+                {
+                    qMod = await QuestPatcher.QMod.QMod.ParseAsync(modArchive, false);
+                
+                    if (qMod.PackageId != _packageId)
+                    {
+                        throw new InstallationException($"Incorrect package ID {qMod.PackageId}");
+                    }
+                
+                    return new QMod(qMod, this);
+                }
+                catch (InvalidModException ex)
+                {
+                    throw new InstallationException(ex.Message);
+                }
             }
-            finally
+            catch (Exception)
             {
-                InstallLock.Release();
+                // If loading the mod failed, then we need to make sure to dispose the underlying ZipArchive and QMod
+                modArchive?.Dispose();
+                if (qMod != null) await qMod.DisposeAsync();
+                throw;
             }
+        }
+
+        public async Task AddModAsync(IMod genericMod)
+        {
+            if (!(genericMod is QMod mod)) throw new ArgumentException("Cannot add non-qmod to qmod provider");
+            
+            await AddModAsyncInternal(mod, new HashSet<string>());
         }
         
         public async Task<bool> UnloadModAsync(IMod genericMod)
         {
-            await InstallLock.WaitAsync();
-            try
-            {
-                if (!(genericMod is QMod mod)) return false;
+            if (!(genericMod is QMod mod)) return false;
                 
-                if (mod.Installed)
-                {
-                    await mod.UninstallAsyncInternal();
-                }
-                return UnloadModInternal(mod);
-            }
-            finally
+            if (mod.Installed)
             {
-                InstallLock.Release();
+                await mod.UninstallAsyncInternal();
             }
+            return UnloadModInternal(mod);
         }
 
         internal void InvokeModStatusChanged(QMod mod)
@@ -95,50 +115,16 @@ namespace BMBF.QMod
             if (Mods.Remove(mod.Id, out var removed))
             {
                 removed.Dispose();
-                ModUnloaded?.Invoke(this, removed);
+                ModUnloaded?.Invoke(this, removed.Id);
                 return true;
             }
             return false;
         }
 
-        internal async Task<QMod> ImportModAsyncInternal(Stream stream, HashSet<string> installPath)
+        internal async Task AddModAsyncInternal(QMod mod, HashSet<string> installPath)
         {
-            ZipArchive modArchive;
-            try
-            {
-                modArchive = new ZipArchive(stream, ZipArchiveMode.Read, true);
-            }
-            catch (InvalidDataException)
-            {
-                throw new InstallationException("Mod was not a valid ZIP archive");
-            }
-            
-            QuestPatcher.QMod.QMod qMod;
-            try
-            {
-                qMod = await QuestPatcher.QMod.QMod.ParseAsync(modArchive, false);
-            }
-            catch (InvalidModException ex)
-            {
-                throw new InstallationException(ex.Message);
-            }
-            catch (InvalidDataException)
-            {
-                throw new InstallationException("Mod was not a valid ZIP archive");
-            }
-            
-            // Make sure that the mod is for the correct app!
-            if (qMod.PackageId != _packageId)
-            {
-                throw new InstallationException($"Mod was for package id {qMod.PackageId}, not {_packageId}");
-            }
-
-            var mod = new QMod(qMod, this);
-            
             mod.UpdateStatusInternal(); // Check whether or not the mod is installed
             
-            stream.Position = 0;
-
             // If an existing mod exists with this same ID, we will need to uninstall it
             // This may uninstall several dependant mods
             List<QMod> uninstalledDependants = new List<QMod>();
@@ -153,7 +139,7 @@ namespace BMBF.QMod
             }
             
             Mods.Add(mod.Id, mod);
-            ModLoaded?.Invoke(mod.Id, new ModLoadedEventArgs(mod, stream, $"{mod.Id}_v{mod.Version}.qmod"));
+            ModLoaded?.Invoke(mod.Id, mod);
 
             if (uninstalledDependants.Count > 0)
             {
@@ -173,8 +159,6 @@ namespace BMBF.QMod
                     await uninstalledDependant.InstallAsyncInternal(installPath);
                 }
             }
-
-            return mod;
         }
         
         public void Dispose()
@@ -186,8 +170,6 @@ namespace BMBF.QMod
             {
                 mod.Dispose();
             }
-            
-            InstallLock.Dispose();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
@@ -6,6 +7,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BMBF.ModManagement;
+using Moq;
 using Moq.Protected;
 using QuestPatcher.QMod;
 using Version = SemanticVersioning.Version;
@@ -27,7 +30,24 @@ namespace BMBF.QMod.Tests
         /// <returns></returns>
         public static QModProvider CreateProvider(HttpClient? httpClient = null, IFileSystem? fileSystem = null)
         {
-            return new QModProvider(PackageId, "/mods", "/libs", httpClient ?? new HttpClient(), fileSystem ?? new MockFileSystem());
+            var modManagerMock = new Mock<IModManager>();
+
+            QModProvider provider = new QModProvider(PackageId, "/mods", "/libs", httpClient ?? new HttpClient(), fileSystem ?? new MockFileSystem(), modManagerMock.Object);
+         
+            var installLock = new SemaphoreSlim(1);
+            modManagerMock.SetupGet(m => m.InstallLock).Returns(installLock);
+            modManagerMock.Setup(m => m.CacheAndImportMod(provider, It.IsAny<Stream>(), It.IsAny<string>()))
+                .Returns(async delegate(IModProvider genericProvider, Stream stream, string _)
+                {
+                    var modProvider = (QModProvider)genericProvider;
+                    
+                    var mod = await modProvider.TryParseModAsync(stream) ?? throw new NullReferenceException();
+                    await provider.AddModAsyncInternal((QMod) mod, new HashSet<string>());
+                    return (QMod) mod;
+                }
+            );
+            
+            return provider;
         }
 
         /// <summary>

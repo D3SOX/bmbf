@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.IO.Abstractions.TestingHelpers;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -26,17 +25,14 @@ namespace BMBF.QMod.Tests
         public async Task ShouldInvokeModLoaded()
         {
             using var provider = Util.CreateProvider(new HttpClient(), new MockFileSystem());
-            var resultStream = new MemoryStream();
-            provider.ModLoaded += (_, args) =>
-            {
-                Assert.NotNull(args.Mod);
-                args.Stream.CopyToAsync(resultStream);
-            };
+
+            IMod? addedMod = null;
+            provider.ModLoaded += (_, mod) => addedMod = mod;
 
             var modStream = Util.CreateTestingMod();
-            await provider.TryImportModAsync(modStream, "test-mod.qmod");
+            var parsedMod = await provider.ParseAndAddMod(modStream);
             
-            Assert.Equal(resultStream.ToArray(), modStream.ToArray());
+            Assert.Equal(parsedMod, addedMod);
         }
 
         [Fact]
@@ -45,7 +41,7 @@ namespace BMBF.QMod.Tests
             var emptyStream = new MemoryStream();
             using var provider = Util.CreateProvider();
             await Assert.ThrowsAsync<InstallationException>(async () =>
-                await provider.TryImportModAsync(emptyStream, "my-mod.qmod"));
+                await provider.TryParseModAsync(emptyStream));
         }
 
         [Theory]
@@ -77,10 +73,8 @@ namespace BMBF.QMod.Tests
                 m.AddFileCopyAsync(new FileCopy(fileCopyPath, fileCopyDestination), emptyStream);
             }, false);
 
-            IMod? result = null;
-            provider.ModLoaded += (_, args) => result = args.Mod;
-            await provider.TryImportModAsync(modStream, "my-mod.qmod");
-            Assert.Equal(installed, result?.Installed);
+            var result = await provider.ParseAndAddMod(modStream);
+            Assert.Equal(installed, result.Installed);
         }
 
         [Fact]
@@ -88,7 +82,7 @@ namespace BMBF.QMod.Tests
         {
             var mod = Util.CreateTestingMod(m => m.PackageId = "com.imposter.app");
             using var provider = Util.CreateProvider();
-            await Assert.ThrowsAsync<InstallationException>(async () => await provider.TryImportModAsync(mod, "my-mod.qmod"));
+            await Assert.ThrowsAsync<InstallationException>(async () => await provider.ParseAndAddMod(mod));
         }
         
         [Fact]
@@ -97,12 +91,12 @@ namespace BMBF.QMod.Tests
             using var provider = Util.CreateProvider();
 
             // Loading a new mod with the same ID should uninstall the old mod
-            var existingMod = await provider.TryImportModAsync(Util.CreateTestingMod(), "existing-mod.qmod");
-            IMod? deletedMod = null;
+            var existingMod = await provider.ParseAndAddMod(Util.CreateTestingMod());
+            string? deletedMod = null;
             provider.ModUnloaded += (_, args) => { deletedMod = args; };
-            await provider.TryImportModAsync(Util.CreateTestingMod(), "new-mod.qmod");
+            await provider.ParseAndAddMod(Util.CreateTestingMod());
 
-            Assert.Equal(existingMod, deletedMod);
+            Assert.Equal(existingMod.Id, deletedMod);
         }
 
         [Theory]
@@ -117,11 +111,11 @@ namespace BMBF.QMod.Tests
                 m.Dependencies.Add(new Dependency("test-mod", versionRange));
             });
 
-            await provider.TryImportModAsync(Util.CreateTestingMod(), "existing-mod.qmod");
-            
-            var dependant = await provider.TryImportModAsync(dependantStream, "dependant.qmod") ?? throw new NullReferenceException();
+            await provider.ParseAndAddMod(Util.CreateTestingMod());
+
+            var dependant = await provider.ParseAndAddMod(dependantStream);
             await dependant.InstallAsync();
-            await provider.TryImportModAsync(Util.CreateTestingMod(m => m.Version = Version.Parse(newlyInstalled)), "new-mod.qmod");
+            await provider.ParseAndAddMod(Util.CreateTestingMod(m => m.Version = Version.Parse(newlyInstalled)));
 
             Assert.Equal(shouldBeInstalled, dependant.Installed);
         }
@@ -130,20 +124,20 @@ namespace BMBF.QMod.Tests
         public async Task ShouldInvokeModUnloaded()
         {
             using var provider = Util.CreateProvider();
-            var mod = await provider.TryImportModAsync(Util.CreateTestingMod(), "my-mod.qmod") ?? throw new NullReferenceException();
+            var mod = await provider.ParseAndAddMod(Util.CreateTestingMod());
 
-            IMod? removedMod = null;
+            string? removedMod = null;
             provider.ModUnloaded += (_, args) => removedMod = args;
             
             await provider.UnloadModAsync(mod);
-            Assert.Equal(mod, removedMod);
+            Assert.Equal(mod.Id, removedMod);
         }
 
         [Fact]
         public async Task ShouldUninstallBeforeModRemoved()
         {
             using var provider = Util.CreateProvider();
-            var mod = await provider.TryImportModAsync(Util.CreateTestingMod(), "my-mod.qmod") ?? throw new NullReferenceException();
+            var mod = await provider.ParseAndAddMod(Util.CreateTestingMod());
             await mod.InstallAsync();
             
             // Since the mod as installed when it was unloaded, it should have been uninstalled before the unload

@@ -13,12 +13,13 @@ namespace BMBF.ModManagement
         /// <summary>
         /// Invoked whenever a mod is imported by the provider
         /// </summary>
-        event EventHandler<ModLoadedEventArgs> ModLoaded;
+        event EventHandler<IMod> ModLoaded;
 
         /// <summary>
-        /// Invoked whenever a mod is deleted by the provider
+        /// Invoked whenever a mod is deleted by the provider.
+        /// The argument is the mod ID.
         /// </summary>
-        event EventHandler<IMod> ModUnloaded;
+        event EventHandler<string> ModUnloaded;
 
         /// <summary>
         /// Invoked whenever a mod is installed or uninstalled
@@ -31,17 +32,21 @@ namespace BMBF.ModManagement
         /// <param name="fileName">Name of the file</param>
         /// <returns>True if the provider may be able to import a file with this name, false if it definitely won't</returns>
         bool CanAttemptImport(string fileName);
+
+        /// <summary>
+        /// Parses a mod from the given stream, without importing it.
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns>The parsed mod, or null if the given stream was not a mod type this provider can load. Calling install/uninstall operations on this mod is not safe</returns>
+        /// <exception cref="InstallationException">If the mod was the correct mod type for this provider, but had another format issue</exception>
+        Task<IMod?> TryParseModAsync(Stream stream);
         
         /// <summary>
-        /// Attempts to import a mod.
-        /// NOTE: If this operation was successful, the caller should not dispose the stream. Ownership of the stream
-        /// is passed to the instance of <see cref="IModProvider"/>
+        /// Adds the given mod to the providers mod set.
         /// </summary>
-        /// <param name="stream">Stream to import the mod from.</param>
-        /// <param name="fileName">File name of the mod</param>
-        /// <returns>The loaded mod, or null if the provider detected that the mod was not the correct type for this provider</returns>
-        /// <exception cref="InstallationException">If the mod was the correct mod type for this provider, but had another format issue</exception>
-        ValueTask<IMod?> TryImportModAsync(Stream stream, string fileName);
+        /// <param name="mod">Mod to add to the mod set</param>
+        /// <exception cref="InstallationException">Any error while adding the mod</exception>
+        Task AddModAsync(IMod mod);
 
         /// <summary>
         /// Unloads the given mod from the provider
