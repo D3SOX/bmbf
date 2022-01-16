@@ -36,6 +36,10 @@ public class BMBFSettings
     public string PatchingFolderName { get; set; }
         
     public string ConfigsPath { get; set; }
-        
+    
+    public string ModFilesPath { get; set; }
+    
+    public string LibFilesPath { get; set; }
+
     public Uri BeatSaverBaseUri { get; set; }
 }
