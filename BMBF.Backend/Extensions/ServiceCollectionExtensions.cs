@@ -10,7 +10,7 @@ public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Adds the BMBF backend services to the given service collection.
-    /// It's important to note that <see cref="IBeatSaberService"/> and <see cref="IAssetProvider"/> must be registered
+    /// It's important to note that <see cref="IBeatSaberService"/> must be registered separately
     /// separately - no implementation is provided in this project.
     /// </summary>
     /// <param name="services">Service collection to add the BMBF backend services to</param>
