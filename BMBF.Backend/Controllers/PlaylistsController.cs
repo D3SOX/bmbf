@@ -27,8 +27,7 @@ public class PlaylistsController : Controller
         return (await _playlistService.GetPlaylistsAsync()).Select(playlistPair => new PlaylistInfo(playlistPair.Value));
     }
 
-    [HttpGet]
-    [Route("cover/{playlistId}")]
+    [HttpGet("cover/{playlistId}")]
     public async Task GetPlaylistCover(string playlistId)
     {
         if((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
@@ -42,8 +41,7 @@ public class PlaylistsController : Controller
         HttpContext.Response.StatusCode = (int) HttpStatusCode.NotFound;
     }
 
-    [HttpPut]
-    [Route("cover/{playlistId}")]
+    [HttpPut("cover/{playlistId}")]
     public async Task<IActionResult> PutPlaylistCover(string playlistId)
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
@@ -56,8 +54,7 @@ public class PlaylistsController : Controller
         return NotFound();
     }
 
-    [HttpGet]
-    [Route("songs/{playlistId}")]
+    [HttpGet("songs/{playlistId}")]
     public async Task<IActionResult> GetPlaylistSongs(string playlistId)
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
@@ -67,8 +64,7 @@ public class PlaylistsController : Controller
         return NotFound();
     }
 
-    [HttpPut]
-    [Route("songs/{playlistId}")]
+    [HttpPut("songs/{playlistId}")]
     public async Task<IActionResult> PutPlaylistSongs(string playlistId, [FromBody] ImmutableList<BPSong> songs)
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
@@ -79,8 +75,7 @@ public class PlaylistsController : Controller
         return NotFound();
     }
 
-    [HttpPut]
-    [Route("update/{playlistId}")]
+    [HttpPut("update/{playlistId}")]
     public async Task<IActionResult> UpdatePlaylistInfo([FromBody] PlaylistInfo newPlaylistInfo)
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(newPlaylistInfo.Id, out var matching))
@@ -92,8 +87,7 @@ public class PlaylistsController : Controller
     }
         
         
-    [HttpDelete]
-    [Route("[action]/{playlistId}")]
+    [HttpDelete("[action]/{playlistId}")]
     public async Task<IActionResult> Delete(string playlistId)
     {
         if (await _playlistService.DeletePlaylistAsync(playlistId))
@@ -103,8 +97,7 @@ public class PlaylistsController : Controller
         return BadRequest(); // Playlist with given path was not in the cache
     }
 
-    [HttpGet]
-    [Route("bplist/{playlistId}")]
+    [HttpGet("bplist/{playlistId}")]
     // ReSharper disable once InconsistentNaming
     public async Task<IActionResult> GetBPList(string playlistId)
     {
@@ -119,8 +112,7 @@ public class PlaylistsController : Controller
         return NotFound();
     }
 
-    [HttpPost]
-    [Route("[action]")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Add([FromBody] PlaylistInfo playlistInfo)
     {
         Playlist playlist = new Playlist(
@@ -134,8 +126,7 @@ public class PlaylistsController : Controller
         return Ok();
     }
 
-    [HttpPost]
-    [Route("[action]")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Save()
     {
         await _playlistService.SavePlaylistsAsync();

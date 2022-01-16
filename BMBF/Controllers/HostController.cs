@@ -26,15 +26,13 @@ public class HostController : Controller
         _bmbfService = bmbfService;
     }
 
-    [HttpGet]
-    [Route("version")]
+    [HttpGet("version")]
     public IActionResult GetVersion()
     {
         return Version != null ? Ok(Version) : NotFound();
     }
 
-    [HttpPost]
-    [Route("quit")]
+    [HttpPost("quit")]
     public void Quit()
     {
         // Tell frontend to quit too
@@ -45,8 +43,7 @@ public class HostController : Controller
         _bmbfService.StopSelf();
     }
 
-    [HttpPost]
-    [Route("restart")]
+    [HttpPost("restart")]
     public void Restart()
     {
         // Tell frontend to restart BMBFService
@@ -54,8 +51,7 @@ public class HostController : Controller
         _bmbfService.SendBroadcast(intent);
     }
 
-    [HttpPost]
-    [Route("runInBackground")]
+    [HttpPost("runInBackground")]
     public void SetRunInBackground([FromBody] bool runInBackground)
     {
         bool currentlyEnabled = GetRunInBackground();
@@ -71,15 +67,13 @@ public class HostController : Controller
         }
     }
 
-    [HttpGet]
-    [Route("runInBackground")]
+    [HttpGet("runInBackground")]
     public bool GetRunInBackground()
     {
         return System.IO.File.Exists(Constants.RunForegroundConfig);
     }
 
-    [HttpGet]
-    [Route("logs")]
+    [HttpGet("logs")]
     public async Task GetLogs()
     {
         var logsPath = Constants.LogPath;

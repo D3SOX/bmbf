@@ -24,8 +24,7 @@ public class SongsController : Controller
         return (await _songService.GetSongsAsync()).Values;
     }
 
-    [HttpDelete]
-    [Route("[action]/{songHash}")]
+    [HttpDelete("[action]/{songHash}")]
     public async Task<IActionResult> Delete(string songHash)
     {
         if (await _songService.DeleteSongAsync(songHash))
@@ -35,8 +34,7 @@ public class SongsController : Controller
         return NotFound(); // Song with given hash did not exist
     }
 
-    [HttpGet]
-    [Route("cover/{songHash}")]
+    [HttpGet("cover/{songHash}")]
     public async Task GetCover(string songHash)
     {
         if((await _songService.GetSongsAsync()).TryGetValue(songHash, out var matching))

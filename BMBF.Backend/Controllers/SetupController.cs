@@ -24,8 +24,7 @@ public class SetupController : Controller
         _beatSaberService = beatSaberService;
     }
 
-    [Route("[action]")]
-    [HttpGet]
+    [HttpGet("[action]")]
     public async Task<IActionResult> Status()
     {
         await _setupService.LoadCurrentStatusAsync(); // Load current status from disk if not loaded already
@@ -36,16 +35,14 @@ public class SetupController : Controller
         return Ok(_setupService.CurrentStatus);
     }
 
-    [Route("[action]")]
-    [HttpGet]
+    [HttpGet("[action]")]
     public async Task<IActionResult> ModVersions()
     {
         // Find the versions that we can currently mod
         return Ok((await _assetService.GetCoreMods(true)).Keys);
     }
 
-    [Route("[action]")]
-    [HttpPost]
+    [HttpGet("[action]")]
     public async Task<IActionResult> Begin()
     {
         if (_setupService.CurrentStatus != null)
@@ -58,8 +55,7 @@ public class SetupController : Controller
         return Ok();
     }
 
-    [Route("[action]")]
-    [HttpGet]
+    [HttpGet("[action]")]
     public async Task<IActionResult> DowngradeVersions()
     {
         List<DiffInfo> diffs;
@@ -88,8 +84,7 @@ public class SetupController : Controller
         return Ok(accessibleVersions);
     }
 
-    [Route("[action]")]
-    [HttpPost]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Downgrade([FromBody] string toVersion)
     {
         List<DiffInfo> diffs = await _assetService.GetDiffs();
@@ -111,8 +106,7 @@ public class SetupController : Controller
         return Ok();
     }
 
-    [Route("[action]")]
-    [HttpPost]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Patch()
     {
         try
@@ -126,8 +120,7 @@ public class SetupController : Controller
         return Ok();
     }
 
-    [Route("[action]")]
-    [HttpPost]
+    [HttpPost("[action]")]
     public async Task<IActionResult> TriggerUninstall()
     {
         try
@@ -141,8 +134,7 @@ public class SetupController : Controller
         return Ok();
     }
         
-    [Route("[action]")]
-    [HttpPost]
+    [HttpPost("[action]")]
     public async Task<IActionResult> TriggerInstall()
     {
         try
@@ -156,8 +148,7 @@ public class SetupController : Controller
         return Ok();
     }
 
-    [Route("[action]")]
-    [HttpPost]
+    [HttpPost("[action]")]
     public async Task<IActionResult> FinalizeSetup()
     {
         try
@@ -171,7 +162,7 @@ public class SetupController : Controller
         return Ok();
     }
 
-    [Route("quit")]
+    [HttpPost("quit")]
     public async Task Quit()
     {
         await _setupService.QuitSetupAsync();

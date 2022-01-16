@@ -14,7 +14,7 @@ public class BeatSaberController : Controller
         _beatSaberService = beatSaberService;
     }
 
-    [Route("install")]
+    [HttpGet("install")]
     public async Task<IActionResult> GetInstallInfo()
     {
         var installInfo = await _beatSaberService.GetInstallationInfoAsync();
