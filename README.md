@@ -40,7 +40,7 @@ When testing BMBF during development, you have 3 options. The quest, an Android 
 4. BMBF will serve to `http://localhost:50006`.
 
 Some notes:
-- Files
+- Files in BMBF.Desktop will be located in the `./BMBF.Desktop/Device` directory - note that the directories don't completely reflect the Quest's filesystem, to make things easier to find.
 - The "beat saber installation" is simulated by an APK located in `./BMBF.Desktop/Device/BeatSaber.apk`. Creating or deleting this file is akin to installing or uninstalling Beat Saber.
 
 
