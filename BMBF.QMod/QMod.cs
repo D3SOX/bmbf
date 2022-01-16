@@ -76,7 +76,7 @@ namespace BMBF.QMod
                 {
                     throw new InvalidOperationException("Cannot uninstall a mod which is not registered to a provider");
                 }
-                
+
                 await UninstallAsyncInternal();
             }
             finally
@@ -126,6 +126,8 @@ namespace BMBF.QMod
 
         internal async Task InstallAsyncInternal(HashSet<string> installPath)
         {
+            if (Installed) return;
+            
             installPath.Add(Id);
             try
             {
@@ -180,6 +182,8 @@ namespace BMBF.QMod
 
         internal async Task<List<QMod>> UninstallAsyncInternal()
         {
+            if (!Installed) return new List<QMod>();
+
             // Uninstall ourself
             
             foreach (string m in Mod.ModFileNames)
@@ -191,7 +195,7 @@ namespace BMBF.QMod
             foreach (string lib in Mod.LibraryFileNames)
             {
                 // Skip library files still in use by other libraries
-                if (_provider.Mods.Values.Any(mod => mod.Id != this.Id && mod.Installed && mod.Mod.LibraryFileNames.Contains(lib))) continue;
+                if (_provider.Mods.Values.Any(mod => mod.Id != Id && mod.Installed && mod.Mod.LibraryFileNames.Contains(lib))) continue;
 
                 string destPath = Path.Combine(_provider.LibsPath, Path.GetFileName(lib));
                 if(FileSystem.File.Exists(destPath)) FileSystem.File.Delete(destPath);
