@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 
 namespace BMBF.Desktop;
 
@@ -50,6 +49,8 @@ public class Startup
         settings.SongsPath = CombineDisableAbsolute(deviceRoot, settings.SongsPath);        
         settings.PlaylistsPath = CombineDisableAbsolute(deviceRoot, settings.PlaylistsPath);        
         settings.RootDataPath = CombineDisableAbsolute(deviceRoot, settings.RootDataPath);
+        settings.ModFilesPath = CombineDisableAbsolute(deviceRoot, settings.ModFilesPath);
+        settings.LibFilesPath = CombineDisableAbsolute(deviceRoot, settings.LibFilesPath);
 
         services.AddSingleton(settings);
         services.AddSingleton(desktopSettings);
