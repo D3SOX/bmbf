@@ -47,7 +47,7 @@ namespace BMBF.QMod
             ModManager = modManager;
         }
 
-        public async Task<IMod?> TryParseModAsync(Stream stream)
+        public async Task<IMod?> TryParseModAsync(Stream stream, bool leaveOpen = false)
         {
             ZipArchive? modArchive = null;
             QuestPatcher.QMod.QMod? qMod = null;
@@ -55,7 +55,7 @@ namespace BMBF.QMod
             {
                 try
                 {
-                    modArchive = new ZipArchive(stream, ZipArchiveMode.Read);
+                    modArchive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen);
                 }
                 catch (InvalidDataException)
                 {

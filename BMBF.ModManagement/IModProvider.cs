@@ -36,10 +36,11 @@ namespace BMBF.ModManagement
         /// <summary>
         /// Parses a mod from the given stream, without importing it.
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="stream">The stream to parse the mod from</param>
+        /// <param name="leaveOpen">Whether to leave the underlying stream open when the mod is disposed</param>
         /// <returns>The parsed mod, or null if the given stream was not a mod type this provider can load. Calling install/uninstall operations on this mod is not safe</returns>
         /// <exception cref="InstallationException">If the mod was the correct mod type for this provider, but had another format issue</exception>
-        Task<IMod?> TryParseModAsync(Stream stream);
+        Task<IMod?> TryParseModAsync(Stream stream, bool leaveOpen = false);
         
         /// <summary>
         /// Adds the given mod to the providers mod set.
