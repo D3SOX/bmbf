@@ -18,9 +18,9 @@ namespace BMBF.ModManagement
         /// Runs arbitrary import logic and then caches/imports the mod using the given provider.
         /// </summary>
         /// <param name="modProvider">Mod provider to import the mod with</param>
-        /// <param name="stream">Stream to import the mod from</param>
+        /// <param name="stream">Stream to import the mod from, must be seekable. Ownership is passed to the mod manager</param>
         /// <param name="fileName">File name for the mod</param>
         /// <returns>The loaded and added mod</returns>
-        Task<IMod> CacheAndImportMod(IModProvider modProvider, Stream stream, string fileName);
+        Task<IMod> ImportMod(IModProvider modProvider, Stream stream, string fileName);
     }
 }

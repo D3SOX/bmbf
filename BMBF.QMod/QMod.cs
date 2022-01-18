@@ -264,12 +264,16 @@ namespace BMBF.QMod
             
             try
             {
-                using var resp = await HttpClient.GetAsync(dependency.DownloadIfMissing).ConfigureAwait(false);
+                using var resp = await HttpClient.GetAsync(dependency.DownloadIfMissing, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
                 await using var content = await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
-
-                var loadedDep = (QMod) await _provider.ModManager.CacheAndImportMod(_provider, content, $"{dependency.Id}.qmod");
                 
-                // Quick sanity check to avoid people putting invalid download links and not noticing
+                var memStream = new MemoryStream();
+                await content.CopyToAsync(memStream);
+                memStream.Position = 0;
+                
+                var loadedDep = (QMod) await _provider.ModManager.ImportMod(_provider, memStream, $"{dependency.Id}.qmod");
+
+                    // Quick sanity check to avoid people putting invalid download links and not noticing
                 if (!dependency.VersionRange.IsSatisfied(loadedDep.Version))
                 {
                     throw new InstallationException(
