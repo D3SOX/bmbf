@@ -34,7 +34,8 @@ public static class SongUtil
             }
         }
 
-        return BitConverter.ToString(hash.ComputeHash(dataStream.ToArray())).Replace("-", "").ToUpper();
+        dataStream.Position = 0;
+        return BitConverter.ToString(hash.ComputeHash(dataStream)).Replace("-", "").ToUpper();
     }
         
     /// <summary>

@@ -123,7 +123,7 @@ public class PlaylistService : IPlaylistService, IDisposable
                         playlist.LoadedFrom = newPath;
                     }
                         
-                    using var playlistStream = new StreamWriter(playlist.LoadedFrom);
+                    await using var playlistStream = new StreamWriter(playlist.LoadedFrom);
                     using var jsonWriter = new JsonTextWriter(playlistStream);
                     await Task.Run(() => _serializer.Serialize(jsonWriter, playlist)).ConfigureAwait(false);
                     playlist.IsPendingSave = false;

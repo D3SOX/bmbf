@@ -255,6 +255,8 @@ public class SetupService : ISetupService, IDisposable
                     _cts.Token.ThrowIfCancellationRequested();
                 }
 
+                await using var selectedDeltaStream = deltaStream;
+
                 if (File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
 
                 _logger.Information($"Applying patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
@@ -262,7 +264,7 @@ public class SetupService : ISetupService, IDisposable
                 await using (var tempStream = File.Open(_tempApkPath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     await Task.Run(() => deltaApplier.Apply(basisStream,
-                        new BinaryDeltaReader(deltaStream, new DummyProgressReporter()), tempStream));
+                        new BinaryDeltaReader(selectedDeltaStream, new DummyProgressReporter()), tempStream));
                 }
 
                 // Move our APK back to the latest complete path, then move to the next diff

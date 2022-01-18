@@ -11,11 +11,10 @@ public class ExtensionsService : IExtensionsService
 {
     public ConcurrentDictionary<string, FileCopyInfo> CopyExtensions { get; } =
         new();
-    public HashSet<string> PlaylistExtensions { get; private set; } = new HashSet<string>();
-    public HashSet<string> ConfigExtensions { get; private set; } = new HashSet<string>();
+    public HashSet<string> PlaylistExtensions { get; private set; } = new();
+    public HashSet<string> ConfigExtensions { get; private set; } = new();
 
     private bool _loadedExtensions;
-        
     private readonly IAssetService _assetService;
 
     public ExtensionsService(IAssetService assetService)
