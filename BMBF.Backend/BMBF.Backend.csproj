@@ -15,5 +15,7 @@
 
     <ProjectReference Include="../BMBF.Patching/BMBF.Patching.csproj" />
     <ProjectReference Include="../BMBF.Resources/BMBF.Resources.csproj" />
+    <ProjectReference Include="../BMBF.ModManagement/BMBF.ModManagement.csproj" />
+    <ProjectReference Include="../BMBF.QMod/BMBF.QMod.csproj" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,11 @@
-﻿using BMBF.Backend.Implementations;
+﻿using System.IO.Abstractions;
+using System.Net.Http;
+using BMBF.Backend.Configuration;
+using BMBF.Backend.Implementations;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util;
 using BMBF.Patching;
+using BMBF.QMod;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BMBF.Backend.Extensions;
@@ -21,6 +25,25 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();
         services.AddSingleton<IMessageService, MessageService>();
+        
+        services.AddSingleton<ModService>();
+        services.AddSingleton<IModService>(s =>
+        {
+            var settings = s.GetService<BMBFSettings>();
+            var modService = s.GetService<ModService>();
+            
+            var provider = new QModProvider(
+                settings.PackageId,
+                settings.ModFilesPath,
+                settings.LibFilesPath,
+                s.GetService<HttpClient>(),
+                new FileSystem(),
+                modService
+            );
+
+            modService.RegisterProvider(provider);
+            return modService;
+        });
             
         services.AddSingleton(HttpClientUtil.CreateBMBFHttpClient());
         services.AddSingleton<IExtensionsService, ExtensionsService>();

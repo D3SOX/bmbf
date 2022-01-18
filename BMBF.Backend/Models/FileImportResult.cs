@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using BMBF.ModManagement;
+using Newtonsoft.Json;
 
 namespace BMBF.Backend.Models;
 
@@ -38,6 +39,10 @@ public class FileImportResult
     /// </summary>
     [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public FileCopyInfo? FileCopyInfo { get; set; }
+    
+    
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public IMod? ImportedMod { get; set; }
 
     public static FileImportResult CreateError(string error)
     {
