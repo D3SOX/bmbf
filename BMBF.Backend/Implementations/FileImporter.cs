@@ -20,23 +20,25 @@ public class FileImporter : IFileImporter
     private readonly IBeatSaverService _beatSaverService;
     private readonly BMBFSettings _bmbfSettings;
     private readonly IExtensionsService _extensionsService;
+    private readonly IModService _modService;
 
     public FileImporter(ISongService songService,
         IPlaylistService playlistService,
         IBeatSaverService beatSaverService,
         BMBFSettings bmbfSettings,
-        IExtensionsService extensionsService)
+        IExtensionsService extensionsService,
+        IModService modService)
     {
         _songService = songService;
         _playlistService = playlistService;
         _beatSaverService = beatSaverService;
         _bmbfSettings = bmbfSettings;
         _extensionsService = extensionsService;
+        _modService = modService;
     }
         
     private async Task<string?> TryImportPlaylistAsync(Stream stream, string fileName)
     {
-        Log.Information($"Importing {fileName} as playlist");
         Playlist playlist;
         try
         {
@@ -141,7 +143,7 @@ public class FileImporter : IFileImporter
         if (_extensionsService.ConfigExtensions.Contains(extension))
         {
             string modId = Path.GetFileNameWithoutExtension(fileName);
-            bool modExistsWithId = false; // TODO: When mods are implemented, check if a mod actually exists with the ID
+            bool modExistsWithId = (await _modService.GetModsAsync()).ContainsKey(modId);
 
             if (modExistsWithId)
             {
@@ -170,8 +172,19 @@ public class FileImporter : IFileImporter
                 
             return FileImportResult.CreateError($"{fileName} was not a valid playlist");
         }
-            
-        // TODO: Attempt to import as a mod here
+        
+        // At this point, we may need to attempt an import multiple times, therefore we copy to a memory stream
+        await using var memStream = new MemoryStream();
+        await stream.CopyToAsync(memStream);
+        memStream.Position = 0;
+        stream = memStream;
+
+        // Now we'll attempt to import the file as a mod
+        var result = await _modService.TryImportModAsync(stream, fileName);
+        if (result != null) return result;
+        // If the result was null, the stream/filename didn't constitute a mod
+        // Therefore, we will rewind the stream and attempt to import as a copy extension
+        memStream.Position = 0;
 
         if (_extensionsService.CopyExtensions.TryGetValue(extension, out var copyInfo))
         {
