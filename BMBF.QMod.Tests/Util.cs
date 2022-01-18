@@ -36,7 +36,7 @@ namespace BMBF.QMod.Tests
          
             var installLock = new SemaphoreSlim(1);
             modManagerMock.SetupGet(m => m.InstallLock).Returns(installLock);
-            modManagerMock.Setup(m => m.CacheAndImportMod(provider, It.IsAny<Stream>(), It.IsAny<string>()))
+            modManagerMock.Setup(m => m.ImportMod(provider, It.IsAny<Stream>(), It.IsAny<string>()))
                 .Returns(async delegate(IModProvider genericProvider, Stream stream, string _)
                 {
                     var modProvider = (QModProvider)genericProvider;
@@ -92,7 +92,7 @@ namespace BMBF.QMod.Tests
         /// <returns>An <see cref="HttpClient"/> that will respond to any request with the given stream as content</returns>
         public static HttpClient CreateHttpClientMock(Stream response)
         {
-            var mock = new Moq.Mock<HttpMessageHandler>();
+            var mock = new Mock<HttpMessageHandler>();
             mock.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
                 .Returns(() => Task.FromResult(new HttpResponseMessage
