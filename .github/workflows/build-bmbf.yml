@@ -15,7 +15,7 @@ jobs:
     - name: Install Android workload
       run: dotnet workload install android
     - name: Test
-      run: dotnet test
+      run: dotnet test ./BMBF.sln
     - name: Publish
       run: dotnet publish BMBF/BMBF.csproj -c Release
     - uses: actions/upload-artifact@v2
