@@ -30,7 +30,7 @@ public class PlaylistsController : Controller
     [HttpGet("cover/{playlistId}")]
     public async Task GetPlaylistCover(string playlistId)
     {
-        if((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
+        if((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching) && matching.Image != null)
         {
             HttpContext.Response.StatusCode = (int) HttpStatusCode.OK;
             HttpContext.Response.ContentType = "image/png";
