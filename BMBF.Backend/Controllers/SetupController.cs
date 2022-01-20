@@ -43,19 +43,6 @@ public class SetupController : Controller
     }
 
     [HttpGet("[action]")]
-    public async Task<IActionResult> Begin()
-    {
-        if (_setupService.CurrentStatus != null)
-        {
-            // Setup already ongoing
-            return BadRequest("Setup already started");
-        }
-
-        await _setupService.BeginSetupAsync();
-        return Ok();
-    }
-
-    [HttpGet("[action]")]
     public async Task<IActionResult> DowngradeVersions()
     {
         List<DiffInfo> diffs;
@@ -82,6 +69,19 @@ public class SetupController : Controller
             .Where(version => diffs.FindShortestPath(installInfo.Version, version) != null); // Where a downgrade path exists
 
         return Ok(accessibleVersions);
+    }
+
+    [HttpPost("[action]")]
+    public async Task<IActionResult> Begin()
+    {
+        if (_setupService.CurrentStatus != null)
+        {
+            // Setup already ongoing
+            return BadRequest("Setup already started");
+        }
+
+        await _setupService.BeginSetupAsync();
+        return Ok();
     }
 
     [HttpPost("[action]")]

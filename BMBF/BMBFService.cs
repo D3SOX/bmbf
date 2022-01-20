@@ -3,12 +3,13 @@ using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.OS;
+using BMBF.Backend.Configuration;
+using BMBF.Backend.Extensions;
 using Java.Lang;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -43,13 +44,14 @@ public class BMBFService : Service
     {
         try
         {
-            _webHost = CreateHostBuilder();
+            var builder = CreateHostBuilder();
+            _webHost = builder.Build();
             await _webHost.StartAsync();
                 
             Log.Information("BMBF service startup complete");
             RunningUrl = Constants.BindAddress; // Notify future activity startups that the service has already started
             Intent intent = new Intent(BMBFIntents.WebServerStartedIntent);
-            intent.PutExtra("BindAddress", Constants.BindAddress);
+            intent.PutExtra("BindPort", Constants.BindPort);
             SendBroadcast(intent);
         }
         catch (Exception ex)
@@ -99,10 +101,12 @@ public class BMBFService : Service
             .CreateLogger().ForContext<BMBFService>(); // Set default context to BMBF service
     }
 
-    private IWebHost CreateHostBuilder()
+    private IWebHostBuilder CreateHostBuilder()
     {
-        var assetFileProvider = new AssetFileProvider(Assets ?? throw new NullReferenceException("Asset manager was null"));
-            
+        var assetManager = Assets ?? throw new NullReferenceException("Asset manager was null");
+        var assetFileProvider = new AssetFileProvider(assetManager);
+        var webRootFileProvider = new AssetFileProvider(assetManager, Constants.WebRootPath);
+        
         return WebHost.CreateDefaultBuilder()
             .ConfigureAppConfiguration(configBuilder =>
             {
@@ -111,17 +115,20 @@ public class BMBFService : Service
             })
             .ConfigureLogging((_, logging) =>
             {
-                logging.ClearProviders();
+                logging.ClearProviders(); // Remove existing asp.net core logging
             })
-            .ConfigureServices(services =>
+            .ConfigureServices((ctx, services) =>
             {
+                var configuration = ctx.Configuration;
+                var settings = configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>();
+                var resources = configuration.GetSection(BMBFResources.Position).Get<BMBFResources>();
+                services.AddBMBF(settings, resources, assetFileProvider);
+
                 services.AddSingleton<Service>(this);
-                services.AddSingleton<IFileProvider>(assetFileProvider);
             })
-            .UseStartup<Startup>()
+            .Configure(app => app.UseBMBF(webRootFileProvider))
             .UseUrls(Constants.BindAddress)
-            .UseSerilog()
-            .Build();
+            .UseSerilog();
     }
         
     private void SetupForegroundService()

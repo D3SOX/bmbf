@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using BMBF.Resources;
-using Newtonsoft.Json;
 
 namespace BMBF.DiffGenerator;
 

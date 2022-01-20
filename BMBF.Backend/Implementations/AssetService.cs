@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -20,7 +21,7 @@ namespace BMBF.Backend.Implementations;
 public class AssetService : IAssetService
 {
     private const string PatchingAssetsPath = "patching";
-    private readonly BuiltInAssets _builtInAssets;
+    private readonly BuiltInAssets? _builtInAssets;
     private readonly HttpClient _httpClient;
     private readonly BMBFResources _bmbfResources;
     private readonly string _packageId;
@@ -31,15 +32,19 @@ public class AssetService : IAssetService
     private List<DiffInfo>? _cachedDiffs;
     private CoreModsIndex? _cachedCoreMods;
 
-    public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
+    public string? BuiltInAssetsVersion => _builtInAssets?.BeatSaberVersion;
         
     public AssetService(IFileProvider assetProvider, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
     {
         _assetProvider = assetProvider;
         _httpClient = httpClient;
 
-        using var patchingIndexStream = OpenAsset("patching_assets.json");
-        _builtInAssets = patchingIndexStream.ReadAsCamelCaseJson<BuiltInAssets>();
+        var indexFile = assetProvider.GetFileInfo("patching_assets.json");
+        if (indexFile.Exists)
+        {
+            using var indexStream = indexFile.CreateReadStream();
+            _builtInAssets = indexStream.ReadAsCamelCaseJson<BuiltInAssets>();
+        }
 
         _bmbfResources = bmbfResources;
         _packageId = bmbfSettings.PackageId;
@@ -66,7 +71,7 @@ public class AssetService : IAssetService
         using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
         resp.EnsureSuccessStatusCode();
         await using var respStream = await resp.Content.ReadAsStreamAsync();
-        return respStream.ReadAsCamelCaseJson<T>();
+        return await respStream.ReadAsCamelCaseJsonAsync<T>();
     }
 
     public async Task<CoreModsIndex> GetCoreMods(bool refresh)
@@ -83,7 +88,7 @@ public class AssetService : IAssetService
         }
         catch (Exception ex)
         {
-            if (_builtInAssets.CoreMods == null || _builtInAssets.BeatSaberVersion == null)
+            if (_builtInAssets?.CoreMods == null || _builtInAssets.BeatSaberVersion == null)
             {
                 Log.Error(ex, "Failed to download core mods, and no core mods were built in");
                 return new CoreModsIndex();
@@ -94,7 +99,7 @@ public class AssetService : IAssetService
             {
                 {
                     _builtInAssets.BeatSaberVersion,
-                    new CoreMods(DateTime.MinValue, _builtInAssets.CoreMods)
+                    new CoreMods(DateTime.MinValue.ToString(CultureInfo.InvariantCulture), _builtInAssets.CoreMods)
                 }
             };
         }
@@ -103,7 +108,7 @@ public class AssetService : IAssetService
     public async Task ExtractOrDownloadCoreMod(CoreMod coreMod, string path)
     {
         await using var outputStream = File.OpenWrite(path);
-        if (_builtInAssets.CoreMods?.Contains(coreMod) ?? false)
+        if (_builtInAssets?.CoreMods?.Contains(coreMod) ?? false)
         {
             Log.Information($"Extracting inbuilt core mod {coreMod.FileName}");
             await using var modStream = OpenAsset(Path.Combine("core_mods", coreMod.FileName));
@@ -136,7 +141,7 @@ public class AssetService : IAssetService
     {
         var modloaderPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmodloader64" : "libmodloader32");
         var mainPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmain64" : "libmain32");
-        return (OpenAsset(modloaderPath), OpenAsset(mainPath), Version.Parse(_builtInAssets.ModLoaderVersion));
+        return (OpenAsset(modloaderPath), OpenAsset(mainPath), Version.Parse(_builtInAssets?.ModLoaderVersion));
     }
 
     public async Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct)
@@ -145,7 +150,7 @@ public class AssetService : IAssetService
         {
             var modLoaderVersion = await DownloadJson<ModLoaderVersion>(_bmbfResources.ModLoaderVersion);
             // If our inbuilt modloader is the same as the latest in resources, we can also skip downloading
-            if (modLoaderVersion.Version == _builtInAssets.ModLoaderVersion)
+            if (modLoaderVersion.Version == _builtInAssets?.ModLoaderVersion)
             {
                 Log.Information($"Latest modloader (v{modLoaderVersion.Version}), matches inbuilt version. Using inbuilt");
                 return OpenBuiltInModloader(is64Bit);
@@ -162,14 +167,21 @@ public class AssetService : IAssetService
         catch (Exception)
         {
             // Use the inbuilt modloader if no internet
-            Log.Warning($"Could not download modloader - using builtin version (v{_builtInAssets.ModLoaderVersion})");
+            var builtinVersion = _builtInAssets?.ModLoaderVersion;
+            if (builtinVersion == null)
+            {
+                Log.Error("Downloading modloader failed, and no version was built in!");
+                throw;
+            }
+            
+            Log.Warning($"Could not download modloader - using builtin version (v{builtinVersion})");
             return OpenBuiltInModloader(is64Bit);
         }
     }
 
     public async Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct)
     {
-        if (beatSaberVersion == _builtInAssets.BeatSaberVersion)
+        if (beatSaberVersion == _builtInAssets?.BeatSaberVersion)
         {
             Log.Information($"Using built-in libunity.so for Beat Saber v{beatSaberVersion}");
             return OpenAsset(Path.Combine(PatchingAssetsPath, "libunity"));

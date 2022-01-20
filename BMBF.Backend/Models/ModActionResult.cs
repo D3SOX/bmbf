@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace BMBF.Backend.Models;
 
@@ -12,6 +12,6 @@ public class ModActionResult
     /// <summary>
     /// If non-null, specifies the error that occured during mod installation
     /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Error { get; set; }
 }

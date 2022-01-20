@@ -2,31 +2,30 @@
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using BMBF.Backend.Models.Messages;
 using BMBF.Backend.Services;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace BMBF.Backend.Controllers;
 
 public class WebSocketController : ControllerBase
 {
-    private readonly IApplicationLifetime _appLifetime;
-    private readonly JsonSerializer _serializer = new()
+    private readonly IHostApplicationLifetime _appLifetime;
+    private readonly JsonSerializerOptions _serializerOptions = new()
     {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
         
     private readonly ILogger _logger;
     private readonly IMessageService _messageService;
         
-    public WebSocketController(IApplicationLifetime appLifetime, IMessageService messageService)
+    public WebSocketController(IHostApplicationLifetime appLifetime, IMessageService messageService)
     {
         _appLifetime = appLifetime;
         _messageService = messageService;
@@ -87,9 +86,6 @@ public class WebSocketController : ControllerBase
             
         var readBuffer = WebSocket.CreateServerBuffer(1024);
         using var msgStream = new MemoryStream();
-        using var msgWriter = new StreamWriter(msgStream);
-        using var jsonWriter = new JsonTextWriter(msgWriter);
-            
         Task<WebSocketReceiveResult>? receiveTask = null;
         Task<IMessage>? messageTask = null;
         while(webSocket.State == WebSocketState.Open)
@@ -123,8 +119,8 @@ public class WebSocketController : ControllerBase
                 // Make sure to overwrite the (potentially) existing message in the buffer
                 msgStream.Position = 0;
                     
-                _serializer.Serialize(jsonWriter, message);
-                jsonWriter.Flush(); // No need for FlushAsync - we are writing to a MemoryStream
+                // No need for SerializeAsync - we are writing to a MemoryStream
+                JsonSerializer.Serialize(msgStream, message, _serializerOptions);
 
                 int length = (int) msgStream.Position;
 

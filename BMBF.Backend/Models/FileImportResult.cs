@@ -1,5 +1,5 @@
-﻿using BMBF.ModManagement;
-using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
+using BMBF.ModManagement;
 
 namespace BMBF.Backend.Models;
 
@@ -13,35 +13,35 @@ public class FileImportResult
     /// <summary>
     /// If the file was imported as a song, this stores the information about the new song
     /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Song? ImportedSong { get; set; }
         
     /// <summary>
     /// If the file was imported as a playlist, this stores the imported playlist ID
     /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ImportedPlaylistId { get; set; }
         
     /// <summary>
     /// If the file was imported as a mod config, this stores the ID of the mod that the config was assigned to
     /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ConfigModId { get; set; }
         
     /// <summary>
     /// Error message, if importing the file failed
     /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Error { get; set; }
 
     /// <summary>
     /// If the file was imported with a copy extension, this stores the info about the copy extension
     /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public FileCopyInfo? FileCopyInfo { get; set; }
     
     
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IMod? ImportedMod { get; set; }
 
     public static FileImportResult CreateError(string error)

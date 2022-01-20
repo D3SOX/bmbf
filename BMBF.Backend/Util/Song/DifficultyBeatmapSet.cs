@@ -1,15 +1,15 @@
 ﻿#nullable disable
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace BMBF.Backend.Util.Song;
 
 public class DifficultyBeatmapSet
 {
-    [JsonProperty("_difficultyBeatmaps")]
+    [JsonPropertyName("_difficultyBeatmaps")]
     public List<DifficultyBeatmap> DifficultyBeatmaps { get; private set; } = new List<DifficultyBeatmap>();
 
-    [JsonProperty("_beatmapCharacteristicName")]
+    [JsonPropertyName("_beatmapCharacteristicName")]
     public string BeatmapCharacteristicName { get; set; }
 }

@@ -31,13 +31,23 @@ public class AssetFileProvider : IFileProvider
             return _assetManager.Open(_path) ?? throw new InvalidOperationException();
         }
 
-        public bool Exists => _assetManager.List(Path.GetDirectoryName(_path) ?? "")?.Contains(Path.GetFileName(_path)) ?? false;
+        public bool Exists
+        {
+            get
+            {
+                var files = _assetManager.List(Path.GetDirectoryName(_path) ?? "");
+                if (files == null) return false;
+
+                var exists =  files.Contains(Path.GetFileName(_path));
+                return exists;
+            }
+        }
 
         /// <summary>
         /// Since our asset files are compressed, we can't use OpenFd to get a file descriptor that would tell us the length
         /// </summary>
-        public long Length => throw new NotImplementedException();
-        public string PhysicalPath => _path;
+        public long Length => 0;
+        public string? PhysicalPath => null;
         public string Name => Path.GetFileName(_path);
         public DateTimeOffset LastModified => DateTimeOffset.UnixEpoch;
         public bool IsDirectory => _path.EndsWith("/");
@@ -74,20 +84,28 @@ public class AssetFileProvider : IFileProvider
     }
 
     private readonly AssetManager _assetManager;
+    private readonly string _basePath;
         
-    public AssetFileProvider(AssetManager assetManager)
+    public AssetFileProvider(AssetManager assetManager, string basePath = "")
     {
         _assetManager = assetManager;
+        _basePath = basePath;
+    }
+
+    private string GetAssetPath(string path)
+    {
+        var nonRootedPath = Path.IsPathRooted(path) ? path[1..] : path;
+        return Path.Combine(_basePath, nonRootedPath);
     }
         
     public IFileInfo GetFileInfo(string subpath)
     {
-        return new FileInfo(subpath, _assetManager);
+        return new FileInfo(GetAssetPath(subpath), _assetManager);
     }
 
     public IDirectoryContents GetDirectoryContents(string subpath)
     {
-        return new DirectoryContents(_assetManager.List(subpath), _assetManager);
+        return new DirectoryContents(_assetManager.List(GetAssetPath(subpath)), _assetManager);
     }
 
     public IChangeToken Watch(string filter)

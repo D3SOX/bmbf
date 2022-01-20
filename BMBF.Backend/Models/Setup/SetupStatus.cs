@@ -12,6 +12,9 @@ public class SetupStatus
 
     public SetupStage Stage { get; set; } = SetupStage.Downgrading;
         
+    /// <summary>
+    /// True if the current <see cref="Stage"/> is in progress, false if it is ready to be started.
+    /// </summary>
     public bool IsInProgress { get; set; }
         
     /// <summary>

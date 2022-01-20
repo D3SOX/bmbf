@@ -10,9 +10,9 @@ public class WebServerStartedReceiver : BroadcastReceiver
 {
     /// <summary>
     /// Invoked when the web server finishes starting up
-    /// Argument is the web server address
+    /// Argument is the web server port
     /// </summary>
-    public event EventHandler<string>? WebServerStartupComplete;
+    public event EventHandler<int>? WebServerStartupComplete;
 
     /// <summary>
     /// Invoked if the web server fails to start
@@ -51,7 +51,7 @@ public class WebServerStartedReceiver : BroadcastReceiver
             
         if (intent.Action == BMBFIntents.WebServerStartedIntent)
         {
-            WebServerStartupComplete?.Invoke(this, intent.GetStringExtra("BindAddress")!);
+            WebServerStartupComplete?.Invoke(this, int.Parse(intent.GetStringExtra("BindPort")!));
         }   else if (intent.Action == BMBFIntents.WebServerFailedToStartIntent)
         {
             WebServerStartupFailed?.Invoke(this, intent.GetStringExtra("Exception")!);

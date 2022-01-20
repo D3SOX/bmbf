@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using SemanticVersioning;
 
 namespace BMBF.Patching
@@ -24,7 +24,7 @@ namespace BMBF.Patching
         /// <summary>
         /// String representation of <see cref="PatcherVersion"/>
         /// </summary>
-        [JsonProperty(PropertyName = "patcherVersion")]
+        [JsonPropertyName("patcherVersion")]
         public string? PatcherVersionString
         {
             get => PatcherVersion?.ToString();
@@ -45,7 +45,7 @@ namespace BMBF.Patching
         /// <summary>
         /// String representation of <see cref="ModloaderVersion"/>
         /// </summary>
-        [JsonProperty(PropertyName = "modloaderVersion")]
+        [JsonPropertyName("modloaderVersion")]
         public string? ModloaderVersionString
         {
             get => ModloaderVersion?.ToString();
@@ -55,13 +55,13 @@ namespace BMBF.Patching
         /// <summary>
         /// A list of all the modified files in the APK
         /// </summary>
-        public HashSet<string> ModifiedFiles { get; set; } = new HashSet<string>();
+        public HashSet<string> ModifiedFiles { get; set; } = new();
         
         [JsonConstructor]
-        public PatchManifest(string patcherName, string? patcherVersion)
+        public PatchManifest(string patcherName, string? patcherVersionString)
         {
             PatcherName = patcherName;
-            PatcherVersionString = patcherVersion;
+            PatcherVersionString = PatcherVersionString;
         }
     }
 }

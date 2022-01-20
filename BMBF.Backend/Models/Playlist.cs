@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 using BMBF.Backend.Util.BPList;
-using Newtonsoft.Json;
 
 namespace BMBF.Backend.Models;
 
@@ -25,7 +25,7 @@ public class Playlist
 
     [JsonIgnore] public string Id { get; set; } = null!;
 
-    [JsonProperty("image")]
+    [JsonPropertyName("image")]
     public string? ImageString {
         get => Image == null ? null : "data:image/png;base64," + Convert.ToBase64String(Image);
         set
@@ -102,12 +102,12 @@ public class Playlist
     }
 
     [JsonConstructor]
-    public Playlist(string playlistTitle, string playlistAuthor, string playlistDescription, ImmutableList<BPSong> songs, string? image)
+    public Playlist(string playlistTitle, string playlistAuthor, string playlistDescription, ImmutableList<BPSong> songs, string? imageString)
     {
         _playlistTitle = playlistTitle;
         _playlistAuthor = playlistAuthor;
         _playlistDescription = playlistDescription;
-        ImageString = image;
+        ImageString = imageString;
         _songs = songs;
     }
 

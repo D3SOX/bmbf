@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util.BPList;
-using Newtonsoft.Json;
 using Serilog;
 
 namespace BMBF.Backend.Implementations;
@@ -42,7 +42,7 @@ public class FileImporter : IFileImporter
         Playlist playlist;
         try
         {
-            playlist = stream.ReadAsJson<Playlist>();
+            playlist = await stream.ReadAsCamelCaseJsonAsync<Playlist>();
         }
         catch (JsonException ex)
         {

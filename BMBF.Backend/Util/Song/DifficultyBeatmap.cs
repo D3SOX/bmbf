@@ -1,23 +1,23 @@
-﻿#nullable disable
+﻿using System.Text.Json.Serialization;
 
-using Newtonsoft.Json;
+#nullable disable
 
 namespace BMBF.Backend.Util.Song;
 
 public class DifficultyBeatmap
 {
-    [JsonProperty("_difficulty")]
+    [JsonPropertyName("_difficulty")]
     public Difficulty Difficulty { get; set; }
 
-    [JsonProperty("_difficultyRank")]
+    [JsonPropertyName("_difficultyRank")]
     public int DifficultyRank { get; set; }
 
-    [JsonProperty("_noteJumpMovementSpeed")]
+    [JsonPropertyName("_noteJumpMovementSpeed")]
     public float NoteJumpMovementSpeed { get; set; }
 
-    [JsonProperty("_noteJumpStartBeatOffset")]
+    [JsonPropertyName("_noteJumpStartBeatOffset")]
     public float NoteJumpStartBeatOffset { get; set; }
 
-    [JsonProperty("_beatmapFilename")]
+    [JsonPropertyName("_beatmapFilename")]
     public string BeatmapFilename { get; set; }
 }

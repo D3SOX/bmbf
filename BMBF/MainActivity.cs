@@ -39,7 +39,7 @@ public class MainActivity : Activity
             _receiver = new WebServerStartedReceiver();
             // Navigate to the main page when WebServer startup finishes
             _receiver.WebServerStartupComplete +=
-                (_, url) => RunOnUiThread(() => OnLoaded(url));
+                (_, port) => RunOnUiThread(() => OnLoaded($"http://localhost:{port}"));
                 
             // Make sure to inform of errors
             _receiver.WebServerStartupFailed +=

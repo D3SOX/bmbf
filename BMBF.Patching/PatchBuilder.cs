@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
-using Serilog.Core;
 using Version = SemanticVersioning.Version;
 
 namespace BMBF.Patching
@@ -126,14 +125,14 @@ namespace BMBF.Patching
                 {
                     if (fileEntry == null && fileModification.OverwriteMode == OverwriteMode.MustExist)
                     {
-                        throw new FileNotFoundException($"File {fileModification.ApkFilePath} did not already exist");
+                        throw new PatchingException($"File {fileModification.ApkFilePath} did not already exist");
                     }
 
                     if (fileEntry != null)
                     {
                         if (fileModification.OverwriteMode == OverwriteMode.MustBeNew)
                         {
-                            throw new InvalidOperationException($"File {fileModification.ApkFilePath} already existed");
+                            throw new PatchingException($"File {fileModification.ApkFilePath} already existed");
                         }
                         // Delete the existing entry if allowed
                         fileEntry.Delete();
@@ -172,6 +171,7 @@ namespace BMBF.Patching
                     logger.Information("Tagging APK");
                     _tagManager.AddTag(apkArchive, _manifest, _allowExistingTag);
                 }
+                logger.Information("Disposing archive (this takes a minute)");
             }
             
             if (_signingCertificate != null)

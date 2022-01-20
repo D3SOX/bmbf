@@ -1,6 +1,11 @@
 ﻿using System;
 using System.IO;
+using BMBF.Backend.Configuration;
+using BMBF.Backend.Extensions;
+using BMBF.Backend.Services;
 using BMBF.Desktop;
+using BMBF.Desktop.Configuration;
+using BMBF.Desktop.Implementations;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -10,34 +15,58 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 
+
+string CombineDisableAbsolute(string path1, string path2)
+{
+    if (Path.IsPathRooted(path2)) path2 = path2.Substring(1);
+    return Path.Combine(path1, path2);
+}
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .MinimumLevel.Verbose() // Enable debug logs
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // Avoid spammy request logging
     .CreateLogger();
 
-var assetsProvider = new PhysicalFileProvider(Path.GetFullPath("../BMBF/Assets"));
+var assetFileProvider = new PhysicalFileProvider(Path.GetFullPath(Constants.AssetsPath));
+var webRootFileProvider = new PhysicalFileProvider(Path.GetFullPath(Constants.WebRootPath));
+
 using var host = WebHost.CreateDefaultBuilder()
     .ConfigureLogging((_, logging) =>
     {
-        logging.ClearProviders();
+        logging.ClearProviders(); // Remove default asp.net core logging
+    })
+    .ConfigureServices((ctx, services) =>
+    {
+        var configuration = ctx.Configuration;
+        var settings = configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>();
+        var resources = configuration.GetSection(BMBFResources.Position).Get<BMBFResources>();
+        var desktopSettings = configuration.GetSection(BMBFDesktopSettings.Position).Get<BMBFDesktopSettings>();
+        var deviceRoot = desktopSettings.DeviceRoot;
+        
+        // Update paths in the settings to make sure they're all within our device directory
+        settings.ConfigsPath = CombineDisableAbsolute(deviceRoot, settings.ConfigsPath);        
+        settings.SongsPath = CombineDisableAbsolute(deviceRoot, settings.SongsPath);        
+        settings.PlaylistsPath = CombineDisableAbsolute(deviceRoot, settings.PlaylistsPath);        
+        settings.RootDataPath = CombineDisableAbsolute(deviceRoot, settings.RootDataPath);
+        settings.ModFilesPath = CombineDisableAbsolute(deviceRoot, settings.ModFilesPath);
+        settings.LibFilesPath = CombineDisableAbsolute(deviceRoot, settings.LibFilesPath);
+        services.AddSingleton(desktopSettings);
+        services.AddSingleton<IBeatSaberService, BeatSaberService>();
+        
+        services.AddBMBF(settings, resources, assetFileProvider);
     })
     .ConfigureAppConfiguration(configBuilder =>
     {
-        // Clear the existing appsettings.json
+        // Remove the existing appsettings.json
         configBuilder.Sources.Clear();
         
         // Make sure to add the BMBF.Desktop appsettings AFTER those from regular BMBF
         // This is to allow us to override file paths
-        configBuilder.AddJsonFile(assetsProvider, "appsettings.json", false, false); 
+        configBuilder.AddJsonFile(assetFileProvider, "appsettings.json", false, false); 
         configBuilder.AddJsonFile("appsettings.json");
     })
-    .ConfigureServices(services =>
-    {
-        // Use the assets file provider
-        services.AddSingleton<IFileProvider>(assetsProvider);
-    })
-    .UseStartup<Startup>()
+    .Configure(app => app.UseBMBF(webRootFileProvider))
     .UseUrls("http://localhost:50006")
     .UseSerilog()
     .Build();

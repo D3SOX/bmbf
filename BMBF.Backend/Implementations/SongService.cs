@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util;
-using Newtonsoft.Json;
 using Serilog;
 
 using SongCache = System.Collections.Concurrent.ConcurrentDictionary<string, BMBF.Backend.Models.Song>;
@@ -30,9 +31,9 @@ public class SongService : IDisposable, ISongService
     private readonly bool _automaticUpdates;
     private bool _disposed;
         
-    private readonly JsonSerializer _jsonSerializer = new()
+    private readonly JsonSerializerOptions _serializerOptions = new()
     {
-        NullValueHandling = NullValueHandling.Ignore
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
     private readonly FileSystemWatcher _fileSystemWatcher = new();
 
@@ -171,7 +172,7 @@ public class SongService : IDisposable, ISongService
             {
                 try
                 {
-                    songs = LoadCache();
+                    songs = await LoadCache();
                 }
                 catch (Exception ex)
                 {
@@ -202,11 +203,10 @@ public class SongService : IDisposable, ISongService
         _fileSystemWatcher.EnableRaisingEvents = true;
     }
 
-    private SongCache? LoadCache()
+    private async Task<SongCache?> LoadCache()
     {
-        using var reader = new StreamReader(_cachePath);
-        using var jsonReader = new JsonTextReader(reader);
-        return _jsonSerializer.Deserialize<ConcurrentDictionary<string, Song>>(jsonReader);
+        await using var cacheStream = File.OpenRead(_cachePath);
+        return await JsonSerializer.DeserializeAsync<ConcurrentDictionary<string, Song>>(cacheStream);
     }
 
     private async Task<SongCache> GenerateOrUpdateCache(SongCache? existing, bool notify)
@@ -339,10 +339,10 @@ public class SongService : IDisposable, ISongService
             {
                 var cacheDirectory = Path.GetDirectoryName(_cachePath);
                 if (cacheDirectory != null) Directory.CreateDirectory(cacheDirectory);
-                
-                using var writer = new StreamWriter(_cachePath);
-                using var jsonWriter = new JsonTextWriter(writer);
-                _jsonSerializer.Serialize(jsonWriter, _songs);
+
+                using var cacheStream = File.OpenWrite(_cachePath);
+                cacheStream.Position = 0;
+                JsonSerializer.Serialize(cacheStream, _songs);
             }
             catch (Exception ex)
             {
