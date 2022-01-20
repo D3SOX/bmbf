@@ -95,9 +95,10 @@ public class SongService : IDisposable, ISongService
             }
 
             var invalidNameChars = Path.GetInvalidFileNameChars();
+            var songPathBase = $"{song.SongName} ({song.SongAuthorName} - {song.LevelAuthorName})";
             
-            var fixedFileName = new string(fileName.Select(c => invalidNameChars.Contains(c) ? '_' : c).ToArray());
-            var originalSavePath = Path.Combine(_songsPath, Path.GetFileNameWithoutExtension(fixedFileName));
+            var fixedPathBase = new string(songPathBase.Select(c => invalidNameChars.Contains(c) ? '_' : c).ToArray());
+            var originalSavePath = Path.Combine(_songsPath, Path.GetFileNameWithoutExtension(fixedPathBase));
 
             song.Path = originalSavePath;
             int i = 1;
@@ -108,8 +109,8 @@ public class SongService : IDisposable, ISongService
             }
             
             Log.Information($"Extracting {fileName} to {song.Path}");
-            
-            await Task.Run(() => zipArchive.ExtractToDirectory(song.Path));
+            // We enable overwriting files to avoid failing to import songs with duplicate ZIP entries
+            await Task.Run(() => zipArchive.ExtractToDirectory(song.Path, true));
                 
             cache[song.Hash] = song;
             Log.Information($"Song {song.SongName} import complete");
@@ -206,7 +207,7 @@ public class SongService : IDisposable, ISongService
     private async Task<SongCache?> LoadCache()
     {
         await using var cacheStream = File.OpenRead(_cachePath);
-        return await JsonSerializer.DeserializeAsync<ConcurrentDictionary<string, Song>>(cacheStream);
+        return await JsonSerializer.DeserializeAsync<ConcurrentDictionary<string, Song>>(cacheStream, _serializerOptions);
     }
 
     private async Task<SongCache> GenerateOrUpdateCache(SongCache? existing, bool notify)
@@ -342,7 +343,7 @@ public class SongService : IDisposable, ISongService
 
                 using var cacheStream = File.OpenWrite(_cachePath);
                 cacheStream.Position = 0;
-                JsonSerializer.Serialize(cacheStream, _songs);
+                JsonSerializer.Serialize(cacheStream, _songs, _serializerOptions);
             }
             catch (Exception ex)
             {
