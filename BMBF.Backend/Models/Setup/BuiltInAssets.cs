@@ -25,12 +25,4 @@ public class BuiltInAssets
     /// Null if modloader is not built in.
     /// </summary>
     public string? ModLoaderVersion { get; set; }
-        
-    [JsonConstructor]
-    public BuiltInAssets(string beatSaberVersion, string? modLoaderVersion, List<CoreMod>? coreMods)
-    {
-        BeatSaberVersion = beatSaberVersion;
-        ModLoaderVersion = modLoaderVersion;
-        CoreMods = coreMods;
-    }
 }
