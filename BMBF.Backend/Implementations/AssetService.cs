@@ -216,9 +216,17 @@ public class AssetService : IAssetService
         }
         catch (Exception)
         {
-            Log.Warning("Could not fetch extensions from BMBF resources, using built in extensions instead!");
-            await using var extensionsStream = OpenAsset("extensions.json");
-            return extensionsStream.ReadAsCamelCaseJson<FileExtensions>();
+            var extensionsFile = _assetProvider.GetFileInfo("extensions.json");
+            if (extensionsFile.Exists)
+            {
+                Log.Warning("Could not fetch extensions from BMBF resources, using built in extensions instead!");
+
+                await using var extensionsStream = extensionsFile.CreateReadStream();
+                return extensionsStream.ReadAsCamelCaseJson<FileExtensions>();
+            }
+            
+            Log.Error("Could not load extensions from BMBF resources, and no extensions were built in");
+            throw;
         }
     }
 }
