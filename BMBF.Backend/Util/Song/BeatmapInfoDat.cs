@@ -41,7 +41,7 @@ public class BeatmapInfoDat
     public float PreviewDuration { get; set; }
 
     [JsonPropertyName("_difficultyBeatmapSets")]
-    public List<DifficultyBeatmapSet> DifficultyBeatmapSets { get; private set; } = new List<DifficultyBeatmapSet>();
+    public List<DifficultyBeatmapSet> DifficultyBeatmapSets { get; set; }
 
     [JsonPropertyName("_songFilename")]
     public string SongFilename { get; set; }
