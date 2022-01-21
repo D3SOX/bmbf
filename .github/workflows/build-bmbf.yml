@@ -29,13 +29,10 @@ jobs:
         key: ${{ runner.os }}-nuget
     - name: Fetch keystore
       run: curl ${{ secrets.KEYSTORE_URL }} -o ./BMBF.keystore
-    - name: Restore
-      shell: pwsh
-      run: ./restore.ps1
     - name: Test 
-      run: dotnet test --no-restore
+      run: dotnet test
     - name: Publish
-      run: dotnet publish BMBF/BMBF.csproj -c Release --no-restore
+      run: dotnet publish BMBF/BMBF.csproj -c Release
       env:
         BMBF_PASS: ${{ secrets.KEYSTORE_PASS }}
     - uses: actions/upload-artifact@v2
