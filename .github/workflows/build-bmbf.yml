@@ -30,9 +30,10 @@ jobs:
       run: dotnet test
     - name: Publish
       run: dotnet publish BMBF/BMBF.csproj -c Release
+      env:
+        BMBF_PASS: ${{ secrets.KEYSTORE_PASS }}
     - uses: actions/upload-artifact@v2
       with:
         name: com.weareneutralaboutoculus.BMBF.apk
         path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*.apk
-        BMBF_PASS: ${{ secrets.KEYSTORE_PASS }}
 
