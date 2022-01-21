@@ -19,6 +19,11 @@ jobs:
         java-version: '11'
     - name: Install Android workload
       run: dotnet workload install android
+    - uses: actions/cache@v1
+      id: cache
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget
     - name: Test
       run: dotnet test
     - name: Publish
