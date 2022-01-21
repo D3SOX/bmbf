@@ -24,6 +24,8 @@ jobs:
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget
+    - name: Fetch keystore
+      run: curl ${{ secrets.KEYSTORE_URL }} -o ./BMBF.keystore
     - name: Test
       run: dotnet test
     - name: Publish
@@ -32,3 +34,5 @@ jobs:
       with:
         name: com.weareneutralaboutoculus.BMBF.apk
         path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*.apk
+        BMBF_PASS: ${{ secrets.KEYSTORE_PASS }}
+

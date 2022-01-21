@@ -7,7 +7,11 @@
         <ApplicationId>com.weareneutralaboutoculus.BMBF</ApplicationId>
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
         
+        <!-- BMBF only runs on the quest, so we can save some space by only building for arm64-v8a -->
+        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+
         <!-- 
             We need set the target SDK version to 29 in order to allow us to use legacy external storage 
             Therefore we supress the warning that API level 31 will be used for ACW compilation,
@@ -16,8 +20,11 @@
         <NoWarn>XA4211;XA1006</NoWarn>
     </PropertyGroup>
     
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    <PropertyGroup>
+        <AndroidKeyStore>true</AndroidKeyStore>
+        <AndroidSigningKeyStore>..\BMBF.keystore</AndroidSigningKeyStore>
+        <AndroidSigningKeyPass>$(BMBF_PASS)</AndroidSigningKeyPass>
+        <AndroidSigningStorePass>$(BMBF_PASS)</AndroidSigningStorePass>
     </PropertyGroup>
     
     <ItemGroup>

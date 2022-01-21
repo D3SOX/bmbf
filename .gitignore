@@ -4,3 +4,4 @@ bin/
 obj/
 Device/
 BMBF.DiffGenerator/Output/
+BMBF.keystore
