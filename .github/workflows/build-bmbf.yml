@@ -38,4 +38,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: com.weareneutralaboutoculus.BMBF.apk
-        path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*.apk
+        path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk
