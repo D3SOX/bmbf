@@ -20,8 +20,6 @@
 
 ## Development
 
-- Before beginning any development, please run `./restore.ps1` in order to download the necessary dependencies.
-
 When testing BMBF during development, you have 3 options. The quest, an Android emulator, or directly on your PC.
 
 ### Using the Quest
@@ -49,6 +47,6 @@ Some notes:
 
 ## Creating a releasable APK
 1. Navigate to the `./BMBF` project on the command line.
-2. Execute `dotnet publish -c Release --no-restore`.
+2. Execute `dotnet publish -c Release`.
 3. The APK will be located at `./BMBF/bin/Release/net6.0-android/android-arm64/publish/com.weareneutralaboutoculus.BMBF-Signed.apk`
 
