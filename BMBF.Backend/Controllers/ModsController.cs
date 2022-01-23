@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.ModManagement;
 using Microsoft.AspNetCore.Mvc;
+using MimeTypes;
 
 namespace BMBF.Backend.Controllers;
 
@@ -26,21 +27,27 @@ public class ModsController : Controller
     }
 
     [HttpGet("cover/{modId}")]
-    public async Task GetModCover(string modId)
+    public async Task<IActionResult> GetModCover(string modId)
     {
-        if((await _modService.GetModsAsync()).TryGetValue(modId, out var matching))
+        if(!(await _modService.GetModsAsync()).TryGetValue(modId, out var matching))
         {
-            await using var coverStream = matching.mod.OpenCoverImage();
-            if (coverStream != null)
-            {
-                HttpContext.Response.StatusCode = (int) HttpStatusCode.OK;
-                HttpContext.Response.ContentType = "image/png";
-                await coverStream.CopyToAsync(HttpContext.Response.Body);
-                return;
-            }
+            return NotFound();
+        }
+        
+        var coverFileName = matching.mod.CoverImageFileName;
+        if (coverFileName == null)
+        {
+            return NotFound();
         }
 
-        HttpContext.Response.StatusCode = (int) HttpStatusCode.NotFound;
+        var coverExtension = Path.GetExtension(coverFileName);
+        if (!MimeTypeMap.TryGetMimeType(coverExtension, out var mimeType))
+        {
+            return NotFound();
+        }
+
+        var coverStream = matching.mod.OpenCoverImage();
+        return File(coverStream, mimeType);
     }
 
     [HttpPost("loadNewMods")]

@@ -2,7 +2,6 @@
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
@@ -28,17 +27,14 @@ public class PlaylistsController : Controller
     }
 
     [HttpGet("cover/{playlistId}")]
-    public async Task GetPlaylistCover(string playlistId)
+    public async Task<IActionResult> GetPlaylistCover(string playlistId)
     {
-        if((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching) && matching.Image != null)
+        if(!(await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching) || matching.Image == null)
         {
-            HttpContext.Response.StatusCode = (int) HttpStatusCode.OK;
-            HttpContext.Response.ContentType = "image/png";
-            await HttpContext.Response.Body.WriteAsync(matching.Image);
-            return;
+            return NotFound();
         }
-
-        HttpContext.Response.StatusCode = (int) HttpStatusCode.NotFound;
+        
+        return File(new MemoryStream(matching.Image), "image/png");
     }
 
     [HttpPut("cover/{playlistId}")]

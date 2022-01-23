@@ -74,18 +74,15 @@ public class HostController : Controller
     }
 
     [HttpGet("logs")]
-    public async Task GetLogs()
+    public IActionResult GetLogs()
     {
         var logsPath = Constants.LogPath;
         if (System.IO.File.Exists(logsPath))
         {
-            HttpContext.Response.StatusCode = (int) HttpStatusCode.OK;
-            HttpContext.Response.ContentType = "text/plain";
-            await using var logsStream = System.IO.File.OpenRead(logsPath);
-            await logsStream.CopyToAsync(HttpContext.Response.Body);
-            return;
+            var logsStream = System.IO.File.OpenRead(logsPath);
+            return File(logsStream, "text/plain");
         }
-            
-        HttpContext.Response.StatusCode = (int) HttpStatusCode.NotFound;
+
+        return NotFound();
     }
 }

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using MimeTypes;
 
 namespace BMBF.Backend.Controllers;
 
@@ -35,23 +35,25 @@ public class SongsController : Controller
     }
 
     [HttpGet("cover/{songHash}")]
-    public async Task GetCover(string songHash)
+    public async Task<IActionResult> GetCover(string songHash)
     {
-        if((await _songService.GetSongsAsync()).TryGetValue(songHash, out var matching))
+        if (!(await _songService.GetSongsAsync()).TryGetValue(songHash, out var matching))
         {
-            HttpContext.Response.StatusCode = (int) HttpStatusCode.OK;
-            HttpContext.Response.ContentType = MimeTypes.MimeTypeMap.GetMimeType(matching.CoverImageFileName);
-            string fullCoverPath = Path.Combine(matching.Path, matching.CoverImageFileName);
-            if (System.IO.File.Exists(fullCoverPath))
-            {
-                await using var coverStream =
-                    System.IO.File.OpenRead(fullCoverPath);
-
-                await coverStream.CopyToAsync(HttpContext.Response.Body);
-                return;
-            }
+            return NotFound();
         }
 
-        HttpContext.Response.StatusCode = (int) HttpStatusCode.NotFound;
+        string fullCoverPath = Path.Combine(matching.Path, matching.CoverImageFileName);
+        if (!System.IO.File.Exists(fullCoverPath))
+        {
+            return NotFound();
+        }
+
+        var coverStream = System.IO.File.OpenRead(fullCoverPath);
+        if(!MimeTypeMap.TryGetMimeType(Path.GetExtension(matching.CoverImageFileName), out var mimeType))
+        {
+            return NotFound();
+        }
+        
+        return File(coverStream, mimeType);
     }
 }
