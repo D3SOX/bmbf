@@ -62,7 +62,14 @@ namespace BMBF.ModManagement
         /// Opens the cover image of the mod
         /// </summary>
         /// <returns>A stream which can be used to read the cover image, or null if there is no cover image</returns>
-        Stream? OpenCoverImage();
+        /// <exception cref="InvalidOperationException">If the mod does not have a cover image. This is the case if <see cref="CoverImageFileName"/> is null</exception>
+        Stream OpenCoverImage();
+
+        /// <summary>
+        /// File name of the mod's cover image
+        /// Null if there is no cover image
+        /// </summary>
+        string? CoverImageFileName { get; }
         
         /// <summary>
         /// Whether or not the mod is currently installed

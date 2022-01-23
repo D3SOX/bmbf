@@ -20,6 +20,7 @@ namespace BMBF.QMod
         public string PackageVersion => Mod.PackageVersion;
         public string Version => Mod.Version.ToString();
         public bool Installed { get; private set; }
+        public string? CoverImageFileName => Path.GetFileName(Mod.CoverImagePath);
         
         internal QuestPatcher.QMod.QMod Mod { get; }
 
@@ -85,9 +86,14 @@ namespace BMBF.QMod
             }
         }
         
-        public Stream? OpenCoverImage()
+        public Stream OpenCoverImage()
         {
-            return Mod.CoverImagePath == null ? null : Mod.OpenCoverImage();
+            if (CoverImageFileName == null)
+            {
+                throw new InvalidOperationException("Cannot open cover image of mod without a cover image");
+            }
+
+            return Mod.OpenCoverImage();
         }
 
         internal void UpdateStatusInternal()
