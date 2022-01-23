@@ -211,6 +211,54 @@ namespace BMBF.QMod.Tests
             await Assert.ThrowsAsync<InstallationException>(async () => await mod.InstallAsync());
         }
 
+        [Theory]
+        [InlineData("cover.png", "cover.png")]
+        [InlineData("mySubDir/cover.png", "cover.png")]
+        public async Task ShouldHaveCorrectCoverFileName(string coverPath, string fileName)
+        {
+            var modStream = Util.CreateTestingMod(m => m.WriteCoverImageAsync(coverPath, new MemoryStream()).Wait());
+            
+            using var provider = Util.CreateProvider();
+            var mod = await provider.ParseAndAddMod(modStream);
+
+            Assert.Equal(fileName, mod.CoverImageFileName);
+        }
+
+        [Fact]
+        public async Task ShouldThrowWhenNoCover()
+        {
+            var modStream = Util.CreateTestingMod();
+    
+            using var provider = Util.CreateProvider();
+            var mod = await provider.ParseAndAddMod(modStream);
+
+            // This should throw InvalidOperationException, as no cover exists in the QMOD
+            Assert.Throws<InvalidOperationException>(() => mod.OpenCoverImage());
+        }
+
+        [Fact]
+        public async Task TestCoverContent()
+        {
+            const string content = "Hello World!";
+            
+            var modStream = Util.CreateTestingMod(m =>
+            {
+                using var coverStream = new MemoryStream();
+                using var coverWriter = new StreamWriter(coverStream);
+                coverWriter.WriteLine(content);
+                coverWriter.Flush();
+                coverStream.Position = 0;
+
+                m.WriteCoverImageAsync("cover.png", coverStream).Wait();
+            });
+            
+            using var provider = Util.CreateProvider();
+            var mod = await provider.ParseAndAddMod(modStream);
+            await using var coverStream = mod.OpenCoverImage();
+            using var coverReader = new StreamReader(coverStream);
+            Assert.Equal(content, await coverReader.ReadLineAsync());
+        }
+
         [Fact]
         public async Task ShouldUninstallLibraryWithNoDependants()
         {
