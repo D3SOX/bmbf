@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
@@ -22,6 +23,24 @@ public class ModsController : Controller
     public async Task<IEnumerable<IMod>> GetMods()
     {
         return (await _modService.GetModsAsync()).Values.Select(pair => pair.mod);
+    }
+
+    [HttpGet("cover/{modId}")]
+    public async Task GetModCover(string modId)
+    {
+        if((await _modService.GetModsAsync()).TryGetValue(modId, out var matching))
+        {
+            await using var coverStream = matching.mod.OpenCoverImage();
+            if (coverStream != null)
+            {
+                HttpContext.Response.StatusCode = (int) HttpStatusCode.OK;
+                HttpContext.Response.ContentType = "image/png";
+                await coverStream.CopyToAsync(HttpContext.Response.Body);
+                return;
+            }
+        }
+
+        HttpContext.Response.StatusCode = (int) HttpStatusCode.NotFound;
     }
 
     [HttpPost("loadNewMods")]
