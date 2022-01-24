@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace BMBF.Backend.Models;
 
@@ -22,7 +22,7 @@ public class Song
     public string CoverImageFileName { get; }
         
     [JsonConstructor]
-    internal Song(string hash, string songName, string songSubName, string songAuthorName, string levelAuthorName, string path, string coverImageFileName)
+    public Song(string hash, string songName, string songSubName, string songAuthorName, string levelAuthorName, string path, string coverImageFileName)
     {
         Hash = hash;
         SongName = songName;

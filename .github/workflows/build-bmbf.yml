@@ -19,6 +19,9 @@ jobs:
         java-version: '11'
     - name: Install Android workload
       run: dotnet workload install android
+    - uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: '6.x'
     - uses: actions/cache@v1
       id: cache
       with:
@@ -26,7 +29,7 @@ jobs:
         key: ${{ runner.os }}-nuget
     - name: Fetch keystore
       run: curl ${{ secrets.KEYSTORE_URL }} -o ./BMBF.keystore
-    - name: Test
+    - name: Test 
       run: dotnet test
     - name: Publish
       run: dotnet publish BMBF/BMBF.csproj -c Release
@@ -35,5 +38,4 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: com.weareneutralaboutoculus.BMBF.apk
-        path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*.apk
-
+        path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk

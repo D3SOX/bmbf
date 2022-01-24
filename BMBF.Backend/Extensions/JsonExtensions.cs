@@ -1,36 +1,48 @@
 ﻿using System;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace BMBF.Backend.Extensions;
 
 public static class JsonExtensions
 {
-    private static readonly JsonSerializer CamelCaseJsonSerializer = new JsonSerializer
+    private static readonly JsonSerializerOptions CamelCaseSerializerOptions = new()
     {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    private static readonly JsonSerializer DefaultJsonSerializer = new JsonSerializer();
-        
-    public static T ReadAsJson<T>(this Stream stream, JsonSerializer? jsonSerializer = null)
+    public static async Task<T> ReadAsJsonAsync<T>(this Stream stream, JsonSerializerOptions? serializerOptions = null)
     {
-        using var reader = new StreamReader(stream);
-        using var jsonReader = new JsonTextReader(reader);
-        return (jsonSerializer ?? DefaultJsonSerializer).Deserialize<T>(jsonReader) ?? throw new NullReferenceException("Deserialized result was null");
+        return await JsonSerializer.DeserializeAsync<T>(stream, serializerOptions) ?? throw new NullReferenceException("Deserialized result was null");
+    }
+
+    public static Task<T> ReadAsCamelCaseJsonAsync<T>(this Stream stream) => 
+        ReadAsJsonAsync<T>(stream, CamelCaseSerializerOptions);
+
+    public static Task WriteAsJsonAsync(this object o, Stream stream, JsonSerializerOptions? serializerOptions = null)
+    {
+        return JsonSerializer.SerializeAsync(stream, o, serializerOptions);
+    }
+
+    public static Task WriteAsCamelCaseJsonAsync(this object o, Stream stream) =>
+        WriteAsJsonAsync(o, stream, CamelCaseSerializerOptions);
+    
+    public static T ReadAsJson<T>(this Stream stream, JsonSerializerOptions? serializerOptions = null)
+    {
+        return JsonSerializer.Deserialize<T>(stream, serializerOptions) ?? throw new NullReferenceException("Deserialized result was null");
     }
 
     public static T ReadAsCamelCaseJson<T>(this Stream stream) => 
-        ReadAsJson<T>(stream, CamelCaseJsonSerializer);
+        ReadAsJson<T>(stream, CamelCaseSerializerOptions);
 
-    public static void WriteAsJson(this object o, Stream stream, JsonSerializer? jsonSerializer = null)
+    public static void WriteAsJson(this object o, Stream stream, JsonSerializerOptions? serializerOptions = null)
     {
-        using var writer = new StreamWriter(stream);
-        using var jsonWriter = new JsonTextWriter(writer);
-        (jsonSerializer ?? DefaultJsonSerializer).Serialize(jsonWriter, o);
+        JsonSerializer.Serialize(stream, o, serializerOptions);
     }
 
-    public static void WriteAsCamelCaseJson(this object o, Stream stream) =>
-        WriteAsJson(o, stream, CamelCaseJsonSerializer);
+    public static void WriteAsCamelCaseJson(this object o, Stream stream)
+    {
+        WriteAsJsonAsync(o, stream, CamelCaseSerializerOptions);
+    }
 }

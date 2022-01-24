@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -38,8 +39,16 @@ public class AssetService : IAssetService
         _assetProvider = assetProvider;
         _httpClient = httpClient;
 
-        using var patchingIndexStream = OpenAsset("patching_assets.json");
-        _builtInAssets = patchingIndexStream.ReadAsCamelCaseJson<BuiltInAssets>();
+        var indexFile = assetProvider.GetFileInfo("patching_assets.json");
+        if (indexFile.Exists)
+        {
+            using var indexStream = indexFile.CreateReadStream();
+            _builtInAssets = indexStream.ReadAsCamelCaseJson<BuiltInAssets>();
+        }
+        else
+        {
+            _builtInAssets = new BuiltInAssets();
+        }
 
         _bmbfResources = bmbfResources;
         _packageId = bmbfSettings.PackageId;
@@ -66,7 +75,7 @@ public class AssetService : IAssetService
         using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
         resp.EnsureSuccessStatusCode();
         await using var respStream = await resp.Content.ReadAsStreamAsync();
-        return respStream.ReadAsCamelCaseJson<T>();
+        return await respStream.ReadAsCamelCaseJsonAsync<T>();
     }
 
     public async Task<CoreModsIndex> GetCoreMods(bool refresh)
@@ -94,7 +103,7 @@ public class AssetService : IAssetService
             {
                 {
                     _builtInAssets.BeatSaberVersion,
-                    new CoreMods(DateTime.MinValue, _builtInAssets.CoreMods)
+                    new CoreMods(DateTime.MinValue.ToString(CultureInfo.InvariantCulture), _builtInAssets.CoreMods)
                 }
             };
         }
@@ -162,6 +171,12 @@ public class AssetService : IAssetService
         catch (Exception)
         {
             // Use the inbuilt modloader if no internet
+            if (_builtInAssets.ModLoaderVersion == null)
+            {
+                Log.Error("Downloading modloader failed, and no version was built in!");
+                throw;
+            }
+            
             Log.Warning($"Could not download modloader - using builtin version (v{_builtInAssets.ModLoaderVersion})");
             return OpenBuiltInModloader(is64Bit);
         }
@@ -201,9 +216,17 @@ public class AssetService : IAssetService
         }
         catch (Exception)
         {
-            Log.Warning("Could not fetch extensions from BMBF resources, using built in extensions instead!");
-            await using var extensionsStream = OpenAsset("extensions.json");
-            return extensionsStream.ReadAsCamelCaseJson<FileExtensions>();
+            var extensionsFile = _assetProvider.GetFileInfo("extensions.json");
+            if (extensionsFile.Exists)
+            {
+                Log.Warning("Could not fetch extensions from BMBF resources, using built in extensions instead!");
+
+                await using var extensionsStream = extensionsFile.CreateReadStream();
+                return extensionsStream.ReadAsCamelCaseJson<FileExtensions>();
+            }
+            
+            Log.Error("Could not load extensions from BMBF resources, and no extensions were built in");
+            throw;
         }
     }
 }

@@ -99,21 +99,33 @@ public class SetupService : ISetupService, IDisposable
     {
         if (CurrentStatus != null || !File.Exists(_statusFile)) return;
             
-        await using var statusStream = File.OpenRead(_statusFile);
-        CurrentStatus = statusStream.ReadAsCamelCaseJson<SetupStatus>();
+        try
+        {
+            await using(var statusStream = File.OpenRead(_statusFile)) {
+                CurrentStatus = await statusStream.ReadAsCamelCaseJsonAsync<SetupStatus>();
 
-        // Update installing modded/uninstalling original status, since BS may have been installed or uninstalled since the status was saved
-        UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync());
+                // Update installing modded/uninstalling original status, since BS may have been installed or uninstalled since the status was saved
+                await UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync());
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load setup status");
+            // Cancel any current setup operation
+            QuitSetupInternal();
+        }
     }
 
-    private void ProcessStatusChange()
+    private async Task ProcessStatusChange()
     {
         if (CurrentStatus == null) throw new NullReferenceException(nameof(CurrentStatus));
         StatusChanged?.Invoke(this, CurrentStatus);
             
         // Save new status for later
+        if(File.Exists(_statusFile)) File.Delete(_statusFile);
+        
         using var statusStream = File.OpenWrite(_statusFile);
-        CurrentStatus.WriteAsCamelCaseJson(statusStream);
+        await CurrentStatus.WriteAsCamelCaseJsonAsync(statusStream);
     }
         
 
@@ -139,7 +151,7 @@ public class SetupService : ISetupService, IDisposable
             File.Copy(installInfo.ApkPath, _latestCompleteApkPath);
 
             CurrentStatus = new SetupStatus(installInfo.Version);
-            ProcessStatusChange();
+            await ProcessStatusChange();
         }
         finally
         {
@@ -194,7 +206,7 @@ public class SetupService : ISetupService, IDisposable
             CurrentStatus.Stage = beginningStage;
             if (updateNow)
             {
-                ProcessStatusChange();
+                await ProcessStatusChange();
             }
         }
         finally
@@ -204,12 +216,12 @@ public class SetupService : ISetupService, IDisposable
         return CurrentStatus;
     }
         
-    private void EndSetupStage()
+    private async Task EndSetupStage()
     {
         if (CurrentStatus != null)
         {
             CurrentStatus.IsInProgress = false;
-            ProcessStatusChange();
+            await ProcessStatusChange();
         }
     }
 
@@ -221,7 +233,7 @@ public class SetupService : ISetupService, IDisposable
             if (downgradePath != null)
             {
                 currentStatus.DowngradingStatus = new DowngradingStatus { Path = downgradePath };
-                ProcessStatusChange();
+                await ProcessStatusChange();
             }
 
             if (currentStatus.DowngradingStatus == null)
@@ -273,7 +285,7 @@ public class SetupService : ISetupService, IDisposable
 
                 currentStatus.DowngradingStatus.CurrentDiff = i + 1;
                 currentStatus.CurrentBeatSaberVersion = diffInfo.ToVersion;
-                ProcessStatusChange(); // Save the new status for resuming later on
+                await ProcessStatusChange(); // Save the new status for resuming later on
             }
 
             Log.Information("Downgrading complete");
@@ -287,7 +299,7 @@ public class SetupService : ISetupService, IDisposable
         {
             currentStatus.DowngradingStatus = null;
             // Move forward to the patching stage
-            EndSetupStage();
+            await EndSetupStage();
         }
     }
 
@@ -351,15 +363,15 @@ public class SetupService : ISetupService, IDisposable
             {
                 builder.ModifyFile($"{libFolder}/libunity.so", OverwriteMode.MustExist, () => unityStream);
             }
-
+            
             await builder.Patch(_tempApkPath, _logger, _cts.Token);
 
-            // Move the current APK back to the latest complete
+                // Move the current APK back to the latest complete
             File.Delete(_latestCompleteApkPath);
             File.Move(_tempApkPath, _latestCompleteApkPath);
 
             // Trigger the next stage
-            UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync(), true);
+            await UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync(), true);
             _logger.Information("Patching complete");
         }
         catch (OperationCanceledException)
@@ -368,7 +380,7 @@ public class SetupService : ISetupService, IDisposable
         }
         finally
         {
-            EndSetupStage();
+            await EndSetupStage();
         }
     }
 
@@ -379,7 +391,7 @@ public class SetupService : ISetupService, IDisposable
     /// </summary>
     /// <param name="installationInfo">The new Beat Saber install</param>
     /// <param name="force">Whether or not to update the status even if not in a post-patch stage</param>
-    private void UpdateStatusPostPatching(InstallationInfo? installationInfo, bool force = false)
+    private async Task UpdateStatusPostPatching(InstallationInfo? installationInfo, bool force = false)
     {
         if (CurrentStatus == null) return;
         // If not in a post patching status, this can be safely skipped
@@ -397,7 +409,7 @@ public class SetupService : ISetupService, IDisposable
             if (CurrentStatus.Stage != SetupStage.InstallingModded)
             {
                 CurrentStatus.Stage = SetupStage.InstallingModded;
-                ProcessStatusChange();
+                await ProcessStatusChange();
                 _logger.Information("Beat Saber was uninstalled");
             }
         }   else if (installationInfo.ModTag == null)
@@ -406,7 +418,7 @@ public class SetupService : ISetupService, IDisposable
             if (CurrentStatus.Stage != SetupStage.UninstallingOriginal)
             {
                 CurrentStatus.Stage = SetupStage.UninstallingOriginal;
-                ProcessStatusChange();
+                await ProcessStatusChange();
                 _logger.Information("Unmodded Beat Saber was installed. It will have to be uninstalled");
             }
         }
@@ -415,7 +427,7 @@ public class SetupService : ISetupService, IDisposable
             if (CurrentStatus.Stage != SetupStage.Finalizing)
             {
                 CurrentStatus.Stage = SetupStage.Finalizing;
-                ProcessStatusChange();
+                await ProcessStatusChange();
                 _logger.Information("Modded Beat Saber was installed (woohoo)");
             }
         }
@@ -446,7 +458,7 @@ public class SetupService : ISetupService, IDisposable
         }
         finally
         {
-            EndSetupStage();
+            await EndSetupStage();
         }
     }
 
@@ -459,7 +471,7 @@ public class SetupService : ISetupService, IDisposable
         }
         finally
         {
-            EndSetupStage();
+            await EndSetupStage();
         }
     }
 
@@ -494,15 +506,22 @@ public class SetupService : ISetupService, IDisposable
         }
         finally
         {
-            EndSetupStage();
+            await EndSetupStage();
         }
     }
         
-    private void OnBeatSaberServiceAppChanged(object? sender, InstallationInfo? installationInfo)
+    private async void OnBeatSaberServiceAppChanged(object? sender, InstallationInfo? installationInfo)
     {
         if (CurrentStatus == null) return;
-            
-        UpdateStatusPostPatching(installationInfo);
+
+        try
+        {
+            await UpdateStatusPostPatching(installationInfo);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to update status upon app change");
+        }
     }
 
     public void Dispose()

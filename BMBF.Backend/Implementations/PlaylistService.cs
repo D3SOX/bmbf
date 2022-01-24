@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Serilog;
 using PlaylistCache = System.Collections.Concurrent.ConcurrentDictionary<string, BMBF.Backend.Models.Playlist>;
 
@@ -22,9 +21,9 @@ public class PlaylistService : IPlaylistService, IDisposable
 
     private PlaylistCache? _cache;
     private readonly SemaphoreSlim _cacheUpdateLock = new(1);
-    private readonly JsonSerializer _serializer = new()
+    private readonly JsonSerializerOptions _serializerOptions = new()
     {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     private readonly string _playlistsPath;
@@ -122,10 +121,10 @@ public class PlaylistService : IPlaylistService, IDisposable
                         }
                         playlist.LoadedFrom = newPath;
                     }
-                        
-                    await using var playlistStream = new StreamWriter(playlist.LoadedFrom);
-                    using var jsonWriter = new JsonTextWriter(playlistStream);
-                    await Task.Run(() => _serializer.Serialize(jsonWriter, playlist)).ConfigureAwait(false);
+                    
+                    await using var playlistStream = File.OpenWrite(playlist.LoadedFrom);
+                    playlistStream.Position = 0;
+                    await JsonSerializer.SerializeAsync(playlistStream, playlist, _serializerOptions);
                     playlist.IsPendingSave = false;
                 }
                 catch (Exception ex)
@@ -238,10 +237,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             // FileShare.Read is used here, since we don't want to attempt to open a playlist while it is still being written
             await using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            using var streamReader = new StreamReader(fileStream);
-            using var jsonReader = new JsonTextReader(streamReader);
-            // No async with newtonsoft :/
-            var playlist = await Task.Run(() => _serializer.Deserialize<Playlist>(jsonReader));
+            var playlist = await JsonSerializer.DeserializeAsync<Playlist>(fileStream, _serializerOptions);
             if (playlist == null)
             {
                 Log.Warning($"Deserialized playlist from {path} was null");

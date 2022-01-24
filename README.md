@@ -16,6 +16,7 @@
 ### Build requirements
 - [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - .NET 6 Android workload. To install, first install .NET 6, then run `dotnet workload install android` as administrator.
+- [NuGet CLI](https://www.nuget.org/downloads) on PATH. 
 
 ## Development
 

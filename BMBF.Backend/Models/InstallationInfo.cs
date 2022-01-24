@@ -1,5 +1,5 @@
-﻿using BMBF.Patching;
-using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
+using BMBF.Patching;
 
 namespace BMBF.Backend.Models;
 

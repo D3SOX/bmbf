@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using BMBF.Resources;
-using Newtonsoft.Json;
 
 namespace BMBF.Backend.Models.Setup;
 
@@ -16,20 +16,13 @@ public class BuiltInAssets
     public string? BeatSaberVersion { get; set; }
         
     /// <summary>
-    /// List of built in core mods>. Null if versioned assets are not included
+    /// List of built in core mods. Null if core mods are not included.
     /// </summary>
     public List<CoreMod>? CoreMods { get; set; }
         
     /// <summary>
-    /// Version of built in modloader
+    /// Version of built in modloader.
+    /// Null if modloader is not built in.
     /// </summary>
-    public string ModLoaderVersion { get; set; }
-        
-    [JsonConstructor]
-    public BuiltInAssets(string beatSaberVersion, string modLoaderVersion, List<CoreMod>? coreMods)
-    {
-        BeatSaberVersion = beatSaberVersion;
-        ModLoaderVersion = modLoaderVersion;
-        CoreMods = coreMods;
-    }
+    public string? ModLoaderVersion { get; set; }
 }

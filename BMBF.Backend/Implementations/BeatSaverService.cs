@@ -2,11 +2,11 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util;
-using Newtonsoft.Json.Linq;
 
 namespace BMBF.Backend.Implementations;
 
@@ -40,21 +40,17 @@ public class BeatSaverService : IBeatSaverService
             
         string respString = await resp.Content.ReadAsStringAsync();
 
-        var versions = JToken.Parse(respString).Value<JArray>("versions");
-        if (versions == null)
-        {
-            throw new FormatException("Map had no versions property");
-        }
-            
+        var versions = JsonDocument.Parse(respString).RootElement.GetProperty("versions");
+
         DateTime latest = DateTime.MinValue;
         string? latestDownloadUri = null;
-        foreach (var versionObj in versions)
+        foreach (var versionObj in versions.EnumerateArray())
         {
-            var val = versionObj.Value<DateTime>("createdAt");
+            var val = versionObj.GetProperty("createdAt").Deserialize<DateTime>();
             if (latest < val)
             {
                 latest = val;
-                latestDownloadUri = versionObj.Value<string>("downloadURL");
+                latestDownloadUri = versionObj.GetProperty("downloadURL").GetString();
             }
         }
             

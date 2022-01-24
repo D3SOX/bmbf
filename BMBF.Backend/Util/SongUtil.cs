@@ -1,17 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Backend.Util.Song;
-using Newtonsoft.Json;
 using Serilog;
 
 namespace BMBF.Backend.Util;
 
 public static class SongUtil
 {
-    private static readonly JsonSerializer JsonSerializer = new();
-
     private static async Task<string?> TryGetSongHashAsync(IFolderProvider provider, Stream infoDatStream, BeatmapInfoDat infoDat)
     {
         using var hash = SHA1.Create();
@@ -62,10 +60,8 @@ public static class SongUtil
 
         BeatmapInfoDat? infoDat;
         await using(var infoDatStream = provider.Open(infoDatPath))
-        using(var infoDatReader = new StreamReader(infoDatStream))
-        using (var jsonReader = new JsonTextReader(infoDatReader))
         {
-            infoDat = JsonSerializer.Deserialize<BeatmapInfoDat>(jsonReader);
+            infoDat = await JsonSerializer.DeserializeAsync<BeatmapInfoDat>(infoDatStream);
             if (infoDat == null)
             {
                 Log.Warning($"Info.dat for song {name} was null");

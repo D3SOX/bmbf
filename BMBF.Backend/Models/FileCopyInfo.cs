@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace BMBF.Backend.Models;
 
@@ -15,7 +15,7 @@ public class FileCopyInfo
     /// <summary>
     /// Name of the mod registering this extension, if any
     /// </summary>
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ModId { get; set; }
         
     [JsonConstructor]

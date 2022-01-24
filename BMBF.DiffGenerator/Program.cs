@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Resources;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Octodiff.Core;
 using Octodiff.Diagnostics;
 using Version = SemanticVersioning.Version;
@@ -20,10 +19,10 @@ internal static class Program
         public void ReportProgress(string operation, long currentPosition, long total) { }
     }
 
-    private static readonly JsonSerializer JsonSerializer = new()
+    private static readonly JsonSerializerOptions SerializerOptions = new()
     {
-        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-        Formatting = Formatting.Indented
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true
     };
 
     private static async Task<SortedDictionary<Version, string>> DownloadVersions(string accessToken, List<OculusAppVersion> versions, string outputPath)
@@ -113,19 +112,16 @@ internal static class Program
 
         Console.WriteLine("Saving index");
         await using var indexStream = File.OpenWrite(indexPath);
-        using var writer = new StreamWriter(indexStream);
-        using var jsonWriter = new JsonTextWriter(writer);
-        JsonSerializer.Serialize(jsonWriter, diffs);
+        await JsonSerializer.SerializeAsync(indexStream, diffs, SerializerOptions);
     }
     
     
     public static async Task<int> Main(string[] args)
     {
         Settings? settings;
-        using(var settingsReader = new StreamReader("settings.json"))
-        using (var jsonReader = new JsonTextReader(settingsReader))
+        using(var settingsStream = File.OpenRead("settings.json"))
         {
-            settings = JsonSerializer.Deserialize<Settings>(jsonReader);
+            settings = await JsonSerializer.DeserializeAsync<Settings>(settingsStream, SerializerOptions);
             if (settings == null)
             {
                 await Console.Error.WriteLineAsync("Settings were null!");

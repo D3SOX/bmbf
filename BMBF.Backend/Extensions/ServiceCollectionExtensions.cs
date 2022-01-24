@@ -1,12 +1,16 @@
-﻿using System.IO.Abstractions;
+﻿using System;
+using System.IO.Abstractions;
 using System.Net.Http;
+using System.Reflection;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Implementations;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util;
 using BMBF.Patching;
 using BMBF.QMod;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 
 namespace BMBF.Backend.Extensions;
 
@@ -18,25 +22,37 @@ public static class ServiceCollectionExtensions
     /// separately - no implementation is provided in this project.
     /// </summary>
     /// <param name="services">Service collection to add the BMBF backend services to</param>
-    // ReSharper disable once InconsistentNaming
-    public static void AddBMBF(this IServiceCollection services)
+    /// <param name="settings">BMBF settings</param>
+    /// <param name="resources">BMBF resource URLs</param>
+    /// <param name="assetFileProvider">File provider used to load assets such as built-in core mods,
+    /// libunity.so, and modloader. If null, then built in assets will not be used, and these files
+    /// will always be downloaded manually</param>
+    public static void AddBMBF(this IServiceCollection services, BMBFSettings settings, BMBFResources resources, IFileProvider assetFileProvider)
     {
         services.AddSingleton<ISongService, SongService>();
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();
         services.AddSingleton<IMessageService, MessageService>();
-        
+        services.AddSingleton<IExtensionsService, ExtensionsService>();
+        services.AddSingleton<IFileImporter, FileImporter>();
+        services.AddSingleton<IBeatSaverService, BeatSaverService>();
+        services.AddSingleton<IAssetService, AssetService>();
+        services.AddSingleton(settings);
+        services.AddSingleton(resources);
+        services.AddSingleton(assetFileProvider);
+        services.AddSingleton(HttpClientUtil.CreateBMBFHttpClient());
+
         services.AddSingleton<ModService>();
         services.AddSingleton<IModService>(s =>
         {
-            var settings = s.GetService<BMBFSettings>();
-            var modService = s.GetService<ModService>();
+            var modService = s.GetService<ModService>() ?? throw new NullReferenceException($"{nameof(ModService)} not configured");
             
+            // Add a QModProvider - more mod providers can be registered here to support alternative mod types
             var provider = new QModProvider(
                 settings.PackageId,
                 settings.ModFilesPath,
                 settings.LibFilesPath,
-                s.GetService<HttpClient>(),
+                s.GetService<HttpClient>() ?? throw new NullReferenceException("No HttpClient configured"),
                 new FileSystem(),
                 modService
             );
@@ -44,13 +60,13 @@ public static class ServiceCollectionExtensions
             modService.RegisterProvider(provider);
             return modService;
         });
-            
-        services.AddSingleton(HttpClientUtil.CreateBMBFHttpClient());
-        services.AddSingleton<IExtensionsService, ExtensionsService>();
-        services.AddSingleton<IFileImporter, FileImporter>();
-        services.AddSingleton<IBeatSaverService, BeatSaverService>();
-        services.AddSingleton<IAssetService, AssetService>();
-
+        
+        // Add controllers, making sure to include those in this assembly instead of only those in the entry assembly 
+        var mvcBuilder = services.AddControllers();
+        mvcBuilder.PartManager
+            .ApplicationParts
+            .Add(new AssemblyPart(Assembly.GetExecutingAssembly()));
+        
         // Configure our legacy tags
         var tagManager = new TagManager();
         tagManager.RegisterLegacyTag("modded",

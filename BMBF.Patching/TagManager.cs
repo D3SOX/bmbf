@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BMBF.Patching
 {
@@ -14,12 +13,12 @@ namespace BMBF.Patching
     public class TagManager
     {
         private readonly string _tagLocation;
-        private readonly Dictionary<string, Func<PatchManifest>> _legacyTags = new Dictionary<string, Func<PatchManifest>>();
+        private readonly Dictionary<string, Func<PatchManifest>> _legacyTags = new();
 
-        private readonly JsonSerializer _jsonSerializer = new JsonSerializer()
+        private readonly JsonSerializerOptions _serializerOptions = new()
         {
-            NullValueHandling = NullValueHandling.Ignore,
-            ContractResolver = new CamelCasePropertyNamesContractResolver()
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
         /// <summary>
@@ -56,11 +55,9 @@ namespace BMBF.Patching
                 var legacyTagPair = _legacyTags.FirstOrDefault(pair => apkArchive.GetEntry(pair.Key) != null);
                 return legacyTagPair.Value?.Invoke() ?? null;
             }
-            
+
             using var tagStream = tagEntry.Open();
-            using var tagReader = new StreamReader(tagStream);
-            using var jsonReader = new JsonTextReader(tagReader);
-            return _jsonSerializer.Deserialize<PatchManifest>(jsonReader);
+            return JsonSerializer.Deserialize<PatchManifest>(tagStream, _serializerOptions);
         }
 
         /// <summary>
@@ -91,10 +88,8 @@ namespace BMBF.Patching
 
             var tagEntry = apkArchive.CreateEntry(_tagLocation);
             using var tagStream = tagEntry.Open();
-            using var writer = new StreamWriter(tagStream);
-            using var jsonWriter = new JsonTextWriter(writer);
             // Save the new tag to the APK
-            _jsonSerializer.Serialize(jsonWriter, manifest);
+            JsonSerializer.Serialize(tagStream, manifest, _serializerOptions);
         }
     }
 }
