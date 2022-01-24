@@ -33,7 +33,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();
         services.AddSingleton<IMessageService, MessageService>();
-        services.AddSingleton<IExtensionsService, ExtensionsService>();
         services.AddSingleton<IFileImporter, FileImporter>();
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
         services.AddSingleton<IAssetService, AssetService>();

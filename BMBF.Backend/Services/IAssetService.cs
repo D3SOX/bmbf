@@ -69,6 +69,7 @@ public interface IAssetService
     /// <summary>
     /// Gets or uses the inbuilt file copy extensions
     /// </summary>
+    /// <exception cref="HttpRequestException">If no extensions were built in, and requesting them from BMBF resources failed</exception>
     /// <returns>The inbuilt or downloaded file copy extensions</returns>
     Task<FileExtensions> GetExtensions();
 }

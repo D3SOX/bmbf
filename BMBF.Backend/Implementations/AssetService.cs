@@ -225,7 +225,6 @@ public class AssetService : IAssetService
                 return extensionsStream.ReadAsCamelCaseJson<FileExtensions>();
             }
             
-            Log.Error("Could not load extensions from BMBF resources, and no extensions were built in");
             throw;
         }
     }

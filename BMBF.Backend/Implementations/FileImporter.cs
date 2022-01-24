@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
@@ -9,6 +10,7 @@ using BMBF.Backend.Extensions;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util.BPList;
+using BMBF.Resources;
 using Serilog;
 
 namespace BMBF.Backend.Implementations;
@@ -19,24 +21,26 @@ public class FileImporter : IFileImporter
     private readonly IPlaylistService _playlistService;
     private readonly IBeatSaverService _beatSaverService;
     private readonly BMBFSettings _bmbfSettings;
-    private readonly IExtensionsService _extensionsService;
     private readonly IModService _modService;
+    private readonly IAssetService _assetService;
+
+    private FileExtensions? _extensions;
 
     public FileImporter(ISongService songService,
         IPlaylistService playlistService,
         IBeatSaverService beatSaverService,
         BMBFSettings bmbfSettings,
-        IExtensionsService extensionsService,
-        IModService modService)
+        IModService modService,
+        IAssetService assetService)
     {
         _songService = songService;
         _playlistService = playlistService;
         _beatSaverService = beatSaverService;
         _bmbfSettings = bmbfSettings;
-        _extensionsService = extensionsService;
         _modService = modService;
+        _assetService = assetService;
     }
-        
+
     private async Task<string?> TryImportPlaylistAsync(Stream stream, string fileName)
     {
         Playlist playlist;
@@ -138,9 +142,20 @@ public class FileImporter : IFileImporter
             }
         }
 
-        await _extensionsService.LoadExtensions();
+        if (_extensions == null)
+        {
+            try
+            {
+                _extensions = await _assetService.GetExtensions();
+            }
+            catch (HttpRequestException ex)
+            {
+                Log.Error(ex, "No extensions were built-in, and loading extensions from BMBF resources failed");
+                return FileImportResult.CreateError("No copy extensions were built in to the APK, and downloading them failed");
+            }
+        }
             
-        if (_extensionsService.ConfigExtensions.Contains(extension))
+        if (_extensions.ConfigExtensions.Contains(extension))
         {
             string modId = Path.GetFileNameWithoutExtension(fileName);
             bool modExistsWithId = (await _modService.GetModsAsync()).ContainsKey(modId);
@@ -158,7 +173,7 @@ public class FileImporter : IFileImporter
             }
         }
             
-        if (_extensionsService.PlaylistExtensions.Contains(extension))
+        if (_extensions.PlaylistExtensions.Contains(extension))
         {
             var playlistId = await TryImportPlaylistAsync(stream, fileName);
             if (playlistId != null)
@@ -186,19 +201,15 @@ public class FileImporter : IFileImporter
         // Therefore, we will rewind the stream and attempt to import as a copy extension
         memStream.Position = 0;
 
-        if (_extensionsService.CopyExtensions.TryGetValue(extension, out var copyInfo))
+        if (_extensions.CopyExtensions.TryGetValue(extension, out var destination))
         {
-            await CopyFile(stream, fileName, copyInfo.Destination);
+            await CopyFile(stream, fileName, destination);
             Log.Information($"{fileName} copied via copy extension ({extension})");
-            if (copyInfo.ModId != null)
-            {
-                Log.Information($"The mod registering this extension was {copyInfo.ModId}");
-            }
 
             return new FileImportResult
             {
                 Type = FileImportResultType.FileCopy,
-                FileCopyInfo = copyInfo
+                FileCopyInfo = new FileCopyInfo(destination, null)
             };
         }
 
