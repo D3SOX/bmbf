@@ -35,7 +35,7 @@ public class Debouncey : IDisposable
     /// </summary>
     public void Invoke()
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(Debouncey));
+        if (_disposed) return;
         
         lock (_timerLock)
         {
