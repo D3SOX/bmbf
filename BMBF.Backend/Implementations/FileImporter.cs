@@ -10,6 +10,7 @@ using BMBF.Backend.Extensions;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util.BPList;
+using BMBF.ModManagement;
 using BMBF.Resources;
 using Serilog;
 
@@ -122,7 +123,7 @@ public class FileImporter : IFileImporter
         await using var outputStream = File.OpenWrite(outputPath);
         await stream.CopyToAsync(outputStream);
     }
-
+    
     public async Task<FileImportResult> TryImportAsync(Stream stream, string fileName)
     {
         Log.Information($"Importing {fileName}");
@@ -155,11 +156,11 @@ public class FileImporter : IFileImporter
             }
         }
             
+        // Attempt to import as a mod config. This only applies if the config's filename matches the ID of a loaded mod
         if (_extensions.ConfigExtensions.Contains(extension))
         {
-            string modId = Path.GetFileNameWithoutExtension(fileName);
-            bool modExistsWithId = (await _modService.GetModsAsync()).ContainsKey(modId);
-
+            var modId = Path.GetFileNameWithoutExtension(fileName);
+            var modExistsWithId = (await _modService.GetModsAsync()).ContainsKey(modId);
             if (modExistsWithId)
             {
                 await CopyFile(stream, fileName, _bmbfSettings.ConfigsPath);
@@ -201,18 +202,42 @@ public class FileImporter : IFileImporter
         // Therefore, we will rewind the stream and attempt to import as a copy extension
         memStream.Position = 0;
 
+        (IMod? mod, string destination)? selectedCopy = null;
+
         if (_extensions.CopyExtensions.TryGetValue(extension, out var destination))
         {
-            await CopyFile(stream, fileName, destination);
-            Log.Information($"{fileName} copied via copy extension ({extension})");
+            selectedCopy = (null, destination);
+        }
 
+        // Search through the installed mods to see if any can process this file type
+        var mods = (await _modService.GetModsAsync()).Values;
+        foreach (var modPair in mods)
+        {
+            if (modPair.mod.CopyExtensions.TryGetValue(extension, out destination))
+            {
+                if (selectedCopy == null)
+                {
+                    Log.Debug($"Found mod {modPair.mod.Id} which can process {extension} files");
+                    selectedCopy = (modPair.mod, destination);
+                }
+                else
+                {
+                    // For now, we will just fail if multiple mods/builtin extensions match the file extension
+                    return FileImportResult.CreateError($"Multiple file copy destinations found for {extension}");   
+                }
+            }
+        }
+        if (selectedCopy != null)
+        {
+            var (mod, copyDest) = selectedCopy.Value;
+            await CopyFile(stream, fileName, copyDest);
             return new FileImportResult
             {
                 Type = FileImportResultType.FileCopy,
-                FileCopyInfo = new FileCopyInfo(destination, null)
+                FileCopyInfo = new FileCopyInfo(copyDest, mod?.Id)
             };
         }
-
+        
         return FileImportResult.CreateError($"Unrecognised file type .{extension}");
     }
 

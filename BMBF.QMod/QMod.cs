@@ -21,7 +21,8 @@ namespace BMBF.QMod
         public string Version => Mod.Version.ToString();
         public bool Installed { get; private set; }
         public string? CoverImageFileName => Path.GetFileName(Mod.CoverImagePath);
-        
+        public IReadOnlyDictionary<string, string> CopyExtensions { get; }
+
         internal QuestPatcher.QMod.QMod Mod { get; }
 
         private IFileSystem FileSystem => _provider.FileSystem;
@@ -35,6 +36,8 @@ namespace BMBF.QMod
         {
             Mod = mod;
             _provider = provider;
+            // Verify that extensions are lower case
+            CopyExtensions = mod.CopyExtensions.ToDictionary(c => c.Extension.ToLower(), c => c.Destination);
         }
 
         private bool VerifyRegistered()

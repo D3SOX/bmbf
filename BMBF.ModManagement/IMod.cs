@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -75,5 +76,12 @@ namespace BMBF.ModManagement
         /// Whether or not the mod is currently installed
         /// </summary>
         bool Installed { get; }
+        
+        /// <summary>
+        /// Map of file extensions to paths which indicate file types this mod loads and where it loads them from.
+        /// Key is lower(!) case file extension without(!) period prefix, value is path.
+        /// !: This is important
+        /// </summary>
+        IReadOnlyDictionary<string, string> CopyExtensions { get; }
     }
 }
