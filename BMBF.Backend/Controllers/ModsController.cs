@@ -26,6 +26,18 @@ public class ModsController : Controller
         return (await _modService.GetModsAsync()).Values.Select(pair => pair.mod);
     }
 
+    [HttpGet("download/{modId}")]
+    public async Task<IActionResult> DownloadMod(string modId)
+    {
+        if (!(await _modService.GetModsAsync()).TryGetValue(modId, out var mod))
+        {
+            return NotFound();
+        }
+
+        var modStream = System.IO.File.OpenRead(mod.path);
+        return File(modStream, "application/octet-stream", $"{mod.mod.Id}_v{mod.mod.Version}{Path.GetExtension(mod.path)}");
+    }
+
     [HttpGet("cover/{modId}")]
     public async Task<IActionResult> GetModCover(string modId)
     {
