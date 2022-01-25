@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.Backend", "BMBF.Backen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.Desktop", "BMBF.Desktop\BMBF.Desktop.csproj", "{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.Backend.Tests", "BMBF.Backend.Tests\BMBF.Backend.Tests.csproj", "{9B9B7BD4-49EE-4571-B668-A5FAB65CB265}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,5 +73,9 @@ Global
 		{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91711B55-CCC4-4185-84DB-2FB22DC6C3B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B9B7BD4-49EE-4571-B668-A5FAB65CB265}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B9B7BD4-49EE-4571-B668-A5FAB65CB265}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B9B7BD4-49EE-4571-B668-A5FAB65CB265}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B9B7BD4-49EE-4571-B668-A5FAB65CB265}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
