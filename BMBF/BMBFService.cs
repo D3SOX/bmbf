@@ -10,6 +10,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -122,11 +123,14 @@ public class BMBFService : Service
                 var configuration = ctx.Configuration;
                 var settings = configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>();
                 var resources = configuration.GetSection(BMBFResources.Position).Get<BMBFResources>();
-                services.AddBMBF(settings, resources, assetFileProvider);
+                services.AddBMBF(ctx, settings, resources, assetFileProvider);
 
                 services.AddSingleton<Service>(this);
             })
-            .Configure(app => app.UseBMBF(webRootFileProvider))
+#if DEBUG
+            .UseEnvironment(Environments.Development)
+#endif
+            .Configure((ctx, app) => app.UseBMBF(ctx, webRootFileProvider))
             .UseUrls(Constants.BindAddress)
             .UseSerilog();
     }

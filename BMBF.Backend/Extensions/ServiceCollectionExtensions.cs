@@ -8,9 +8,11 @@ using BMBF.Backend.Services;
 using BMBF.Backend.Util;
 using BMBF.Patching;
 using BMBF.QMod;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 
 namespace BMBF.Backend.Extensions;
 
@@ -22,13 +24,27 @@ public static class ServiceCollectionExtensions
     /// separately - no implementation is provided in this project.
     /// </summary>
     /// <param name="services">Service collection to add the BMBF backend services to</param>
+    /// <param name="ctx">Context of the web app</param>
     /// <param name="settings">BMBF settings</param>
     /// <param name="resources">BMBF resource URLs</param>
     /// <param name="assetFileProvider">File provider used to load assets such as built-in core mods,
     /// libunity.so, and modloader. If null, then built in assets will not be used, and these files
     /// will always be downloaded manually</param>
-    public static void AddBMBF(this IServiceCollection services, BMBFSettings settings, BMBFResources resources, IFileProvider assetFileProvider)
+    public static void AddBMBF(this IServiceCollection services,
+                                WebHostBuilderContext ctx, 
+                                BMBFSettings settings,
+                                BMBFResources resources,
+                                IFileProvider assetFileProvider)
     {
+        if (ctx.HostingEnvironment.IsDevelopment())
+        {
+            services.AddSwaggerGen(options =>
+            {
+                options.SupportNonNullableReferenceTypes();
+            });
+        }
+        services.AddRouting(options => options.LowercaseUrls = true);
+        
         services.AddSingleton<ISongService, SongService>();
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();

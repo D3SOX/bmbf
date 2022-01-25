@@ -1,7 +1,9 @@
 ﻿using System.IO;
 using System.Net;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using MimeTypes;
 using Serilog;
 
@@ -13,9 +15,10 @@ public static class ApplicationBuilderExtensions
     /// Adds the BMBF middleware and endpoints to an app.
     /// </summary>
     /// <param name="app">App to add BMBF endpoints to</param>
+    /// <param name="ctx">Context of the web app</param>
     /// <param name="webRootFileProvider">File provider used for frontend static files</param>
     /// <param name="apiEndpointPrefix">Prefix for API endpoints (i.e. non-frontend routes)</param>
-    public static void UseBMBF(this IApplicationBuilder app, IFileProvider webRootFileProvider, string apiEndpointPrefix = "/api")
+    public static void UseBMBF(this IApplicationBuilder app, WebHostBuilderContext ctx, IFileProvider webRootFileProvider, string apiEndpointPrefix = "/api")
     {
         app.UseWebSockets();
         
@@ -27,6 +30,12 @@ public static class ApplicationBuilderExtensions
             {
                 endpoints.MapControllers();
             });
+
+            if (ctx.HostingEnvironment.IsDevelopment())
+            {
+                appBuilder.UseSwagger();
+                appBuilder.UseSwaggerUI();
+            }
         });
 
         // Add our own middleware for static files
@@ -34,37 +43,37 @@ public static class ApplicationBuilderExtensions
         // determine the length of its files.
         // Unfortunately, this isn't always the case, for instance, compressed Android assets have no way of finding
         // their length without copying the whole file into memory first, which is inefficient.
-        app.Run(async ctx =>
+        app.Run(async reqCtx =>
         {
             // Redirect / to /index.html
-            if (ctx.Request.Path == "/")
+            if (reqCtx.Request.Path == "/")
             {
-                ctx.Request.Path = "/index.html";
+                reqCtx.Request.Path = "/index.html";
             }
 
-            var file = webRootFileProvider.GetFileInfo(ctx.Request.Path);
+            var file = webRootFileProvider.GetFileInfo(reqCtx.Request.Path);
             if (!file.Exists)
             {
-                ctx.Response.StatusCode = (int) HttpStatusCode.NotFound;
+                reqCtx.Response.StatusCode = (int) HttpStatusCode.NotFound;
                 return;
             }
             
-            var extension = Path.GetExtension(ctx.Request.Path);
+            var extension = Path.GetExtension(reqCtx.Request.Path);
             // Attempt to find the Content-Type for this file extension
             if (MimeTypeMap.TryGetMimeType(extension, out var mimeType))
             {
-                ctx.Response.StatusCode = (int) HttpStatusCode.OK;
-                ctx.Response.Headers["Content-Type"] = mimeType;
+                reqCtx.Response.StatusCode = (int) HttpStatusCode.OK;
+                reqCtx.Response.Headers["Content-Type"] = mimeType;
                 
                 // Copy the static file into our response
                 await using var fileStream = file.CreateReadStream();
-                await fileStream.CopyToAsync(ctx.Response.Body);
+                await fileStream.CopyToAsync(reqCtx.Response.Body);
             }
             else
             {
                 // Fallback failure if no mime type is available
-                Log.Warning($"Could not serve static file {ctx.Request.Path} - could not determine Content-Type for {extension}");
-                ctx.Response.StatusCode = (int) HttpStatusCode.NotFound;
+                Log.Warning($"Could not serve static file {reqCtx.Request.Path} - could not determine Content-Type for {extension}");
+                reqCtx.Response.StatusCode = (int) HttpStatusCode.NotFound;
             }
         });
     }

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
@@ -54,7 +55,7 @@ using var host = WebHost.CreateDefaultBuilder()
         services.AddSingleton(desktopSettings);
         services.AddSingleton<IBeatSaberService, BeatSaberService>();
         
-        services.AddBMBF(settings, resources, assetFileProvider);
+        services.AddBMBF(ctx, settings, resources, assetFileProvider);
     })
     .ConfigureAppConfiguration(configBuilder =>
     {
@@ -66,9 +67,12 @@ using var host = WebHost.CreateDefaultBuilder()
         configBuilder.AddJsonFile(assetFileProvider, "appsettings.json", false, false); 
         configBuilder.AddJsonFile("appsettings.json");
     })
-    .Configure(app => app.UseBMBF(webRootFileProvider))
+    .Configure((ctx, app) => app.UseBMBF(ctx, webRootFileProvider))
     .UseUrls("http://localhost:50006")
     .UseSerilog()
+#if DEBUG
+    .UseEnvironment(Environments.Development)
+#endif
     .Build();
 
 var shutdownTriggered = false;
