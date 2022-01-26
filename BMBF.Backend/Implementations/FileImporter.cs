@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -24,6 +25,7 @@ public class FileImporter : IFileImporter
     private readonly BMBFSettings _bmbfSettings;
     private readonly IModService _modService;
     private readonly IAssetService _assetService;
+    private readonly IFileSystem _io;
 
     private FileExtensions? _extensions;
 
@@ -32,7 +34,8 @@ public class FileImporter : IFileImporter
         IBeatSaverService beatSaverService,
         BMBFSettings bmbfSettings,
         IModService modService,
-        IAssetService assetService)
+        IAssetService assetService,
+        IFileSystem io)
     {
         _songService = songService;
         _playlistService = playlistService;
@@ -40,6 +43,7 @@ public class FileImporter : IFileImporter
         _bmbfSettings = bmbfSettings;
         _modService = modService;
         _assetService = assetService;
+        _io = io;
     }
 
     private async Task<string?> TryImportPlaylistAsync(Stream stream, string fileName)
@@ -115,12 +119,12 @@ public class FileImporter : IFileImporter
 
     private async Task CopyFile(Stream stream, string fileName, string saveDirectory)
     {
-        Directory.CreateDirectory(saveDirectory);
+        _io.Directory.CreateDirectory(saveDirectory);
         var outputPath = Path.Combine(saveDirectory, fileName);
-        if(File.Exists(outputPath)) File.Delete(outputPath);
+        if(_io.File.Exists(outputPath)) _io.File.Delete(outputPath);
                 
         Log.Information($"Copied {fileName} to {saveDirectory}");
-        await using var outputStream = File.OpenWrite(outputPath);
+        await using var outputStream = _io.File.OpenWrite(outputPath);
         await stream.CopyToAsync(outputStream);
     }
     

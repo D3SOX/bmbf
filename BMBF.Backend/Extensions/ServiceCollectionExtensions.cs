@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileImporter, FileImporter>();
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
         services.AddSingleton<IAssetService, AssetService>();
+        services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton(settings);
         services.AddSingleton(resources);
         services.AddSingleton(assetFileProvider);

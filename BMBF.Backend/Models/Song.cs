@@ -7,7 +7,7 @@ namespace BMBF.Backend.Models;
 /// </summary>
 public class Song
 {
-    public string Hash { get; }
+    public string Hash { get; internal set; }
         
     public string SongName { get; }
         
@@ -20,6 +20,11 @@ public class Song
     public string Path { get; set; }
         
     public string CoverImageFileName { get; }
+
+    public static Song CreateBlank()
+    {
+        return new Song("", "", "", "", "", "", "");
+    }
         
     [JsonConstructor]
     public Song(string hash, string songName, string songSubName, string songAuthorName, string levelAuthorName, string path, string coverImageFileName)
