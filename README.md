@@ -5,12 +5,13 @@
 ### Projects
 - `BMBF` - The main BMBF project, which produces the Android APK for installation onto the Quest.
 - `BMBF.Backend` - Contains the code for the BMBF backend, uses abstractions to interact with android-specific APIs. 
+- `BMBF.Backend.Tests` - Unit tests for the backend 
 - `BMBF.Desktop` - A wrapper around BMBF for testing locally without an emulator. Allows BMBF to run directly on one's PC.
 - `BMBF.DiffGenerator` - Automatically downloads Beat Saber versions and computes diffs for downgrading.
 - `BMBF.ModManagement` - Abstractions which allow multiple mod types to be handled by BMBF.
 - `BMBF.Patching` - Convenient API for patching and signing APKs, with manifest changes.
 - `BMBF.QMod` - Implementation of [QMOD](https://github.com/Lauriethefish/QuestPatcher.QMod) loading and installation.
-- `BMBF.QMod.Tests` - Tests for QMOD management.
+- `BMBF.QMod.Tests` - Unit tests for QMOD management.
 - `BMBF.Resources` - C# classes for loading the JSON files in the [resources repo](https://github.com/BMBF/resources).
 
 ### Build requirements
