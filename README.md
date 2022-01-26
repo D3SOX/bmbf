@@ -5,7 +5,7 @@
 ### Projects
 - `BMBF` - The main BMBF project, which produces the Android APK for installation onto the Quest.
 - `BMBF.Backend` - Contains the code for the BMBF backend, uses abstractions to interact with android-specific APIs. 
-- `BMBF.Desktop` - A wrapper around BMBF for testing locally without an emulator. Allows BMBF to run directly on ones PC.
+- `BMBF.Desktop` - A wrapper around BMBF for testing locally without an emulator. Allows BMBF to run directly on one's PC.
 - `BMBF.DiffGenerator` - Automatically downloads Beat Saber versions and computes diffs for downgrading.
 - `BMBF.ModManagement` - Abstractions which allow multiple mod types to be handled by BMBF.
 - `BMBF.Patching` - Convenient API for patching and signing APKs, with manifest changes.
@@ -20,19 +20,12 @@
 
 ## Development
 
-When testing BMBF during development, you have 3 options. The quest, an Android emulator, or directly on your PC.
+When testing BMBF during development, you have 2 options. The quest, or running BMBF directly on your PC.
 
 ### Using the Quest
 1. Open `BMBF.sln` in the IDE of your choice (e.g. Visual Studio or Rider). 
 2. Plug your Quest into your PC (make sure that you have USB debugging setup)
 3. Run the project using the run/debug buttons in your IDE. This will automatically build, install, and run BMBF.
-
-### Setting up an Emulator
-1. Open the AVD manager in your IDE.
-2. Create a new virtual device.
-3. Choose an Android TV (720p) device, and make sure that you use an image with an API level of at least 29, ideally 30.
-4. Select the device when running the BMBF project.
-5. Note that you can forward the ports for BMBF to your PC by running `adb forward tcp:50005 tcp:50005`
 
 ### Running directly on your PC
 1. Navigate to `./BMBF.Desktop`
@@ -43,6 +36,9 @@ When testing BMBF during development, you have 3 options. The quest, an Android 
 Some notes:
 - Files in BMBF.Desktop will be located in the `./BMBF.Desktop/Device` directory - note that the directories don't completely reflect the Quest's filesystem, to make things easier to find.
 - The "beat saber installation" is simulated by an APK located in `./BMBF.Desktop/Device/BeatSaber.apk`. Creating or deleting this file is akin to installing or uninstalling Beat Saber.
+
+## Browsing API endpoints
+API endpoints can be viewed in swagger at the endpoint `/api/swagger` (only applies in the `Debug` configuration)
 
 
 ## Creating a releasable APK
