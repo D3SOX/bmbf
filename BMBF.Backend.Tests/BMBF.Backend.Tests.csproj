@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="../BMBF.Backend/BMBF.Backend.csproj" />
 
-    <None Include="Resources\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Resources\" />
+    <None Include="Resources\**" CopyToOutputDirectory="Always" LinkBase="Resources\" />
   </ItemGroup>
 
   <ItemGroup>
