@@ -345,7 +345,8 @@ public class SongService : IDisposable, ISongService
             {
                 var cacheDirectory = Path.GetDirectoryName(_cachePath);
                 if (cacheDirectory != null) Directory.CreateDirectory(cacheDirectory);
-
+                if(_io.File.Exists(_cachePath)) _io.File.Delete(_cachePath);
+                
                 using var cacheStream = _io.File.OpenWrite(_cachePath);
                 cacheStream.Position = 0;
                 JsonSerializer.Serialize(cacheStream, _songs, _serializerOptions);
