@@ -27,6 +27,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .MinimumLevel.Verbose() // Enable debug logs
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // Avoid spammy request logging
+    .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
     .CreateLogger();
 
 var assetFileProvider = new PhysicalFileProvider(Path.GetFullPath(Constants.AssetsPath));

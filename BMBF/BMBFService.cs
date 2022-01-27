@@ -94,6 +94,7 @@ public class BMBFService : Service
     {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // Disable microsoft request logging
+            .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
             .MinimumLevel.Verbose()
             .Enrich.FromLogContext()
             .WriteTo.AndroidLog(LogEventLevel.Verbose, "{Message:l}{NewLine}{Exception:l}")

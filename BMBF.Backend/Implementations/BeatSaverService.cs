@@ -4,9 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using BMBF.Backend.Configuration;
 using BMBF.Backend.Services;
-using BMBF.Backend.Util;
 
 namespace BMBF.Backend.Implementations;
 
@@ -14,10 +12,9 @@ public class BeatSaverService : IBeatSaverService
 {
     private readonly HttpClient _httpClient;
         
-    public BeatSaverService(BMBFSettings settings)
+    public BeatSaverService(HttpClient httpClient)
     {
-        _httpClient = HttpClientUtil.CreateBMBFHttpClient();
-        _httpClient.BaseAddress = settings.BeatSaverBaseUri;
+        _httpClient = httpClient;
     }
 
     public async Task<Stream?> DownloadSongByHash(string hash)

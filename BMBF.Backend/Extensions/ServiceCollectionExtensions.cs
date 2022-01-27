@@ -5,7 +5,6 @@ using System.Reflection;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Implementations;
 using BMBF.Backend.Services;
-using BMBF.Backend.Util;
 using BMBF.Patching;
 using BMBF.QMod;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +17,17 @@ namespace BMBF.Backend.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+    private static string UserAgent => $"BMBF/{Assembly.GetExecutingAssembly().GetName().Version}";
+
+    /// <summary>
+    /// Configures the default BMBF headers on the given <see cref="HttpClient"/>
+    /// </summary>
+    /// <param name="httpClient">Client to configure</param>
+    private static void ConfigureDefaults(HttpClient httpClient)
+    {
+        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
+    }
+
     /// <summary>
     /// Adds the BMBF backend services to the given service collection.
     /// It's important to note that <see cref="IBeatSaberService"/> must be registered separately
@@ -50,25 +60,36 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISetupService, SetupService>();
         services.AddSingleton<IMessageService, MessageService>();
         services.AddSingleton<IFileImporter, FileImporter>();
-        services.AddSingleton<IBeatSaverService, BeatSaverService>();
         services.AddSingleton<IAssetService, AssetService>();
         services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IBeatSaverService, BeatSaverService>();
+        
+        services.AddHttpClient<IBeatSaverService, BeatSaverService>(client =>
+        {
+            ConfigureDefaults(client);
+            client.BaseAddress = settings.BeatSaverBaseUri;
+        });
+        services.AddHttpClient<IAssetService, AssetService>(ConfigureDefaults);
+        services.AddHttpClient();
+        
         services.AddSingleton(settings);
         services.AddSingleton(resources);
         services.AddSingleton(assetFileProvider);
-        services.AddSingleton(HttpClientUtil.CreateBMBFHttpClient());
 
         services.AddSingleton<ModService>();
         services.AddSingleton<IModService>(s =>
         {
             var modService = s.GetService<ModService>() ?? throw new NullReferenceException($"{nameof(ModService)} not configured");
-            
+            var httpClientFactory = s.GetService<IHttpClientFactory>() ?? throw new NullReferenceException($"No {nameof(IHttpClientFactory)} configured");
+            var httpClient = httpClientFactory.CreateClient();
+            ConfigureDefaults(httpClient);
+
             // Add a QModProvider - more mod providers can be registered here to support alternative mod types
             var provider = new QModProvider(
                 settings.PackageId,
                 settings.ModFilesPath,
                 settings.LibFilesPath,
-                s.GetService<HttpClient>() ?? throw new NullReferenceException("No HttpClient configured"),
+                httpClientFactory.CreateClient(),
                 new FileSystem(),
                 modService
             );
