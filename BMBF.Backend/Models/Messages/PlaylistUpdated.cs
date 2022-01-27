@@ -1,5 +1,5 @@
 ﻿using System.Collections.Immutable;
-using BMBF.Backend.Util.BPList;
+using BMBF.Backend.Models.BPList;
 
 namespace BMBF.Backend.Models.Messages;
 

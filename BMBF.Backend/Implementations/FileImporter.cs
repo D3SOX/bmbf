@@ -10,7 +10,7 @@ using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
-using BMBF.Backend.Util.BPList;
+using BMBF.Backend.Models.BPList;
 using BMBF.ModManagement;
 using BMBF.Resources;
 using Serilog;

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace BMBF.Backend.Util.BPList;
+namespace BMBF.Backend.Models.BPList;
 
 // ReSharper disable once InconsistentNaming
 public class BPSong

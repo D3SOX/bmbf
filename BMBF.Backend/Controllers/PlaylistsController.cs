@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
-using BMBF.Backend.Util.BPList;
+using BMBF.Backend.Models.BPList;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BMBF.Backend.Controllers;
