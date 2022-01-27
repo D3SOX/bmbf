@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -28,18 +29,21 @@ public class PlaylistService : IPlaylistService, IDisposable
 
     private readonly string _playlistsPath;
     private readonly bool _automaticUpdates;
+    private readonly IFileSystem _io;
 
-    private readonly FileSystemWatcher _fileSystemWatcher = new();
+    private readonly IFileSystemWatcher _fileSystemWatcher;
     private readonly Debouncey _autoUpdateDebouncey;
 
     private bool _disposed;
         
-    public PlaylistService(BMBFSettings settings)
+    public PlaylistService(BMBFSettings settings, IFileSystem io)
     {
         _playlistsPath = settings.PlaylistsPath;
         _automaticUpdates = settings.UpdateCachesAutomatically;
         _autoUpdateDebouncey = new Debouncey(settings.PlaylistFolderDebounceDelay);
         _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
+        _io = io;
+        _fileSystemWatcher = _io.FileSystemWatcher.CreateNew();
     }
 
     public async Task<string> AddPlaylistAsync(Playlist playlist)
@@ -114,7 +118,7 @@ public class PlaylistService : IPlaylistService, IDisposable
                     {
                         string newPath = Path.Combine(_playlistsPath, playlistPair.Key + ".bplist");
                         int i = 1;
-                        while (File.Exists(newPath))
+                        while (_io.File.Exists(newPath))
                         {
                             newPath = Path.Combine(_playlistsPath, playlistPair.Key + "_" + i + ".bplist");
                             i++;
@@ -122,7 +126,7 @@ public class PlaylistService : IPlaylistService, IDisposable
                         playlist.LoadedFrom = newPath;
                     }
                     
-                    await using var playlistStream = File.OpenWrite(playlist.LoadedFrom);
+                    await using var playlistStream = _io.File.OpenWrite(playlist.LoadedFrom);
                     playlistStream.Position = 0;
                     await JsonSerializer.SerializeAsync(playlistStream, playlist, _serializerOptions);
                     playlist.IsPendingSave = false;
@@ -148,7 +152,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             // If the playlist was actually loaded from a file, then delete it
             if (playlist.LoadedFrom != null)
             {
-                File.Delete(playlist.LoadedFrom);
+                _io.File.Delete(playlist.LoadedFrom);
             }
             PlaylistDeleted?.Invoke(this, playlist);
             return true;
@@ -168,7 +172,7 @@ public class PlaylistService : IPlaylistService, IDisposable
                 return _cache;
             }
 
-            Directory.CreateDirectory(_playlistsPath);
+            _io.Directory.CreateDirectory(_playlistsPath);
 
             // We wait to assign the cache field until the cache is fully loaded
             var cache = new PlaylistCache();
@@ -203,7 +207,7 @@ public class PlaylistService : IPlaylistService, IDisposable
     {
         foreach(var entry in cache)
         {
-            if (!File.Exists(entry.Value.LoadedFrom))
+            if (!_io.File.Exists(entry.Value.LoadedFrom))
             {
                 Log.Information($"Playlist {entry.Key} deleted");
                 cache.Remove(entry.Key, out _);
@@ -214,7 +218,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             } 
         }
             
-        foreach (string playlistPath in Directory.EnumerateFiles(_playlistsPath))
+        foreach (string playlistPath in _io.Directory.EnumerateFiles(_playlistsPath))
         {
             await ProcessNewPlaylistAsync(playlistPath, cache, notify);
         }
@@ -228,7 +232,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             // We can skip loading if:
             // - The existing playlist is pending save - changes made in BMBF are prioritised over those on disk
             // - The playlist file was modified at the same time (or further before) the playlist was loaded
-            var lastWriteTime = File.GetLastWriteTimeUtc(path);
+            var lastWriteTime = _io.File.GetLastWriteTimeUtc(path);
             if (existing != null && (existing.IsPendingSave || lastWriteTime <= existing.LastLoadTime))
             {
                 return;

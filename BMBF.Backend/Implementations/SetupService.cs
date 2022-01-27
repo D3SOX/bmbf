@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,8 +60,13 @@ public class SetupService : ISetupService, IDisposable
     private bool _disposed;
 
     private readonly SemaphoreSlim _stageBeginLock = new(1);
+    private readonly IFileSystem _io;
 
-    public SetupService(IBeatSaberService beatSaberService, IAssetService assetService, TagManager tagManager, BMBFSettings settings)
+    public SetupService(IBeatSaberService beatSaberService,
+        IAssetService assetService,
+        TagManager tagManager,
+        BMBFSettings settings,
+        IFileSystem io)
     {
         _beatSaberService = beatSaberService;
         _assetService = assetService;
@@ -75,7 +81,7 @@ public class SetupService : ISetupService, IDisposable
             .WriteTo.Logger(Log.Logger.ForContext<SetupService>())
             // TODO: Write to status update ws api
             .CreateLogger();
-
+        _io = io;
 
         _beatSaberService.AppChanged += OnBeatSaberServiceAppChanged;
     }
@@ -97,11 +103,11 @@ public class SetupService : ISetupService, IDisposable
 
     private async Task LoadSavedStatusAsync()
     {
-        if (CurrentStatus != null || !File.Exists(_statusFile)) return;
+        if (CurrentStatus != null || !_io.File.Exists(_statusFile)) return;
             
         try
         {
-            await using(var statusStream = File.OpenRead(_statusFile)) {
+            await using(var statusStream = _io.File.OpenRead(_statusFile)) {
                 CurrentStatus = await statusStream.ReadAsCamelCaseJsonAsync<SetupStatus>();
 
                 // Update installing modded/uninstalling original status, since BS may have been installed or uninstalled since the status was saved
@@ -122,9 +128,9 @@ public class SetupService : ISetupService, IDisposable
         StatusChanged?.Invoke(this, CurrentStatus);
             
         // Save new status for later
-        if(File.Exists(_statusFile)) File.Delete(_statusFile);
+        if(_io.File.Exists(_statusFile)) _io.File.Delete(_statusFile);
         
-        using var statusStream = File.OpenWrite(_statusFile);
+        using var statusStream = _io.File.OpenWrite(_statusFile);
         await CurrentStatus.WriteAsCamelCaseJsonAsync(statusStream);
     }
         
@@ -143,12 +149,12 @@ public class SetupService : ISetupService, IDisposable
             }
 
             _logger.Information("Beginning setup");
-            if(Directory.Exists(_setupDirName)) Directory.Delete(_setupDirName, true);
-            Directory.CreateDirectory(_setupDirName);
+            if(_io.Directory.Exists(_setupDirName)) _io.Directory.Delete(_setupDirName, true);
+            _io.Directory.CreateDirectory(_setupDirName);
             
             _logger.Information("Copying APK to temp");
             var installInfo = await _beatSaberService.GetInstallationInfoAsync() ?? throw new InvalidOperationException("Cannot begin setup when Beat Saber is not installed");
-            File.Copy(installInfo.ApkPath, _latestCompleteApkPath);
+            _io.File.Copy(installInfo.ApkPath, _latestCompleteApkPath);
 
             CurrentStatus = new SetupStatus(installInfo.Version);
             await ProcessStatusChange();
@@ -187,7 +193,7 @@ public class SetupService : ISetupService, IDisposable
     private void QuitSetupInternal()
     {
         Log.Information("Quitting setup");
-        Directory.Delete(_setupDirName, true);
+        _io.Directory.Delete(_setupDirName, true);
         CurrentStatus = null;
         _cts.Dispose();
     }
@@ -269,19 +275,19 @@ public class SetupService : ISetupService, IDisposable
 
                 await using var selectedDeltaStream = deltaStream;
 
-                if (File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
+                if (_io.File.Exists(_tempApkPath)) _io.File.Delete(_tempApkPath);
 
                 _logger.Information($"Applying patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
-                await using (var basisStream = File.OpenRead(_latestCompleteApkPath))
-                await using (var tempStream = File.Open(_tempApkPath, FileMode.Create, FileAccess.ReadWrite))
+                await using (var basisStream = _io.File.OpenRead(_latestCompleteApkPath))
+                await using (var tempStream = _io.File.Open(_tempApkPath, FileMode.Create, FileAccess.ReadWrite))
                 {
                     await Task.Run(() => deltaApplier.Apply(basisStream,
                         new BinaryDeltaReader(selectedDeltaStream, new DummyProgressReporter()), tempStream));
                 }
 
                 // Move our APK back to the latest complete path, then move to the next diff
-                File.Delete(_latestCompleteApkPath);
-                File.Move(_tempApkPath, _latestCompleteApkPath);
+                _io.File.Delete(_latestCompleteApkPath);
+                _io.File.Move(_tempApkPath, _latestCompleteApkPath);
 
                 currentStatus.DowngradingStatus.CurrentDiff = i + 1;
                 currentStatus.CurrentBeatSaberVersion = diffInfo.ToVersion;
@@ -313,8 +319,8 @@ public class SetupService : ISetupService, IDisposable
         {
             _logger.Information("Beginning patching");
 
-            if (File.Exists(_tempApkPath)) File.Delete(_tempApkPath);
-            File.Copy(_latestCompleteApkPath, _tempApkPath);
+            if (_io.File.Exists(_tempApkPath)) _io.File.Delete(_tempApkPath);
+            _io.File.Copy(_latestCompleteApkPath, _tempApkPath);
 
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
@@ -367,8 +373,8 @@ public class SetupService : ISetupService, IDisposable
             await builder.Patch(_tempApkPath, _logger, _cts.Token);
 
                 // Move the current APK back to the latest complete
-            File.Delete(_latestCompleteApkPath);
-            File.Move(_tempApkPath, _latestCompleteApkPath);
+            _io.File.Delete(_latestCompleteApkPath);
+            _io.File.Move(_tempApkPath, _latestCompleteApkPath);
 
             // Trigger the next stage
             await UpdateStatusPostPatching(await _beatSaberService.GetInstallationInfoAsync(), true);
@@ -438,18 +444,18 @@ public class SetupService : ISetupService, IDisposable
         await BeginSetupStage(SetupStage.UninstallingOriginal);
         try
         {
-            if (!Directory.Exists(_backupPath))
+            if (!_io.Directory.Exists(_backupPath))
             {
-                Directory.CreateDirectory(_backupPath);
+                _io.Directory.CreateDirectory(_backupPath);
                 foreach (string fileName in DataFiles)
                 {
                     _logger.Information($"Backing up {fileName}");
                     var filePath = Path.Combine(BeatSaberDataPath, fileName);
                     var backupFilePath = Path.Combine(_backupPath, fileName);
 
-                    if (File.Exists(filePath))
+                    if (_io.File.Exists(filePath))
                     {
-                        File.Copy(filePath, backupFilePath);
+                        _io.File.Copy(filePath, backupFilePath);
                     }
                 }
             }
@@ -480,15 +486,15 @@ public class SetupService : ISetupService, IDisposable
         await BeginSetupStage(SetupStage.Finalizing);
         try
         {
-            if (Directory.Exists(_backupPath))
+            if (_io.Directory.Exists(_backupPath))
             {
-                Directory.CreateDirectory(BeatSaberDataPath);
-                var files = Directory.GetFiles(_backupPath);
+                _io.Directory.CreateDirectory(BeatSaberDataPath);
+                var files = _io.Directory.GetFiles(_backupPath);
                 _logger.Information($"Restoring {files.Length} files");
                 foreach (string file in files)
                 {
                     var fileName = Path.GetFileName(file);
-                    File.Copy(file, Path.Combine(BeatSaberDataPath, fileName));
+                    _io.File.Copy(file, Path.Combine(BeatSaberDataPath, fileName));
                 }
             }
             else

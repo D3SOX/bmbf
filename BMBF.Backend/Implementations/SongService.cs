@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
@@ -35,15 +36,17 @@ public class SongService : IDisposable, ISongService
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
-    private readonly FileSystemWatcher _fileSystemWatcher = new();
+
+    private readonly IFileSystemWatcher _fileSystemWatcher;
 
     public event EventHandler<Song>? SongAdded; 
     public event EventHandler<Song>? SongRemoved;
 
     private readonly SemaphoreSlim _cacheUpdateLock = new(1);
     private readonly Debouncey _autoUpdateDebouncey;
+    private readonly IFileSystem _io;
 
-    public SongService(BMBFSettings bmbfSettings)
+    public SongService(BMBFSettings bmbfSettings, IFileSystem io)
     {
         _songsPath = bmbfSettings.SongsPath;
         _cachePath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.SongsCacheName);
@@ -52,6 +55,8 @@ public class SongService : IDisposable, ISongService
         _automaticUpdates = bmbfSettings.UpdateCachesAutomatically;
         _autoUpdateDebouncey = new Debouncey(bmbfSettings.SongFolderDebounceDelay);
         _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
+        _io = io;
+        _fileSystemWatcher = _io.FileSystemWatcher.CreateNew();
     }
 
     public async Task UpdateSongCacheAsync()
@@ -169,7 +174,7 @@ public class SongService : IDisposable, ISongService
 
             // Attempt to load the cache from BMBFData first, since it's expensive to generate
             SongCache? songs = null;
-            if (File.Exists(_cachePath))
+            if (_io.File.Exists(_cachePath))
             {
                 try
                 {
@@ -206,7 +211,7 @@ public class SongService : IDisposable, ISongService
 
     private async Task<SongCache?> LoadCache()
     {
-        await using var cacheStream = File.OpenRead(_cachePath);
+        await using var cacheStream = _io.File.OpenRead(_cachePath);
         return await JsonSerializer.DeserializeAsync<ConcurrentDictionary<string, Song>>(cacheStream, _serializerOptions);
     }
 
@@ -256,7 +261,7 @@ public class SongService : IDisposable, ISongService
     {
         try
         {
-            Song? song = await SongUtil.TryLoadSongInfoAsync(new DirectoryFolderProvider(path), path);
+            Song? song = await SongUtil.TryLoadSongInfoAsync(new DirectoryFolderProvider(path, _io), path);
 
             // If the path was a valid song
             if (song != null)
@@ -341,7 +346,7 @@ public class SongService : IDisposable, ISongService
                 var cacheDirectory = Path.GetDirectoryName(_cachePath);
                 if (cacheDirectory != null) Directory.CreateDirectory(cacheDirectory);
 
-                using var cacheStream = File.OpenWrite(_cachePath);
+                using var cacheStream = _io.File.OpenWrite(_cachePath);
                 cacheStream.Position = 0;
                 JsonSerializer.Serialize(cacheStream, _songs, _serializerOptions);
             }

@@ -109,21 +109,17 @@ public class AssetService : IAssetService
         }
     }
 
-    public async Task ExtractOrDownloadCoreMod(CoreMod coreMod, string path)
+    public async Task<Stream> ExtractOrDownloadCoreMod(CoreMod coreMod, string path)
     {
         await using var outputStream = File.OpenWrite(path);
         if (_builtInAssets.CoreMods?.Contains(coreMod) ?? false)
         {
             Log.Information($"Extracting inbuilt core mod {coreMod.FileName}");
-            await using var modStream = OpenAsset(Path.Combine("core_mods", coreMod.FileName));
-            await modStream.CopyToAsync(outputStream);
+            return OpenAsset(Path.Combine("core_mods", coreMod.FileName));
         }
-        else
-        {
-            Log.Information($"Downloading core mod {coreMod.FileName}");
-            using var resp = await _httpClient.GetAsync(coreMod.DownloadLink);
-            await resp.Content.CopyToAsync(outputStream);
-        }
+        
+        Log.Information($"Downloading core mod {coreMod.FileName}");
+        return await _httpClient.GetStreamAsync(coreMod.DownloadLink);
     }
 
     public async Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct)

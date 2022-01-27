@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,10 +30,12 @@ public class ModService : IModService, IDisposable, IModManager
     private bool _disposed;
 
     private readonly string _modsPath;
+    private readonly IFileSystem _io;
 
-    public ModService(BMBFSettings bmbfSettings)
+    public ModService(BMBFSettings bmbfSettings, IFileSystem io)
     {
         _modsPath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.ModsDirectoryName);
+        _io = io;
     }
 
     /// <summary>
@@ -155,14 +158,14 @@ public class ModService : IModService, IDisposable, IModManager
         var extension = Path.GetExtension(fileName);
         string savePath = Path.Combine(_modsPath, fileName);
         int i = 1;
-        while (File.Exists(savePath))
+        while (_io.File.Exists(savePath))
         {
             savePath = Path.Combine(_modsPath, $"{fileNameWithoutExtension}_{i}.{extension}");
             i++;
         }
 
         Log.Debug($"Caching mod locally to {savePath}");
-        var cacheStream = File.Open(savePath, FileMode.Create, FileAccess.ReadWrite);
+        var cacheStream = _io.File.Open(savePath, FileMode.Create, FileAccess.ReadWrite);
         IMod? cachedMod = null;
         try
         {
@@ -184,16 +187,16 @@ public class ModService : IModService, IDisposable, IModManager
             // Because of this, we will dispose of the mod and stream now
             cachedMod?.Dispose();
             await cacheStream.DisposeAsync();
-            File.Delete(savePath);
+            _io.File.Delete(savePath);
             throw;
         }
     }
 
     private async Task LoadNewModsAsyncInternal(ModsCache cacheById)
     {
-        if (!Directory.Exists(_modsPath)) Directory.CreateDirectory(_modsPath);
+        _io.Directory.CreateDirectory(_modsPath);
         
-        foreach (string modPath in Directory.EnumerateFiles(_modsPath))
+        foreach (string modPath in _io.Directory.EnumerateFiles(_modsPath))
         {
             if (cacheById.Any(pair => pair.Value.path == modPath)) continue;
 
@@ -201,7 +204,7 @@ public class ModService : IModService, IDisposable, IModManager
             IMod? parsedMod = null;
             try
             {
-                modStream = File.OpenRead(modPath);
+                modStream = _io.File.OpenRead(modPath);
                  
                 var result = await FindProvider(modStream, Path.GetFileName(modPath), false);
                 if (result is null)
@@ -267,7 +270,7 @@ public class ModService : IModService, IDisposable, IModManager
         if (_modsById.Remove(modId, out var removedMod))
         {
             Log.Information($"Mod {modId} removed - deleting {removedMod.path}");
-            File.Delete(removedMod.path);
+            _io.File.Delete(removedMod.path);
             ModRemoved?.Invoke(this, modId);
         }
     }
