@@ -1,9 +1,9 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using BMBF.Backend.Models.BeatSaver;
 using BMBF.Backend.Services;
 
 namespace BMBF.Backend.Implementations;
@@ -36,35 +36,35 @@ public class BeatSaverService : IBeatSaverService
         }
 
         await using var respStream = await resp.Content.ReadAsStreamAsync();
-        var versions = (await JsonDocument.ParseAsync(respStream)).RootElement.GetProperty("versions");
-
-        DateTime latest = DateTime.MinValue;
-        string? latestDownloadUri = null;
-        foreach (var versionObj in versions.EnumerateArray())
+        var map = await JsonSerializer.DeserializeAsync<Map>(respStream);
+        if (map == null)
         {
-            var hash = versionObj.GetProperty("hash").GetString()?.ToUpper();
-            if(hash == null) continue;
+            return null;
+        }
+
+        MapVersion? latest = null;
+        foreach (var version in map.Versions)
+        {
+            var hash = version.Hash;
 
             if (preferHash != null && hash != preferHash)
             {
                 continue;
             }
             
-            var val = versionObj.GetProperty("createdAt").Deserialize<DateTime>();
-            if (latest < val)
+            if (latest == null || latest.CreatedAt < version.CreatedAt)
             {
-                latest = val;
-                latestDownloadUri = versionObj.GetProperty("downloadURL").GetString();
+                latest = version;
             }
         }
 
         // No version found (with correct hash)
-        if (latestDownloadUri == null)
+        if (latest == null)
         {
             return null;
         }
 
-        var mapResp = await _httpClient.GetAsync(latestDownloadUri, HttpCompletionOption.ResponseHeadersRead);
+        var mapResp = await _httpClient.GetAsync(latest.DownloadUrl, HttpCompletionOption.ResponseHeadersRead);
         mapResp.EnsureSuccessStatusCode();
         return await mapResp.Content.ReadAsStreamAsync();
     }
