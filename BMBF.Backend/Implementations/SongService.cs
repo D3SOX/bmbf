@@ -45,7 +45,7 @@ public class SongService : IDisposable, ISongService
     private readonly Debouncey _autoUpdateDebouncey;
     private readonly IFileSystem _io;
 
-    public SongService(BMBFSettings bmbfSettings, IFileSystem io)
+    public SongService(BMBFSettings bmbfSettings, IFileSystem io, IFileSystemWatcher fileSystemWatcher)
     {
         _songsPath = bmbfSettings.SongsPath;
         _cachePath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.SongsCacheName);
@@ -55,7 +55,7 @@ public class SongService : IDisposable, ISongService
         _autoUpdateDebouncey = new Debouncey(bmbfSettings.SongFolderDebounceDelay);
         _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
         _io = io;
-        _fileSystemWatcher = _io.FileSystemWatcher.CreateNew();
+        _fileSystemWatcher = fileSystemWatcher;
     }
 
     public async Task UpdateSongCacheAsync()
@@ -104,7 +104,7 @@ public class SongService : IDisposable, ISongService
 
             song.Path = originalSavePath;
             int i = 1;
-            while (Directory.Exists(song.Path))
+            while (_io.Directory.Exists(song.Path))
             {
                 song.Path = $"{originalSavePath}_{i}";
                 i++;
@@ -140,7 +140,7 @@ public class SongService : IDisposable, ISongService
         {
             // Note that if multiple songs existed with this hash, and DeleteDuplicateSongs was false, then there may still be another folder with this hash
             // This folder will be loaded next time BMBF is restarted
-            Directory.Delete(song.Path, true);
+            _io.Directory.Delete(song.Path, true);
             Log.Information($"Song {song.SongName}: {song.Hash} deleted");
             SongRemoved?.Invoke(this, song);
             return true;
@@ -166,7 +166,7 @@ public class SongService : IDisposable, ISongService
                 return _songs;
             }
                 
-            Directory.CreateDirectory(_songsPath);
+            _io.Directory.CreateDirectory(_songsPath);
 
             // Attempt to load the cache from BMBFData first, since it's expensive to generate
             SongCache? songs = null;
@@ -219,14 +219,14 @@ public class SongService : IDisposable, ISongService
         if (existing is null)
         {
             songs = new SongCache();
-            songsToLoad = Directory.EnumerateDirectories(_songsPath);
+            songsToLoad = _io.Directory.EnumerateDirectories(_songsPath);
         }
         else
         {
             songs = existing;
             // We collect the directories into a hashmap and then remove those that are already in the cache
             // This is to avoid a quadratic lookup later on, since we're storing songs with hashes as keys, not paths
-            var songsSet = Directory.EnumerateDirectories(_songsPath).ToHashSet();
+            var songsSet = _io.Directory.EnumerateDirectories(_songsPath).ToHashSet();
             foreach (var existingPair in existing)
             {
                 if (!songsSet.Remove(existingPair.Value.Path))
@@ -282,7 +282,7 @@ public class SongService : IDisposable, ISongService
                 {
                     if (_deleteDuplicateSongs)
                     {
-                        Directory.Delete(song.Path, true);
+                        _io.Directory.Delete(song.Path, true);
                     }
 
                     Log.Warning($"Duplicate song {(_deleteDuplicateSongs ? "deleted" : "found")}: {song.Path} ({existingSong.Path} has identical hash {song.Hash})");
@@ -304,7 +304,7 @@ public class SongService : IDisposable, ISongService
         if (_deleteInvalidFolders)
         {
             Log.Warning("Deleting invalid song");
-            Directory.Delete(path, true);
+            _io.Directory.Delete(path, true);
         }
     }
 
@@ -340,7 +340,7 @@ public class SongService : IDisposable, ISongService
             try
             {
                 var cacheDirectory = Path.GetDirectoryName(_cachePath);
-                if (cacheDirectory != null) Directory.CreateDirectory(cacheDirectory);
+                if (cacheDirectory != null) _io.Directory.CreateDirectory(cacheDirectory);
                 if(_io.File.Exists(_cachePath)) _io.File.Delete(_cachePath);
                 
                 using var cacheStream = _io.File.OpenWrite(_cachePath);

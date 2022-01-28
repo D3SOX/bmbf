@@ -36,21 +36,24 @@ public class PlaylistService : IPlaylistService, IDisposable
 
     private bool _disposed;
         
-    public PlaylistService(BMBFSettings settings, IFileSystem io)
+    public PlaylistService(BMBFSettings settings, IFileSystem io, IFileSystemWatcher fileSystemWatcher)
     {
         _playlistsPath = settings.PlaylistsPath;
         _automaticUpdates = settings.UpdateCachesAutomatically;
         _autoUpdateDebouncey = new Debouncey(settings.PlaylistFolderDebounceDelay);
         _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
         _io = io;
-        _fileSystemWatcher = _io.FileSystemWatcher.CreateNew();
+        _fileSystemWatcher = fileSystemWatcher;
     }
 
     public async Task<string> AddPlaylistAsync(Playlist playlist)
     {
         var playlists = await GetCacheAsync();
         playlist.IsPendingSave = true;
-        return AddPlaylist(playlist, playlists, playlist.PlaylistTitle);
+        var id = AddPlaylist(playlist, playlists, playlist.PlaylistTitle);
+        
+        PlaylistAdded?.Invoke(this, playlist);
+        return id;
     }
         
     private string AddPlaylist(Playlist playlist, PlaylistCache cache, string idSuggestion)
@@ -125,7 +128,13 @@ public class PlaylistService : IPlaylistService, IDisposable
                         }
                         playlist.LoadedFrom = newPath;
                     }
-                    
+                    else
+                    {
+                        // Delete the existing playlist - otherwise if the new playlist is shorter the playlist file
+                        // become corrupted
+                        _io.File.Delete(playlist.LoadedFrom);
+                    }
+
                     await using var playlistStream = _io.File.OpenWrite(playlist.LoadedFrom);
                     playlistStream.Position = 0;
                     await JsonSerializer.SerializeAsync(playlistStream, playlist, _serializerOptions);
@@ -239,7 +248,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             }
 
             // FileShare.Read is used here, since we don't want to attempt to open a playlist while it is still being written
-            await using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            await using var fileStream = _io.FileStream.Create(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             var playlist = await JsonSerializer.DeserializeAsync<Playlist>(fileStream, _serializerOptions);
             if (playlist == null)
