@@ -14,6 +14,7 @@ using BMBF.Backend.Implementations;
 using BMBF.Backend.Models;
 using BMBF.Backend.Models.BPList;
 using BMBF.Backend.Services;
+using BMBF.Backend.Util;
 using BMBF.ModManagement;
 using BMBF.Resources;
 using Moq;
@@ -124,7 +125,7 @@ public class FileImporterTests
         };
         
         _songServiceMock.Setup(s => 
-            s.ImportSongAsync(It.IsNotNull<ZipArchive>(), It.IsAny<string>()))
+            s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsAny<string>()))
             .ReturnsAsync(expectedResult);
         
         var result = await _fileImporter.ImportAsync(songStream, "myFile.zip");
@@ -267,7 +268,7 @@ public class FileImporterTests
         var song = Song.CreateBlank();
         song.Hash = songHash;
         _songServiceMock.Setup(s => 
-                s.ImportSongAsync(It.IsNotNull<ZipArchive>(), It.IsNotNull<string>()))
+                s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsNotNull<string>()))
             .ReturnsAsync(new FileImportResult
             {
                 ImportedSong = song,
@@ -282,7 +283,7 @@ public class FileImporterTests
 
         // Make sure that the song was imported and downloaded
         _songServiceMock.Verify(s =>
-                s.ImportSongAsync(It.IsNotNull<ZipArchive>(), It.IsNotNull<string>()),
+                s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsNotNull<string>()),
             Times.Once);
         _beatSaverServiceMock.Verify(b => b.DownloadSongByHash(songHash), Times.Once);
     }

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -79,10 +78,8 @@ public class SongService : IDisposable, ISongService
         }
     }
         
-    public async Task<FileImportResult> ImportSongAsync(ZipArchive zipArchive, string fileName)
+    public async Task<FileImportResult> ImportSongAsync(ISongProvider folderProvider, string fileName)
     {
-        var folderProvider = new ArchiveSongProvider(zipArchive);
-
         Song? song = await SongUtil.TryLoadSongInfoAsync(folderProvider, fileName);
         if (song == null)
         {
@@ -114,8 +111,7 @@ public class SongService : IDisposable, ISongService
             }
             
             Log.Information($"Extracting {fileName} to {song.Path}");
-            // We enable overwriting files to avoid failing to import songs with duplicate ZIP entries
-            await Task.Run(() => zipArchive.ExtractToDirectory(song.Path, true));
+            await folderProvider.CopyToAsync(song.Path, _io);
                 
             cache[song.Hash] = song;
             Log.Information($"Song {song.SongName} import complete");

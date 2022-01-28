@@ -11,6 +11,7 @@ using BMBF.Backend.Extensions;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.Backend.Models.BPList;
+using BMBF.Backend.Util;
 using BMBF.ModManagement;
 using BMBF.Resources;
 using Serilog;
@@ -94,7 +95,7 @@ public class FileImporter : IFileImporter
                 }
                     
                 using var archive = new ZipArchive(mapStream, ZipArchiveMode.Read);
-                var importResult = await _songService.ImportSongAsync(archive, (bpSong.SongName ?? bpSong.Hash) + ".zip");
+                var importResult = await _songService.ImportSongAsync(new ArchiveSongProvider(archive), (bpSong.SongName ?? bpSong.Hash) + ".zip");
                 if (importResult.Type == FileImportResultType.Failed)
                 {
                     Log.Error($"Failed to import song {bpSong.Hash}: {importResult.Error}");
@@ -139,7 +140,7 @@ public class FileImporter : IFileImporter
             try
             {
                 using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
-                return await _songService.ImportSongAsync(archive, fileName);
+                return await _songService.ImportSongAsync(new ArchiveSongProvider(archive), fileName);
             }
             catch (InvalidDataException)
             {

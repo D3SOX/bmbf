@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.IO.Abstractions;
+using System.Threading.Tasks;
 
 namespace BMBF.Backend.Util;
 
@@ -22,4 +24,11 @@ public interface ISongProvider
     /// <returns>A stream which can be used to read from the file</returns>
     /// <exception cref="FileNotFoundException">If no file exists with the given name</exception>
     Stream Open(string name);
+
+    /// <summary>
+    /// Copies the song files into the given directory on the given <see cref="IFileSystem"/>
+    /// </summary>
+    /// <param name="path">Path to copy the files to</param>
+    /// <param name="fileSystem">File system to use for copying</param>
+    Task CopyToAsync(string path, IFileSystem fileSystem);
 }
