@@ -11,15 +11,17 @@ namespace BMBF.Backend.Models;
 /// </summary>
 public class Playlist
 {
-        
     public const string LegalIdCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
 
+    [JsonPropertyName("playlistTitle")]
     public string PlaylistTitle { get => _playlistTitle; set { if (_playlistTitle != value) { _playlistTitle = value; NotifyInfoUpdated(); } } }
     private string _playlistTitle;
         
+    [JsonPropertyName("playlistAuthor")]
     public string PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyInfoUpdated(); } } }
     private string _playlistAuthor;
         
+    [JsonPropertyName("playlistDescription")]
     public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyInfoUpdated(); } } }
     private string _playlistDescription;
 
@@ -63,6 +65,7 @@ public class Playlist
     /// <summary>
     /// The songs within the playlist
     /// </summary>
+    [JsonPropertyName("songs")]
     public ImmutableList<BPSong> Songs
     {
         get => _songs; 
