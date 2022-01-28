@@ -17,7 +17,7 @@ public class SongUtilTests
     public async Task ShouldReturnNullIfNoInfoDat()
     {
         // All methods will be stubbed, so no files will exist
-        var folderProvider = Mock.Of<IFolderProvider>();
+        var folderProvider = Mock.Of<ISongProvider>();
         Assert.Null(await SongUtil.TryLoadSongInfoAsync(folderProvider));
     }
 
@@ -26,7 +26,7 @@ public class SongUtilTests
     [InlineData("Info.dat")]
     public async Task ShouldAllowBothInfoDatPaths(string infoDatPath)
     {
-        var folderProvider = new Mock<IFolderProvider>();
+        var folderProvider = new Mock<ISongProvider>();
         folderProvider.Setup(f => f.Exists(infoDatPath)).Returns(() => true);
         var exampleInfoDat = new BeatmapInfoDat
         {
@@ -47,7 +47,7 @@ public class SongUtilTests
     [Fact]
     public async Task ShouldMatchSongDetails()
     {
-        var folderProvider = new Mock<IFolderProvider>();
+        var folderProvider = new Mock<ISongProvider>();
         folderProvider.Setup(f => f.Exists("info.dat")).Returns(() => true);
         var exampleInfoDat = new BeatmapInfoDat
         {
@@ -81,7 +81,7 @@ public class SongUtilTests
     [Fact]
     public async Task ShouldHaveCorrectHash()
     {
-        var folderProvider = new DirectoryFolderProvider("./Resources/ExampleSong", new FileSystem());
+        var folderProvider = new PhysicalSongProvider("./Resources/ExampleSong", new FileSystem());
 
         var song = await SongUtil.TryLoadSongInfoAsync(folderProvider);
         Debug.Assert(song != null);

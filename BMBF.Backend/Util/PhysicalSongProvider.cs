@@ -4,14 +4,14 @@ using System.IO.Abstractions;
 namespace BMBF.Backend.Util;
 
 /// <summary>
-/// Folder provider using an actual directory on disk
+/// Song provider using an actual directory on a <see cref="IFileSystem"/>
 /// </summary>
-public class DirectoryFolderProvider : IFolderProvider
+public class PhysicalSongProvider : ISongProvider
 {
     private readonly string _directoryName;
     private readonly IFileSystem _io;
         
-    public DirectoryFolderProvider(string directoryName, IFileSystem io)
+    public PhysicalSongProvider(string directoryName, IFileSystem io)
     {
         _directoryName = directoryName;
         _io = io;

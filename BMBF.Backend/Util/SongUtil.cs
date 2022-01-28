@@ -10,7 +10,7 @@ namespace BMBF.Backend.Util;
 
 public static class SongUtil
 {
-    private static async Task<string?> TryGetSongHashAsync(IFolderProvider provider, Stream infoDatStream, BeatmapInfoDat infoDat)
+    private static async Task<string?> TryGetSongHashAsync(ISongProvider provider, Stream infoDatStream, BeatmapInfoDat infoDat)
     {
         using var hash = SHA1.Create();
         await using var dataStream = new MemoryStream();
@@ -42,7 +42,7 @@ public static class SongUtil
     /// <param name="provider">Provider to load the song info from</param>
     /// <param name="name">Name to use for logging purposes</param>
     /// <returns>The loaded Song model, or null if a song could not be loaded from the path</returns>
-    public static async Task<Backend.Models.Song?> TryLoadSongInfoAsync(IFolderProvider provider, string? name = null)
+    public static async Task<Backend.Models.Song?> TryLoadSongInfoAsync(ISongProvider provider, string? name = null)
     {
         name ??= "<unknown>";
 

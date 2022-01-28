@@ -81,7 +81,7 @@ public class SongService : IDisposable, ISongService
         
     public async Task<FileImportResult> ImportSongAsync(ZipArchive zipArchive, string fileName)
     {
-        var folderProvider = new ArchiveFolderProvider(zipArchive);
+        var folderProvider = new ArchiveSongProvider(zipArchive);
 
         Song? song = await SongUtil.TryLoadSongInfoAsync(folderProvider, fileName);
         if (song == null)
@@ -261,7 +261,7 @@ public class SongService : IDisposable, ISongService
     {
         try
         {
-            Song? song = await SongUtil.TryLoadSongInfoAsync(new DirectoryFolderProvider(path, _io), path);
+            Song? song = await SongUtil.TryLoadSongInfoAsync(new PhysicalSongProvider(path, _io), path);
 
             // If the path was a valid song
             if (song != null)

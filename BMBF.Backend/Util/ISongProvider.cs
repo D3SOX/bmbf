@@ -3,9 +3,10 @@
 namespace BMBF.Backend.Util;
 
 /// <summary>
-/// Small abstraction over the files in a folder
+/// Small abstraction over the files in a folder, used for loading songs either from a
+/// <see cref="System.IO.Compression.ZipArchive"/> or from a physical directory.
 /// </summary>
-public interface IFolderProvider
+public interface ISongProvider
 {
     /// <summary>
     /// Finds if a file with the given name exists in the folder

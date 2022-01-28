@@ -4,13 +4,13 @@ using System.IO.Compression;
 namespace BMBF.Backend.Util;
 
 /// <summary>
-/// Folder provider that uses a ZipArchive
+/// Song provider that uses a ZipArchive
 /// </summary>
-public class ArchiveFolderProvider : IFolderProvider
+public class ArchiveSongProvider : ISongProvider
 {
     private readonly ZipArchive _archive;
         
-    public ArchiveFolderProvider(ZipArchive archive)
+    public ArchiveSongProvider(ZipArchive archive)
     {
         _archive = archive;
     }
