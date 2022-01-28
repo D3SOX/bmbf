@@ -216,6 +216,10 @@ public class PlaylistService : IPlaylistService, IDisposable
     {
         foreach(var entry in cache)
         {
+            // Skip playlists that haven't been saved yet, or have changes pending save
+            // (i.e. prioritise changes made in BMBF over those made on disk)
+            if(entry.Value.LoadedFrom == null || entry.Value.IsPendingSave) continue;
+
             if (!_io.File.Exists(entry.Value.LoadedFrom))
             {
                 Log.Information($"Playlist {entry.Key} deleted");
