@@ -126,7 +126,7 @@ public class PlaylistService : IPlaylistService, IDisposable
                             newPath = Path.Combine(_playlistsPath, playlistPair.Key + "_" + i + ".bplist");
                             i++;
                         }
-                        playlist.LoadedFrom = newPath;
+                        playlist.LoadedFrom = Path.GetFullPath(newPath);
                     }
                     else
                     {
@@ -233,7 +233,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             
         foreach (string playlistPath in _io.Directory.EnumerateFiles(_playlistsPath))
         {
-            await ProcessNewPlaylistAsync(playlistPath, cache, notify);
+            await ProcessNewPlaylistAsync(Path.GetFullPath(playlistPath), cache, notify);
         }
     }
 
@@ -241,7 +241,7 @@ public class PlaylistService : IPlaylistService, IDisposable
     {
         try
         {
-            var existing = cache.FirstOrDefault(p => p.Value.LoadedFrom == path).Value;
+            var existing = cache.Values.FirstOrDefault(p => p.LoadedFrom == path);
             // We can skip loading if:
             // - The existing playlist is pending save - changes made in BMBF are prioritised over those on disk
             // - The playlist file was modified at the same time (or further before) the playlist was loaded
