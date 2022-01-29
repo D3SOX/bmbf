@@ -145,16 +145,24 @@ public class ModService : IModService, IDisposable, IModManager
     async Task<IMod> IModManager.ImportMod(IModProvider provider, Stream stream, string fileName)
     {
         await using var modStream = stream;
-        
-        var tempMod = await provider.TryParseModAsync(modStream, true);
-        if (tempMod == null)
-        {
-            throw new InstallationException($"Could not parse mod {fileName}");
-        }
-        tempMod.Dispose();
 
-        modStream.Position = 0;
-        return await CacheAndImportMod(provider, modStream, fileName);
+        try
+        {
+            var tempMod = await provider.TryParseModAsync(modStream, true);
+            if (tempMod == null)
+            {
+                throw new InstallationException($"Could not parse mod {fileName}");
+            }
+            tempMod.Dispose();
+
+            modStream.Position = 0;
+            return await CacheAndImportMod(provider, modStream, fileName);
+        }
+        catch (Exception)
+        {
+            await modStream.DisposeAsync();
+            throw;
+        }
     }
     
     private async Task<ModsCache> GetCacheAsyncInternal()
