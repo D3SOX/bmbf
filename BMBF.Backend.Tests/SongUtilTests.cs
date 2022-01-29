@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Abstractions;
 using System.Threading.Tasks;
 using BMBF.Backend.Util;
 using BMBF.Backend.Util.Song;
@@ -81,9 +80,7 @@ public class SongUtilTests
     [Fact]
     public async Task ShouldHaveCorrectHash()
     {
-        var folderProvider = new PhysicalSongProvider("./Resources/ExampleSong", new FileSystem());
-
-        var song = await SongUtil.TryLoadSongInfoAsync(folderProvider);
+        var song = await SongUtil.TryLoadSongInfoAsync(Util.ExampleSongProvider);
         Debug.Assert(song != null);
         
         // ff9
