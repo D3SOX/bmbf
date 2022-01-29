@@ -32,10 +32,13 @@ public class ModService : IModService, IDisposable, IModManager
     private readonly string _modsPath;
     private readonly IFileSystem _io;
 
+    private readonly BMBFSettings _bmbfSettings;
+
     public ModService(BMBFSettings bmbfSettings, IFileSystem io)
     {
         _modsPath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.ModsDirectoryName);
         _io = io;
+        _bmbfSettings = bmbfSettings;
     }
 
     /// <summary>
@@ -223,15 +226,13 @@ public class ModService : IModService, IDisposable, IModManager
                 modStream = _io.File.OpenRead(modPath);
                  
                 var result = await FindProvider(modStream, Path.GetFileName(modPath), false);
-                if (result is null)
+                if (result is not null)
                 {
-                    Log.Warning($"{Path.GetFileName(modPath)} couldn't be loaded as a mod");
-                    // TODO: Delete invalid mod?
+                    parsedMod = result.Value.mod;
+                    await AddModAsync(modPath, parsedMod, result.Value.provider, cacheById);
                     continue;
                 }
-
-                parsedMod = result.Value.mod;
-                await AddModAsync(modPath, parsedMod, result.Value.provider, cacheById);
+                Log.Warning($"{Path.GetFileName(modPath)} couldn't be loaded as a mod");
             }
             catch (Exception ex)
             {
@@ -239,6 +240,19 @@ public class ModService : IModService, IDisposable, IModManager
                 if (modStream != null) await modStream.DisposeAsync();
                 parsedMod?.Dispose();
                 Log.Error(ex, $"Failed to load mod from {modPath}");
+            }
+
+            if (_bmbfSettings.DeleteInvalidMods)
+            {
+                Log.Debug("Deleting invalid mod");
+                try
+                {
+                    _io.File.Delete(modPath);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to delete invalid mod");
+                }
             }
         }
     }
