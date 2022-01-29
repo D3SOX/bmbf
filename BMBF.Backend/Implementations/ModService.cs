@@ -103,7 +103,23 @@ public class ModService : IModService, IDisposable, IModManager
             _installLock.Release();
         }
     }
-    
+
+    public async Task UnloadModAsync(IMod mod)
+    {
+        await _installLock.WaitAsync();
+        try
+        {
+            foreach (var provider in _modProviders)
+            {
+                await provider.UnloadModAsync(mod);
+            }
+        }
+        finally
+        {
+            _installLock.Release();
+        }
+    }
+
     public async Task LoadNewModsAsync()
     {
         if (_modsById == null)
