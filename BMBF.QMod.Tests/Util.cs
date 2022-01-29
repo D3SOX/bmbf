@@ -73,14 +73,14 @@ namespace BMBF.QMod.Tests
             {
                 // Add a simple file copy
                 // This exists primarily to avoid the mod being treated as always enabled after importing since all of the files are copied
-                mod.AddFileCopyAsync(new FileCopy("example.txt", "test/example.txt"), new MemoryStream());
+                mod.AddFileCopyAsync(new FileCopy("example.txt", "test/example.txt"), new MemoryStream()).Wait();
             }
 
             configureOptions?.Invoke(mod);
             mod.Dispose(); // Save the manifest
             stream.Dispose();
             
-            backingStream.WriteAsync(stream.ToArray()); // ToArray is safe, even if the MemoryStream is disposed
+            backingStream.Write(stream.ToArray()); // ToArray is safe, even if the MemoryStream is disposed
             backingStream.Position = 0;
             return backingStream;
         }
