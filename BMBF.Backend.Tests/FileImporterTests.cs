@@ -26,14 +26,6 @@ namespace BMBF.Backend.Tests;
 public class FileImporterTests
 {
     private static readonly byte[] ExampleFileContent = Encoding.UTF8.GetBytes("Hello World!");
-    private Playlist ExamplePlaylist => new(
-        "Example Playlist",
-        "Unicorns",
-        "Example",
-        ImmutableList<BPSong>.Empty,
-        null
-    );
-
     public FileImporterTests()
     {
         _modServiceMock.Setup(m => m.GetModsAsync()).ReturnsAsync(new Dictionary<string, (IMod mod, string path)>());
@@ -237,7 +229,7 @@ public class FileImporterTests
     [Fact]
     public async Task ShouldAddPlaylist()
     {
-        var examplePlaylist = ExamplePlaylist;
+        var examplePlaylist = Util.ExamplePlaylist;
         const string expectedPlaylistId = "Example_Playlist";
         
         _playlistServiceMock
@@ -260,13 +252,12 @@ public class FileImporterTests
     {
         const string songHash = "12345";
         
-        var examplePlaylist = ExamplePlaylist;
+        var examplePlaylist = Util.ExamplePlaylist;
         examplePlaylist.Songs = ImmutableList.Create(
             new BPSong(songHash, null, null)
         );
 
-        var song = Song.CreateBlank();
-        song.Hash = songHash;
+        var song = Song.CreateBlank(songHash);
         _songServiceMock.Setup(s => 
                 s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsNotNull<string>()))
             .ReturnsAsync(new FileImportResult
@@ -293,7 +284,7 @@ public class FileImporterTests
     {
         const string expectedPlaylistId = "Example_Playlist";
 
-        var examplePlaylist = ExamplePlaylist;
+        var examplePlaylist = Util.ExamplePlaylist;
         examplePlaylist.Songs = ImmutableList.Create(
             new BPSong("", null, null)
         );
@@ -317,7 +308,7 @@ public class FileImporterTests
     {
         const string mapKey = "ff9";
         
-        var examplePlaylist = ExamplePlaylist;
+        var examplePlaylist = Util.ExamplePlaylist;
         examplePlaylist.Songs = ImmutableList.Create(
             new BPSong("", null, mapKey)
         );
