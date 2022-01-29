@@ -89,19 +89,41 @@ namespace BMBF.QMod.Tests
         /// Creates an <see cref="HttpClient"/> that will always respond to a URL with the given <see cref="Stream"/>
         /// </summary>
         /// <param name="response">Content stream to respond with</param>
-        /// <returns>An <see cref="HttpClient"/> that will respond to any request with the given stream as content</returns>
-        public static HttpClient CreateHttpClientMock(Stream response)
+        /// <param name="requestUrl">URL of requests to return this response for</param>
+        /// <returns>An <see cref="HttpClient"/> that will respond to the request with the given stream as content</returns>
+        public static HttpClient CreateStreamHttpClientMock(string requestUrl, Stream response)
+        {
+            return CreateHttpClientMock(requestUrl, new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StreamContent(response)
+            });
+        }
+        
+        /// <summary>
+        /// Creates an <see cref="HttpClient"/> that will always respond to the given URL with a 404 response code.
+        /// </summary>
+        /// <param name="requestUrl">URL of requests to return 404 for</param>
+        /// <returns>An <see cref="HttpClient"/> that will respond to any request to ths given URL with a 404</returns>
+        public static HttpClient CreateNotFoundHttpClientMock(string requestUrl)
+        {
+            return CreateHttpClientMock(requestUrl, new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.NotFound
+            });
+        }
+
+        private static HttpClient CreateHttpClientMock(string requestUrl, HttpResponseMessage responseMessage)
         {
             var mock = new Mock<HttpMessageHandler>();
             mock.Protected()
-                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .Returns(() => Task.FromResult(new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StreamContent(response)
-                }));
+                .Setup<Task<HttpResponseMessage>>("SendAsync", 
+                    ItExpr.Is<HttpRequestMessage>(req => req.RequestUri == new Uri(requestUrl)),
+                    ItExpr.IsAny<CancellationToken>())
+                .Returns(Task.FromResult(responseMessage));
 
             return new HttpClient(mock.Object);
         }
+        
     }
 }

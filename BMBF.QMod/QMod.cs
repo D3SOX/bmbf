@@ -42,12 +42,9 @@ namespace BMBF.QMod
 
         private bool VerifyRegistered()
         {
-            if (_provider.Mods.TryGetValue(Id, out var mod))
+            if (_provider.Mods.TryGetValue(Id, out var mod) && mod == this)
             {
-                if (mod == this)
-                {
-                    return true;
-                }
+                return true;
             }
             return false;
         }
@@ -274,6 +271,7 @@ namespace BMBF.QMod
             try
             {
                 using var resp = await HttpClient.GetAsync(dependency.DownloadIfMissing, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+                resp.EnsureSuccessStatusCode();
                 await using var content = await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 
                 var memStream = new MemoryStream();
@@ -282,7 +280,7 @@ namespace BMBF.QMod
                 
                 var loadedDep = (QMod) await _provider.ModManager.ImportMod(_provider, memStream, $"{dependency.Id}.qmod");
 
-                    // Quick sanity check to avoid people putting invalid download links and not noticing
+                // Quick sanity check to avoid people putting invalid download links and not noticing
                 if (!dependency.VersionRange.IsSatisfied(loadedDep.Version))
                 {
                     throw new InstallationException(

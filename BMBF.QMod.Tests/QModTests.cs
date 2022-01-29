@@ -111,12 +111,14 @@ namespace BMBF.QMod.Tests
         public async Task ShouldInstallDependencies()
         {
             var dependencyStream = Util.CreateTestingMod(m => m.Id = DependencyId);
-            // Make sure to mock the dependency download
-            using var provider = Util.CreateProvider(Util.CreateHttpClientMock(dependencyStream));
+            var dependencyUrl = "https://example.com/my-dependency.qmod";
             var modStream = Util.CreateTestingMod(m =>
             {
-                m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", "https://example.com/my-dependency.qmod"));
+                m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
             });
+            
+            // Make sure to mock the dependency download
+            using var provider = Util.CreateProvider(Util.CreateStreamHttpClientMock(dependencyUrl, dependencyStream));
 
             var mod = await provider.ParseAndAddMod(modStream);
 
@@ -148,12 +150,28 @@ namespace BMBF.QMod.Tests
         }
 
         [Fact]
+        public async Task ShouldThrowIfDependencyDownloadFails()
+        {
+            var dependencyUrl = "https://example.com/my-dependency.qmod";
+            var modStream = Util.CreateTestingMod(m =>
+            {
+                m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
+            });
+            
+            using var provider = Util.CreateProvider(Util.CreateNotFoundHttpClientMock(dependencyUrl));
+            var mod = await provider.ParseAndAddMod(modStream) ?? throw new InstallationException("Failed to parse mod");
+
+            await Assert.ThrowsAsync<InstallationException>(async () => await mod.InstallAsync());
+        }
+
+        [Fact]
         public async Task ShouldUpgradeDependencies()
         {
             // Mod depends on version ^1.0.0
+            var dependencyUrl = "https://example.com/my-dependency.qmod";
             var modStream = Util.CreateTestingMod(m =>
             {
-                m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", "https://example.com/my-dependency.qmod"));
+                m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
             });
             // Version 0.5.0 does not intersect this, so the dependency should be upgraded
             var oldDepStream = Util.CreateTestingMod(m =>
@@ -165,7 +183,7 @@ namespace BMBF.QMod.Tests
             var newDepStream = Util.CreateTestingMod(m => m.Id = DependencyId); 
             
             // Create an HttpClient that will mock the dependency download and inject it into our provider
-            using var provider = Util.CreateProvider(Util.CreateHttpClientMock(newDepStream));
+            using var provider = Util.CreateProvider(Util.CreateStreamHttpClientMock(dependencyUrl, newDepStream));
             var existingDependency = await provider.ParseAndAddMod(oldDepStream);
             var mod = await provider.ParseAndAddMod(modStream);
             
