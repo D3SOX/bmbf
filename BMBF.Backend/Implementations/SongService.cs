@@ -294,13 +294,14 @@ public class SongService : IDisposable, ISongService
                 {
                     SongAdded?.Invoke(this, song);
                 }
+                return;
             }
         }
         catch (Exception ex)
         {
             Log.Error(ex, $"Failed to load song from {path}");
         }
-            
+        
         if (_deleteInvalidFolders)
         {
             Log.Warning("Deleting invalid song");
