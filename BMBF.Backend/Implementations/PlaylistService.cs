@@ -126,7 +126,7 @@ public class PlaylistService : IPlaylistService, IDisposable
                             newPath = Path.Combine(_playlistsPath, playlistPair.Key + "_" + i + ".bplist");
                             i++;
                         }
-                        playlist.LoadedFrom = Path.GetFullPath(newPath);
+                        playlist.LoadedFrom = newPath;
                     }
                     else
                     {
@@ -233,7 +233,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             
         foreach (string playlistPath in _io.Directory.EnumerateFiles(_playlistsPath))
         {
-            await ProcessNewPlaylistAsync(Path.GetFullPath(playlistPath), cache, notify);
+            await ProcessNewPlaylistAsync(playlistPath, cache, notify);
         }
     }
 

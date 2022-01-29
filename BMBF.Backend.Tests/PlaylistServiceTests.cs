@@ -16,6 +16,10 @@ public class PlaylistServiceTests : IDisposable
 {
     public PlaylistServiceTests()
     {
+        // Due to an issue with how MockFileSystem works, we always re-root the playlists path
+        // Essentially, it always treats / as C:/ even if using a different boot drive letter,
+        // which causes it to mismatch with Path.GetFullPath("/") - which will return the correct boot drive letter.
+        _settings.PlaylistsPath = Path.Combine(Path.GetFullPath("/") ?? throw new NullReferenceException(), "Playlists");
         _playlistService = CreatePlaylistService();
     }
 
@@ -23,7 +27,6 @@ public class PlaylistServiceTests : IDisposable
     private readonly IFileSystem _fileSystem = new MockFileSystem();
     private readonly BMBFSettings _settings = new()
     {
-        PlaylistsPath = "/Playlists",
         UpdateCachesAutomatically = false
     };
     
