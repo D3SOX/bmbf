@@ -46,8 +46,7 @@ public class SongServiceTests : IDisposable
         
         await _songService.ImportSongAsync(Util.ExampleSongProvider, "example.zip");
         
-        Assert.Single(songs);
-        Assert.Equal(songs.Values.First(_ => true), addedSong);
+        Assert.Equal(songs.Values.Single(), addedSong);
     }
 
     [Fact]
@@ -60,7 +59,7 @@ public class SongServiceTests : IDisposable
         using var newSongService = CreateSongService();
         var newSongs = await _songService.GetSongsAsync();
         
-        Assert.Equal(songs.First(_ => true), newSongs.First(_ => true));
+        Assert.Equal(songs.Single(), newSongs.Single());
     }
 
     [Fact]
@@ -85,7 +84,7 @@ public class SongServiceTests : IDisposable
         // Import a song
         await _songService.ImportSongAsync(Util.ExampleSongProvider, "song.zip");
         var songs = await _songService.GetSongsAsync();
-        var song = songs.Values.First(_ => true);
+        var song = songs.Values.Single();
         
         // Remove the song on disk and update the song cache
         _fileSystem.Directory.Delete(song.Path, true);
@@ -103,7 +102,7 @@ public class SongServiceTests : IDisposable
         await _songService.ImportSongAsync(Util.ExampleSongProvider, "song.zip");
         var songs = await _songService.GetSongsAsync();
         
-        var song = songs.Values.First(_ => true);
+        var song = songs.Values.Single();
         Song? removedSong = null;
         _songService.SongRemoved += (_, s) => removedSong = s;
         await _songService.DeleteSongAsync(song.Hash);
