@@ -1,17 +1,33 @@
 ﻿using System;
 using System.IO;
+using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
+using Moq;
 using QuestPatcher.QMod;
 using Xunit;
 using Version = SemanticVersioning.Version;
 
 namespace BMBF.QMod.Tests
 {
-    public class QModTests
+    public class QModTests : IDisposable
     {
         private const string DependencyId = "my-dependency";
+        
+        private readonly QModProvider _provider;
+        private readonly IFileSystem _fileSystem = new MockFileSystem();
+
+        private readonly Mock<HttpClientHandler> _clientHandlerMock = new();
+
+        public QModTests()
+        {
+            _provider = Util.CreateProvider(
+                new HttpClient(_clientHandlerMock.Object),
+                _fileSystem
+            );
+        }
 
         [Theory]
         [InlineData(true)]
@@ -31,11 +47,8 @@ namespace BMBF.QMod.Tests
                 m.CreateLibraryFileAsync(libFileName, emptyStream);
                 m.AddFileCopyAsync(new FileCopy(fileCopyName, fileCopyPath), emptyStream);
             }, false);
-
-            var fileSystem = new MockFileSystem();
-            using var provider = Util.CreateProvider(null, fileSystem);
-
-            var mod = await provider.ParseAndAddMod(modStream);
+            
+            var mod = await _provider.ParseAndAddMod(modStream);
             await mod.InstallAsync();
             if (!modInstalled)
             {
@@ -43,17 +56,16 @@ namespace BMBF.QMod.Tests
             }
 
             // If the mod is installed, then the mod's files should be copied, otherwise none of them should exist
-            Assert.Equal(modInstalled, fileSystem.FileExists($"mods/{modFileName}"));
-            Assert.Equal(modInstalled, fileSystem.FileExists($"libs/{libFileName}"));
-            Assert.Equal(modInstalled, fileSystem.FileExists(fileCopyPath));
+            Assert.Equal(modInstalled, _fileSystem.File.Exists($"mods/{modFileName}"));
+            Assert.Equal(modInstalled, _fileSystem.File.Exists($"libs/{libFileName}"));
+            Assert.Equal(modInstalled, _fileSystem.File.Exists(fileCopyPath));
         }
 
         [Fact]
         public async Task ShouldThrowIfModUnregistered()
         {
-            var modStream = Util.CreateTestingMod();
-            using var provider = Util.CreateProvider();
-            using var mod = await provider.TryParseModAsync(modStream);
+            using var modStream = Util.CreateTestingMod();
+            using var mod = await _provider.TryParseModAsync(modStream);
             if (mod == null) throw new FormatException("Invalid testing mod");
             
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await mod.InstallAsync());
@@ -65,8 +77,6 @@ namespace BMBF.QMod.Tests
         {
             const string libFileName = "my-library.so";
             
-            var fileSystem = new MockFileSystem();
-            using var provider = Util.CreateProvider(null, fileSystem);
             var otherModStream = Util.CreateTestingMod(m =>
             {
                 m.Id = "other-mod";
@@ -78,21 +88,20 @@ namespace BMBF.QMod.Tests
                 m.CreateLibraryFileAsync(libFileName, new MemoryStream());
             });
 
-            var otherMod = await provider.ParseAndAddMod(otherModStream);
-            var mod = await provider.ParseAndAddMod(modStream);
+            var otherMod = await _provider.ParseAndAddMod(otherModStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
             await mod.InstallAsync();
             await otherMod.InstallAsync();
 
             // As otherMod is still installed and has a libFile with the same name, it shouldn't be deleted.
             await mod.UninstallAsync();
-            Assert.True(fileSystem.FileExists($"libs/{libFileName}"));
+            Assert.True(_fileSystem.File.Exists($"libs/{libFileName}"));
         }
 
         [Fact]
         public async Task ShouldBeInstalledAfterInstall()
         {
-            using var provider = Util.CreateProvider();
-            var mod = await provider.ParseAndAddMod(Util.CreateTestingMod());
+            var mod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
             await mod.InstallAsync();
             Assert.True(mod.Installed);
         }
@@ -100,8 +109,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldBeUninstalledAfterUninstall()
         {
-            using var provider = Util.CreateProvider();
-            var mod = await provider.ParseAndAddMod(Util.CreateTestingMod());
+            var mod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
             await mod.InstallAsync();
             await mod.UninstallAsync();
             Assert.False(mod.Installed);
@@ -118,12 +126,12 @@ namespace BMBF.QMod.Tests
             });
             
             // Make sure to mock the dependency download
-            using var provider = Util.CreateProvider(Util.CreateStreamHttpClientMock(dependencyUrl, dependencyStream));
+            Util.ConfigureResponseStream(_clientHandlerMock, dependencyUrl, dependencyStream);
 
-            var mod = await provider.ParseAndAddMod(modStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             QMod? installedDep = null;
-            provider.ModLoaded += (_, args) => installedDep = (QMod) args;
+            _provider.ModLoaded += (_, args) => installedDep = (QMod) args;
             await mod.InstallAsync();
 
             // Verify that the dependency is installed and has the correct ID
@@ -139,10 +147,9 @@ namespace BMBF.QMod.Tests
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0"));
             });
             var dependencyStream = Util.CreateTestingMod(m => m.Id = DependencyId);
-            using var provider = Util.CreateProvider();
-            var dependency = await provider.ParseAndAddMod(dependencyStream);
+            var dependency = await _provider.ParseAndAddMod(dependencyStream);
             // The dependency is loaded, but not installed
-            var mod = await provider.ParseAndAddMod(modStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             await mod.InstallAsync();
             // The dependency should have been reinstalled, since it wasn't installed during mod installation
@@ -158,8 +165,8 @@ namespace BMBF.QMod.Tests
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
             });
             
-            using var provider = Util.CreateProvider(Util.CreateNotFoundHttpClientMock(dependencyUrl));
-            var mod = await provider.ParseAndAddMod(modStream) ?? throw new InstallationException("Failed to parse mod");
+            Util.ConfigureNotFound(_clientHandlerMock, dependencyUrl);
+            var mod = await _provider.ParseAndAddMod(modStream) ?? throw new InstallationException("Failed to parse mod");
 
             await Assert.ThrowsAsync<InstallationException>(async () => await mod.InstallAsync());
         }
@@ -183,12 +190,12 @@ namespace BMBF.QMod.Tests
             var newDepStream = Util.CreateTestingMod(m => m.Id = DependencyId); 
             
             // Create an HttpClient that will mock the dependency download and inject it into our provider
-            using var provider = Util.CreateProvider(Util.CreateStreamHttpClientMock(dependencyUrl, newDepStream));
-            var existingDependency = await provider.ParseAndAddMod(oldDepStream);
-            var mod = await provider.ParseAndAddMod(modStream);
+            Util.ConfigureResponseStream(_clientHandlerMock, dependencyUrl, newDepStream);
+            var existingDependency = await _provider.ParseAndAddMod(oldDepStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
             
             string? uninstalledDependency = null;
-            provider.ModUnloaded += (_, args) => uninstalledDependency = args;
+            _provider.ModUnloaded += (_, args) => uninstalledDependency = args;
             await mod.InstallAsync();
             
             // The older dependency should have been uninstalled, as its version does not intersect the required version
@@ -204,8 +211,7 @@ namespace BMBF.QMod.Tests
                 // But does not state a download link to get the dependency if missing
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0"));
             });
-            using var provider = Util.CreateProvider();
-            var mod = await provider.ParseAndAddMod(modStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             await Assert.ThrowsAsync<InstallationException>(async () => await mod.InstallAsync());
         }
@@ -214,16 +220,15 @@ namespace BMBF.QMod.Tests
         public async Task ShouldFailOnUpgradeWithNoDownloadUri()
         {
             // Mod depends on version ^1.0.0
-            var modStream = Util.CreateTestingMod(m => m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", "https://example.com/my-dependency.qmod")));
+            var modStream = Util.CreateTestingMod(m => m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0")));
             // Version 0.5.0 does not intersect this, so the dependency needs to be upgraded
             var oldDepStream = Util.CreateTestingMod(m =>
             {
                 m.Id = DependencyId;
                 m.Version = Version.Parse("0.5.0");
             });
-            using var provider = Util.CreateProvider();
-            await provider.ParseAndAddMod(oldDepStream);
-            var mod = await provider.ParseAndAddMod(modStream);
+            await _provider.ParseAndAddMod(oldDepStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             // But there is no download URI, so the install should throw 
             await Assert.ThrowsAsync<InstallationException>(async () => await mod.InstallAsync());
@@ -236,8 +241,7 @@ namespace BMBF.QMod.Tests
         {
             var modStream = Util.CreateTestingMod(m => m.WriteCoverImageAsync(coverPath, new MemoryStream()).Wait());
             
-            using var provider = Util.CreateProvider();
-            var mod = await provider.ParseAndAddMod(modStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             Assert.Equal(fileName, mod.CoverImageFileName);
         }
@@ -247,8 +251,7 @@ namespace BMBF.QMod.Tests
         {
             var modStream = Util.CreateTestingMod();
     
-            using var provider = Util.CreateProvider();
-            var mod = await provider.ParseAndAddMod(modStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             // This should throw InvalidOperationException, as no cover exists in the QMOD
             Assert.Throws<InvalidOperationException>(() => mod.OpenCoverImage());
@@ -270,8 +273,7 @@ namespace BMBF.QMod.Tests
                 m.WriteCoverImageAsync("cover.png", coverStream).Wait();
             });
             
-            using var provider = Util.CreateProvider();
-            var mod = await provider.ParseAndAddMod(modStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
             await using var coverStream = mod.OpenCoverImage();
             using var coverReader = new StreamReader(coverStream);
             Assert.Equal(content, await coverReader.ReadLineAsync());
@@ -286,14 +288,18 @@ namespace BMBF.QMod.Tests
                 m.IsLibrary = true;
             });
             var modStream = Util.CreateTestingMod(m => m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0")));
-            using var provider = Util.CreateProvider();
-            var lib = await provider.ParseAndAddMod(libStream);
-            var mod = await provider.ParseAndAddMod(modStream);
+            var lib = await _provider.ParseAndAddMod(libStream);
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             // Libraries should be automatically uninstalled if no installed mods depend on them
             await mod.InstallAsync(); // Library will be installed as mod depends on it
             await mod.UninstallAsync(); // Library will be uninstalled as mod no longer depends on it
             Assert.False(lib.Installed);
+        }
+
+        public void Dispose()
+        {
+            _provider.Dispose();
         }
     }
 }

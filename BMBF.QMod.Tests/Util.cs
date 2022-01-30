@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -25,14 +24,14 @@ namespace BMBF.QMod.Tests
         /// <summary>
         /// Creates a <see cref="QModProvider"/> with /mods and /libs paths and a default HttpClient and mock FileSystem
         /// </summary>
-        /// <param name="httpClient">If not null, this will be used to override the default HttpClient</param>
-        /// <param name="fileSystem">If not null, this will be used to override the default mock FileSystem</param>
-        /// <returns></returns>
-        public static QModProvider CreateProvider(HttpClient? httpClient = null, IFileSystem? fileSystem = null)
+        /// <param name="httpClient">HTTP client to be used for dependency downloads</param>
+        /// <param name="fileSystem">File system to simulate mod installs</param>
+        /// <returns>Created <see cref="QModProvider"/></returns>
+        public static QModProvider CreateProvider(HttpClient httpClient, IFileSystem fileSystem)
         {
             var modManagerMock = new Mock<IModManager>();
 
-            QModProvider provider = new QModProvider(PackageId, "/mods", "/libs", httpClient ?? new HttpClient(), fileSystem ?? new MockFileSystem(), modManagerMock.Object);
+            QModProvider provider = new QModProvider(PackageId, "/mods", "/libs", httpClient, fileSystem, modManagerMock.Object);
          
             var installLock = new SemaphoreSlim(1);
             modManagerMock.SetupGet(m => m.InstallLock).Returns(installLock);
@@ -86,14 +85,15 @@ namespace BMBF.QMod.Tests
         }
 
         /// <summary>
-        /// Creates an <see cref="HttpClient"/> that will always respond to a URL with the given <see cref="Stream"/>
+        /// Configures the given <see cref="HttpClientHandler"/> mock to always respond to <paramref name="requestUrl"/>
+        /// with the given stream.
         /// </summary>
+        /// <param name="clientHandler">Handler to configure</param>
         /// <param name="response">Content stream to respond with</param>
         /// <param name="requestUrl">URL of requests to return this response for</param>
-        /// <returns>An <see cref="HttpClient"/> that will respond to the request with the given stream as content</returns>
-        public static HttpClient CreateStreamHttpClientMock(string requestUrl, Stream response)
+        public static void ConfigureResponseStream(Mock<HttpClientHandler> clientHandler, string requestUrl, Stream response)
         {
-            return CreateHttpClientMock(requestUrl, new HttpResponseMessage
+            ConfigureResponse(clientHandler, requestUrl, new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StreamContent(response)
@@ -103,26 +103,23 @@ namespace BMBF.QMod.Tests
         /// <summary>
         /// Creates an <see cref="HttpClient"/> that will always respond to the given URL with a 404 response code.
         /// </summary>
+        /// <param name="clientHandler">Handler to configure</param>
         /// <param name="requestUrl">URL of requests to return 404 for</param>
-        /// <returns>An <see cref="HttpClient"/> that will respond to any request to ths given URL with a 404</returns>
-        public static HttpClient CreateNotFoundHttpClientMock(string requestUrl)
+        public static void ConfigureNotFound(Mock<HttpClientHandler> clientHandler, string requestUrl)
         {
-            return CreateHttpClientMock(requestUrl, new HttpResponseMessage
+            ConfigureResponse(clientHandler, requestUrl, new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.NotFound
             });
         }
 
-        private static HttpClient CreateHttpClientMock(string requestUrl, HttpResponseMessage responseMessage)
+        private static void ConfigureResponse(Mock<HttpClientHandler> clientHandler, string requestUrl, HttpResponseMessage responseMessage)
         {
-            var mock = new Mock<HttpMessageHandler>();
-            mock.Protected()
+            clientHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", 
                     ItExpr.Is<HttpRequestMessage>(req => req.RequestUri == new Uri(requestUrl)),
                     ItExpr.IsAny<CancellationToken>())
                 .Returns(Task.FromResult(responseMessage));
-
-            return new HttpClient(mock.Object);
         }
         
     }
