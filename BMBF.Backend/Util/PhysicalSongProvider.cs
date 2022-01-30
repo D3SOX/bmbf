@@ -14,6 +14,11 @@ public class PhysicalSongProvider : ISongProvider
         
     public PhysicalSongProvider(string directoryName, IFileSystem io)
     {
+        if (!io.Directory.Exists(directoryName))
+        {
+            throw new DirectoryNotFoundException($"Could not find directory {directoryName}");
+        }
+        
         _directoryName = directoryName;
         _io = io;
     }
