@@ -12,8 +12,8 @@ public class PhysicalSongProviderTests
     private readonly PhysicalSongProvider _provider;
 
     private readonly byte[] _exampleContent = System.Text.Encoding.UTF8.GetBytes("Hello World!");
-    private readonly IFileSystem _inputFileSystem = new MockFileSystem();
-    private readonly IFileSystem _extractFileSystem = new MockFileSystem();
+    private readonly IFileSystem _inputFileSystem = new MockFileSystem(null, Path.GetFullPath("/"));
+    private readonly IFileSystem _extractFileSystem = new MockFileSystem(null, Path.GetFullPath("/"));
 
     private readonly string _inputDir = "/Input";
 
