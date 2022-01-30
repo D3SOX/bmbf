@@ -2,11 +2,11 @@
 using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using System.Net.Http;
+using System.Net;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
-using Moq;
 using QuestPatcher.QMod;
+using RichardSzalay.MockHttp;
 using Xunit;
 using Version = SemanticVersioning.Version;
 
@@ -19,12 +19,11 @@ namespace BMBF.QMod.Tests
         private readonly QModProvider _provider;
         private readonly IFileSystem _fileSystem = new MockFileSystem();
 
-        private readonly Mock<HttpClientHandler> _clientHandlerMock = new();
-
+        private readonly MockHttpMessageHandler _messageHandler = new();
         public QModTests()
         {
             _provider = Util.CreateProvider(
-                new HttpClient(_clientHandlerMock.Object),
+                _messageHandler.ToHttpClient(),
                 _fileSystem
             );
         }
@@ -126,8 +125,9 @@ namespace BMBF.QMod.Tests
             });
             
             // Make sure to mock the dependency download
-            Util.ConfigureResponseStream(_clientHandlerMock, dependencyUrl, dependencyStream);
-
+            _messageHandler.When(dependencyUrl)
+                .Respond("application/octet-stream", dependencyStream);
+            
             var mod = await _provider.ParseAndAddMod(modStream);
 
             QMod? installedDep = null;
@@ -164,10 +164,11 @@ namespace BMBF.QMod.Tests
             {
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
             });
-            
-            Util.ConfigureNotFound(_clientHandlerMock, dependencyUrl);
-            var mod = await _provider.ParseAndAddMod(modStream) ?? throw new InstallationException("Failed to parse mod");
 
+            _messageHandler.When(dependencyUrl)
+                .Respond(HttpStatusCode.NotFound);
+            
+            var mod = await _provider.ParseAndAddMod(modStream) ?? throw new InstallationException("Failed to parse mod");
             await Assert.ThrowsAsync<InstallationException>(async () => await mod.InstallAsync());
         }
 
@@ -190,7 +191,9 @@ namespace BMBF.QMod.Tests
             var newDepStream = Util.CreateTestingMod(m => m.Id = DependencyId); 
             
             // Create an HttpClient that will mock the dependency download and inject it into our provider
-            Util.ConfigureResponseStream(_clientHandlerMock, dependencyUrl, newDepStream);
+            _messageHandler.When(dependencyUrl)
+                .Respond("application/octet-stream", newDepStream);
+            
             var existingDependency = await _provider.ParseAndAddMod(oldDepStream);
             var mod = await _provider.ParseAndAddMod(modStream);
             

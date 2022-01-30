@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BMBF.ModManagement;
 using Moq;
 using QuestPatcher.QMod;
+using RichardSzalay.MockHttp;
 using Xunit;
 using Version = SemanticVersioning.Version;
 
@@ -20,7 +21,7 @@ namespace BMBF.QMod.Tests
         public QModProviderTests()
         {
             _provider = Util.CreateProvider(
-                new HttpClient(Mock.Of<HttpClientHandler>()),
+                new MockHttpMessageHandler().ToHttpClient(),
                 _fileSystem
             );
         }

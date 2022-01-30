@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
 using BMBF.ModManagement;
 using Moq;
-using Moq.Protected;
 using QuestPatcher.QMod;
 using Version = SemanticVersioning.Version;
 
@@ -83,44 +80,5 @@ namespace BMBF.QMod.Tests
             backingStream.Position = 0;
             return backingStream;
         }
-
-        /// <summary>
-        /// Configures the given <see cref="HttpClientHandler"/> mock to always respond to <paramref name="requestUrl"/>
-        /// with the given stream.
-        /// </summary>
-        /// <param name="clientHandler">Handler to configure</param>
-        /// <param name="response">Content stream to respond with</param>
-        /// <param name="requestUrl">URL of requests to return this response for</param>
-        public static void ConfigureResponseStream(Mock<HttpClientHandler> clientHandler, string requestUrl, Stream response)
-        {
-            ConfigureResponse(clientHandler, requestUrl, new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StreamContent(response)
-            });
-        }
-        
-        /// <summary>
-        /// Creates an <see cref="HttpClient"/> that will always respond to the given URL with a 404 response code.
-        /// </summary>
-        /// <param name="clientHandler">Handler to configure</param>
-        /// <param name="requestUrl">URL of requests to return 404 for</param>
-        public static void ConfigureNotFound(Mock<HttpClientHandler> clientHandler, string requestUrl)
-        {
-            ConfigureResponse(clientHandler, requestUrl, new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.NotFound
-            });
-        }
-
-        private static void ConfigureResponse(Mock<HttpClientHandler> clientHandler, string requestUrl, HttpResponseMessage responseMessage)
-        {
-            clientHandler.Protected()
-                .Setup<Task<HttpResponseMessage>>("SendAsync", 
-                    ItExpr.Is<HttpRequestMessage>(req => req.RequestUri == new Uri(requestUrl)),
-                    ItExpr.IsAny<CancellationToken>())
-                .Returns(Task.FromResult(responseMessage));
-        }
-        
     }
 }
