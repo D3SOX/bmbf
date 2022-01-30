@@ -333,4 +333,12 @@ public class FileImporterTests
         // Since .unknown files are not supported, importing them should fail
         Assert.Equal(FileImportResultType.Failed, result.Type);
     }
+
+    [Fact]
+    public async Task ImportShouldThrowIfFailed()
+    {
+        using var blankContent = new MemoryStream();
+        await Assert.ThrowsAsync<ImportException>(() => 
+            _fileImporter.ImportAsync(blankContent, "example.unknown"));
+    }
 }
