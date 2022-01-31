@@ -1,5 +1,8 @@
-﻿namespace BMBF.Backend.Models.Setup;
+﻿using System.Text.Json.Serialization;
 
+namespace BMBF.Backend.Models.Setup;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SetupStage
 {
     /// <summary>

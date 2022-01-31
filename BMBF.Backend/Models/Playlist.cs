@@ -92,6 +92,7 @@ public class Playlist
     /// <summary>
     /// Path that the playlist was loaded from
     /// </summary>
+    [JsonIgnore]
     public string? LoadedFrom { get; set; }
 
     public event PlaylistUpdatedEventHandler? Updated;
