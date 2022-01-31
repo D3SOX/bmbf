@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -18,6 +19,7 @@ public class ImportController : Controller
 
     [HttpPost]
     [RequestSizeLimit(1024 * 1024 * 100)] // Accept files up to 100 MiB
+    [Produces(typeof(FileImportResult))]
     public async Task<IActionResult> ImportFile()
     {
         if (!Request.Headers.TryGetValue("filename", out var fileName))

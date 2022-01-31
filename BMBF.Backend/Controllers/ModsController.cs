@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.ModManagement;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MimeTypes;
 
@@ -27,6 +28,7 @@ public class ModsController : Controller
     }
 
     [HttpGet("download/{modId}")]
+    [Produces("application/octet-stream")]
     public async Task<IActionResult> DownloadMod(string modId)
     {
         if (!(await _modService.GetModsAsync()).TryGetValue(modId, out var mod))
@@ -69,12 +71,14 @@ public class ModsController : Controller
     }
 
     [HttpPost("[action]/{modId}")]
+    [Produces(typeof(ModActionResult))]
     public async Task<IActionResult> Install(string modId)
     {
         return await SetInstallStatus(modId, true);
     }
 
     [HttpPost("[action]/{modId}")]
+    [Produces(typeof(ModActionResult))]
     public async Task<IActionResult> Uninstall(string modId)
     {
         return await SetInstallStatus(modId, false);

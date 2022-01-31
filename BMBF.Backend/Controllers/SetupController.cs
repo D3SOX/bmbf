@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BMBF.Backend.Extensions;
+using BMBF.Backend.Models.Setup;
 using BMBF.Backend.Services;
 using BMBF.Resources;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,7 @@ public class SetupController : Controller
     }
 
     [HttpGet("[action]")]
+    [Produces(typeof(SetupStatus))]
     public async Task<IActionResult> Status()
     {
         await _setupService.LoadCurrentStatusAsync(); // Load current status from disk if not loaded already
@@ -36,6 +38,7 @@ public class SetupController : Controller
     }
 
     [HttpGet("[action]")]
+    [Produces(typeof(IEnumerable<string>))]
     public async Task<IActionResult> ModVersions()
     {
         // Find the versions that we can currently mod
@@ -43,6 +46,7 @@ public class SetupController : Controller
     }
 
     [HttpGet("[action]")]
+    [Produces(typeof(IEnumerable<string>))]
     public async Task<IActionResult> DowngradeVersions()
     {
         List<DiffInfo> diffs;

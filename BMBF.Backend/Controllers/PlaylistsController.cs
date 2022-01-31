@@ -27,6 +27,7 @@ public class PlaylistsController : Controller
     }
 
     [HttpGet("cover/{playlistId}")]
+    [Produces("image/png")]
     public async Task<IActionResult> GetPlaylistCover(string playlistId)
     {
         if(!(await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching) || matching.Image == null)
@@ -51,6 +52,7 @@ public class PlaylistsController : Controller
     }
 
     [HttpGet("songs/{playlistId}")]
+    [Produces(typeof(ImmutableList<BPSong>))]
     public async Task<IActionResult> GetPlaylistSongs(string playlistId)
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
@@ -94,6 +96,7 @@ public class PlaylistsController : Controller
     }
 
     [HttpGet("bplist/{playlistId}")]
+    [Produces(typeof(Playlist))]
     // ReSharper disable once InconsistentNaming
     public async Task<IActionResult> GetBPList(string playlistId)
     {
@@ -109,6 +112,7 @@ public class PlaylistsController : Controller
     }
 
     [HttpPost("[action]")]
+    [Produces(typeof(string))]
     public async Task<IActionResult> Add([FromBody] PlaylistInfo playlistInfo)
     {
         Playlist playlist = new Playlist(
@@ -119,7 +123,7 @@ public class PlaylistsController : Controller
             null
         );
         await _playlistService.AddPlaylistAsync(playlist);
-        return Ok();
+        return Ok(playlist.Id);
     }
 
     [HttpPost("[action]")]

@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
+using BMBF.Backend.Models;
 using BMBF.Backend.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BMBF.Backend.Controllers;
@@ -15,6 +17,7 @@ public class BeatSaberController : Controller
     }
 
     [HttpGet("install")]
+    [ProducesResponseType(typeof(InstallationInfo), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetInstallInfo()
     {
         var installInfo = await _beatSaberService.GetInstallationInfoAsync();
@@ -22,6 +25,6 @@ public class BeatSaberController : Controller
         {
             return NotFound("Beat Saber is not installed");
         }
-        return new OkObjectResult(installInfo);
+        return Ok(installInfo);
     }
 }
