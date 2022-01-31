@@ -17,8 +17,7 @@ public class BeatSaberController : Controller
     }
 
     [HttpGet("install")]
-    [Produces(typeof(InstallationInfo))]
-    public async Task<IActionResult> GetInstallInfo()
+    public async Task<ActionResult<InstallationInfo>> GetInstallInfo()
     {
         var installInfo = await _beatSaberService.GetInstallationInfoAsync();
         if (installInfo is null)

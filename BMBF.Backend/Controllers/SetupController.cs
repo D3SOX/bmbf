@@ -26,8 +26,7 @@ public class SetupController : Controller
     }
 
     [HttpGet("[action]")]
-    [Produces(typeof(SetupStatus))]
-    public async Task<IActionResult> Status()
+    public async Task<ActionResult<SetupStatus>> Status()
     {
         await _setupService.LoadCurrentStatusAsync(); // Load current status from disk if not loaded already
         if (_setupService.CurrentStatus is null)
@@ -38,16 +37,14 @@ public class SetupController : Controller
     }
 
     [HttpGet("[action]")]
-    [Produces(typeof(IEnumerable<string>))]
-    public async Task<IActionResult> ModVersions()
+    public async Task<ActionResult<IEnumerable<string>>> ModVersions()
     {
         // Find the versions that we can currently mod
         return Ok((await _assetService.GetCoreMods(true)).Keys);
     }
 
     [HttpGet("[action]")]
-    [Produces(typeof(IEnumerable<string>))]
-    public async Task<IActionResult> DowngradeVersions()
+    public async Task<ActionResult<IEnumerable<string>>> DowngradeVersions()
     {
         List<DiffInfo> diffs;
         try

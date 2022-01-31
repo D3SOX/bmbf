@@ -52,8 +52,7 @@ public class PlaylistsController : Controller
     }
 
     [HttpGet("songs/{playlistId}")]
-    [Produces(typeof(ImmutableList<BPSong>))]
-    public async Task<IActionResult> GetPlaylistSongs(string playlistId)
+    public async Task<ActionResult<ImmutableList<BPSong>>> GetPlaylistSongs(string playlistId)
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
         {
@@ -92,13 +91,12 @@ public class PlaylistsController : Controller
         {
             return Ok();
         }
-        return BadRequest(); // Playlist with given path was not in the cache
+        return NotFound(); // Playlist with given id was not in the cache
     }
 
     [HttpGet("bplist/{playlistId}")]
-    [Produces(typeof(Playlist))]
     // ReSharper disable once InconsistentNaming
-    public async Task<IActionResult> GetBPList(string playlistId)
+    public async Task<ActionResult<Playlist>> GetBPList(string playlistId)
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching))
         {
@@ -112,8 +110,7 @@ public class PlaylistsController : Controller
     }
 
     [HttpPost("[action]")]
-    [Produces(typeof(string))]
-    public async Task<IActionResult> Add([FromBody] PlaylistInfo playlistInfo)
+    public async Task<ActionResult<string>> Add([FromBody] PlaylistInfo playlistInfo)
     {
         Playlist playlist = new Playlist(
             playlistInfo.PlaylistTitle,

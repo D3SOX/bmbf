@@ -19,8 +19,7 @@ public class ImportController : Controller
 
     [HttpPost]
     [RequestSizeLimit(1024 * 1024 * 100)] // Accept files up to 100 MiB
-    [Produces(typeof(FileImportResult))]
-    public async Task<IActionResult> ImportFile()
+    public async Task<ActionResult<FileImportResult>> ImportFile()
     {
         if (!Request.Headers.TryGetValue("filename", out var fileName))
         {

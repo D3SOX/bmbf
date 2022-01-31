@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.ModManagement;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MimeTypes;
 
@@ -71,20 +70,18 @@ public class ModsController : Controller
     }
 
     [HttpPost("[action]/{modId}")]
-    [Produces(typeof(ModActionResult))]
-    public async Task<IActionResult> Install(string modId)
+    public async Task<ActionResult<ModActionResult>> Install(string modId)
     {
         return await SetInstallStatus(modId, true);
     }
 
     [HttpPost("[action]/{modId}")]
-    [Produces(typeof(ModActionResult))]
-    public async Task<IActionResult> Uninstall(string modId)
+    public async Task<ActionResult<ModActionResult>> Uninstall(string modId)
     {
         return await SetInstallStatus(modId, false);
     }
     
-    private async Task<IActionResult> SetInstallStatus(string id, bool installed)
+    private async Task<ActionResult<ModActionResult>> SetInstallStatus(string id, bool installed)
     {
         var mods = await _modService.GetModsAsync();
         if (!mods.TryGetValue(id, out var modPair))
