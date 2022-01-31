@@ -39,7 +39,7 @@ dotnet_diagnostic.CA2250.severity=warning
 # Xml files
 
 # IDE0008: Use explicit type
-csharp_style_var_when_type_is_apparent =false:suggestion
+csharp_style_var_when_type_is_apparent=false:suggestion
 csharp_style_var_for_built_in_types=false:suggestion
 csharp_style_prefer_pattern_matching=true:suggestion
 csharp_style_pattern_matching_over_is_with_cast_check=true:warning
