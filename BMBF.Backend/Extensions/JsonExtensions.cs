@@ -17,7 +17,7 @@ public static class JsonExtensions
         return await JsonSerializer.DeserializeAsync<T>(stream, serializerOptions) ?? throw new NullReferenceException("Deserialized result was null");
     }
 
-    public static Task<T> ReadAsCamelCaseJsonAsync<T>(this Stream stream) => 
+    public static Task<T> ReadAsCamelCaseJsonAsync<T>(this Stream stream) =>
         ReadAsJsonAsync<T>(stream, CamelCaseSerializerOptions);
 
     public static Task WriteAsJsonAsync(this object o, Stream stream, JsonSerializerOptions? serializerOptions = null)
@@ -27,13 +27,13 @@ public static class JsonExtensions
 
     public static Task WriteAsCamelCaseJsonAsync(this object o, Stream stream) =>
         WriteAsJsonAsync(o, stream, CamelCaseSerializerOptions);
-    
+
     public static T ReadAsJson<T>(this Stream stream, JsonSerializerOptions? serializerOptions = null)
     {
         return JsonSerializer.Deserialize<T>(stream, serializerOptions) ?? throw new NullReferenceException("Deserialized result was null");
     }
 
-    public static T ReadAsCamelCaseJson<T>(this Stream stream) => 
+    public static T ReadAsCamelCaseJson<T>(this Stream stream) =>
         ReadAsJson<T>(stream, CamelCaseSerializerOptions);
 
     public static void WriteAsJson(this object o, Stream stream, JsonSerializerOptions? serializerOptions = null)

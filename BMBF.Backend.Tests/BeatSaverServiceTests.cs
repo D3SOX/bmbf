@@ -17,7 +17,7 @@ public class BeatSaverServiceTests : IDisposable
 {
     private Uri BaseAddress => new("https://example.com");
 
-    
+
     public BeatSaverServiceTests()
     {
         _httpClient = new HttpClient(_handlerMock.Object)
@@ -40,7 +40,7 @@ public class BeatSaverServiceTests : IDisposable
     {
         _handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync",
-                ItExpr.Is<HttpRequestMessage>(m => m.Method == HttpMethod.Get && 
+                ItExpr.Is<HttpRequestMessage>(m => m.Method == HttpMethod.Get &&
                                                                                 m.RequestUri == new Uri(BaseAddress, requestUrl)),
                 ItExpr.IsAny<CancellationToken>())
             .Returns(() => Task.FromResult(new HttpResponseMessage
@@ -94,11 +94,11 @@ public class BeatSaverServiceTests : IDisposable
             // The newer map should always be downloaded when downloading by key
             new MapVersion("", new Uri(BaseAddress, "wrongMap.zip"), new DateTime(0)),
             new MapVersion("", new Uri(BaseAddress, "map.zip"), new DateTime(1)));
-        
+
         SetupGet("map.zip", new StringContent("example"));
 
         var result = await _beatSaverService.DownloadSongByKey("1");
-        
+
         Assert.NotNull(result);
         VerifyGet("map.zip", Times.Once());
     }

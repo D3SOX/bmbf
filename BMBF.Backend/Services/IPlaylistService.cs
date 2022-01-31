@@ -22,7 +22,7 @@ public interface IPlaylistService
     /// <exception cref="InvalidOperationException">A playlist with this playlist's ID already exists</exception>
     /// <returns>ID of the added playlist</returns>
     Task<string> AddPlaylistAsync(Playlist playlist);
-        
+
     /// <summary>
     /// Updates the current playlist cache
     /// If it has not yet been loaded, this will just load the cache
@@ -45,7 +45,7 @@ public interface IPlaylistService
     /// Invoked whenever a playlist is added
     /// </summary>
     event EventHandler<Playlist> PlaylistAdded;
-        
+
     /// <summary>
     /// Invoked whenever a playlist is deleted
     /// </summary>

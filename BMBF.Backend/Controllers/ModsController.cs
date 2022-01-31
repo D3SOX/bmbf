@@ -42,11 +42,11 @@ public class ModsController : Controller
     [HttpGet("cover/{modId}")]
     public async Task<IActionResult> GetModCover(string modId)
     {
-        if(!(await _modService.GetModsAsync()).TryGetValue(modId, out var matching))
+        if (!(await _modService.GetModsAsync()).TryGetValue(modId, out var matching))
         {
             return NotFound();
         }
-        
+
         var coverFileName = matching.mod.CoverImageFileName;
         if (coverFileName == null)
         {
@@ -80,7 +80,7 @@ public class ModsController : Controller
     {
         return await SetInstallStatus(modId, false);
     }
-    
+
     private async Task<ActionResult<ModActionResult>> SetInstallStatus(string id, bool installed)
     {
         var mods = await _modService.GetModsAsync();

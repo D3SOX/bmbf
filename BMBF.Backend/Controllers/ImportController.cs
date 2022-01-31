@@ -25,7 +25,7 @@ public class ImportController : Controller
         {
             return BadRequest("Cannot import file without filename");
         }
-            
+
         var result = await _fileImporter.TryImportAsync(Request.Body, fileName);
         if (result.Type == FileImportResultType.Failed)
         {

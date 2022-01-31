@@ -59,7 +59,7 @@ internal static class Program
         var diffs = settings.AdditionalDiffs ?? new();
 
         Version? last = null;
-        foreach(var pair in versions)
+        foreach (var pair in versions)
         {
             if (last != null)
             {
@@ -75,7 +75,7 @@ internal static class Program
     private static async Task GenerateDiffs(SortedDictionary<Version, string> versions, List<DiffInfo> diffs, string indexPath, string outputPath)
     {
         Directory.CreateDirectory(outputPath);
-        
+
         var signatureBuilder = new SignatureBuilder();
         var deltaBuilder = new DeltaBuilder();
 
@@ -91,7 +91,7 @@ internal static class Program
                     Console.WriteLine($"Delta {diff.Name} already exists");
                     continue;
                 }
-                
+
                 // Generate the file signature if not already done
                 if (signatureStream is null)
                 {
@@ -100,7 +100,7 @@ internal static class Program
                     await using var basisStream = File.OpenRead(pair.Value);
                     signatureBuilder.Build(basisStream, new SignatureWriter(signatureStream));
                 }
-                
+
                 // Now we can generate the diff
                 Console.WriteLine($"Generating delta {diff.Name}");
                 await using var newFileStream = File.OpenRead(versions[Version.Parse(diff.ToVersion)]);
@@ -114,12 +114,12 @@ internal static class Program
         await using var indexStream = File.OpenWrite(indexPath);
         await JsonSerializer.SerializeAsync(indexStream, diffs, SerializerOptions);
     }
-    
-    
+
+
     public static async Task<int> Main(string[] args)
     {
         Settings? settings;
-        using(var settingsStream = File.OpenRead("settings.json"))
+        using (var settingsStream = File.OpenRead("settings.json"))
         {
             settings = await JsonSerializer.DeserializeAsync<Settings>(settingsStream, SerializerOptions);
             if (settings == null)
@@ -136,11 +136,11 @@ internal static class Program
         }
 
         var accessToken = args[0];
-        
+
         string apksDir = Path.Combine(settings.OutputDirectory, "APKs");
         string diffsPath = Path.Combine(settings.OutputDirectory, "Diffs");
         string diffIndexPath = Path.Combine(settings.OutputDirectory, "diffIndex.json");
-        
+
         var oculusVersions = await new AppVersionFinder(accessToken).GetAppVersions(2448060205267927);
         var versionPaths = await DownloadVersions(accessToken, oculusVersions, apksDir);
 

@@ -8,6 +8,6 @@ public class SongAdded : IMessage
     }
 
     public MessageType Type => MessageType.SongAdded;
-        
+
     public Song Song { get; set; }
 }

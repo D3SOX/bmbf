@@ -45,27 +45,27 @@ using var host = WebHost.CreateDefaultBuilder()
         var resources = configuration.GetSection(BMBFResources.Position).Get<BMBFResources>();
         var desktopSettings = configuration.GetSection(BMBFDesktopSettings.Position).Get<BMBFDesktopSettings>();
         var deviceRoot = desktopSettings.DeviceRoot;
-        
+
         // Update paths in the settings to make sure they're all within our device directory
-        settings.ConfigsPath = CombineDisableAbsolute(deviceRoot, settings.ConfigsPath);        
-        settings.SongsPath = CombineDisableAbsolute(deviceRoot, settings.SongsPath);        
-        settings.PlaylistsPath = CombineDisableAbsolute(deviceRoot, settings.PlaylistsPath);        
+        settings.ConfigsPath = CombineDisableAbsolute(deviceRoot, settings.ConfigsPath);
+        settings.SongsPath = CombineDisableAbsolute(deviceRoot, settings.SongsPath);
+        settings.PlaylistsPath = CombineDisableAbsolute(deviceRoot, settings.PlaylistsPath);
         settings.RootDataPath = CombineDisableAbsolute(deviceRoot, settings.RootDataPath);
         settings.ModFilesPath = CombineDisableAbsolute(deviceRoot, settings.ModFilesPath);
         settings.LibFilesPath = CombineDisableAbsolute(deviceRoot, settings.LibFilesPath);
         services.AddSingleton(desktopSettings);
         services.AddSingleton<IBeatSaberService, BeatSaberService>();
-        
+
         services.AddBMBF(ctx, settings, resources, assetFileProvider);
     })
     .ConfigureAppConfiguration(configBuilder =>
     {
         // Remove the existing appsettings.json
         configBuilder.Sources.Clear();
-        
+
         // Make sure to add the BMBF.Desktop appsettings AFTER those from regular BMBF
         // This is to allow us to override file paths
-        configBuilder.AddJsonFile(assetFileProvider, "appsettings.json", false, false); 
+        configBuilder.AddJsonFile(assetFileProvider, "appsettings.json", false, false);
         configBuilder.AddJsonFile("appsettings.json");
     })
     .Configure((ctx, app) => app.UseBMBF(ctx, webRootFileProvider))
@@ -85,7 +85,7 @@ Log.Information("BMBF startup complete");
 Console.CancelKeyPress += async (_, _) =>
 {
     if (shutdownTriggered) return;
-    
+
     Log.Information("Shutting down");
     shutdownTriggered = true;
     try
@@ -94,7 +94,7 @@ Console.CancelKeyPress += async (_, _) =>
     }
     catch (Exception ex)
     {
-        Log.Error(ex,"Failed to shut down");
+        Log.Error(ex, "Failed to shut down");
     }
 };
 

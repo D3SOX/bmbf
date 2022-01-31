@@ -35,7 +35,7 @@ public static class SongUtil
         dataStream.Position = 0;
         return BitConverter.ToString(hash.ComputeHash(dataStream)).Replace("-", "").ToUpper();
     }
-        
+
     /// <summary>
     /// Attempts to load a song from the given path
     /// </summary>
@@ -59,7 +59,7 @@ public static class SongUtil
         }
 
         BeatmapInfoDat? infoDat;
-        await using(var infoDatStream = provider.Open(infoDatPath))
+        await using (var infoDatStream = provider.Open(infoDatPath))
         {
             infoDat = await JsonSerializer.DeserializeAsync<BeatmapInfoDat>(infoDatStream);
             if (infoDat == null)

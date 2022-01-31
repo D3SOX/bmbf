@@ -14,12 +14,12 @@ public class BuiltInAssets
     /// Null if versioned assets are not included
     /// </summary>
     public string? BeatSaberVersion { get; set; }
-        
+
     /// <summary>
     /// List of built in core mods. Null if core mods are not included.
     /// </summary>
     public List<CoreMod>? CoreMods { get; set; }
-        
+
     /// <summary>
     /// Version of built in modloader.
     /// Null if modloader is not built in.

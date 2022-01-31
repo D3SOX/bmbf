@@ -59,7 +59,7 @@ public class FileImporter : IFileImporter
             Log.Error($"Could not parse as playlist: {ex.Message}");
             return null;
         }
-            
+
         // Install any missing songs in the BPList
         // TODO: Progress bar system
         var songs = await _songService.GetSongsAsync();
@@ -81,7 +81,7 @@ public class FileImporter : IFileImporter
         {
             Log.Information($"Found {missingSongs.Count} songs that will need to be installed");
         }
-            
+
         foreach (var bpSong in missingSongs)
         {
             Log.Information($"Downloading song {bpSong.SongName ?? bpSong.Hash}");
@@ -93,14 +93,14 @@ public class FileImporter : IFileImporter
                     Log.Warning($"No map with hash {bpSong.Hash} or with key {bpSong.Key} found on BeatSaver");
                     continue;
                 }
-                    
+
                 using var archive = new ZipArchive(mapStream, ZipArchiveMode.Read);
                 var importResult = await _songService.ImportSongAsync(new ArchiveSongProvider(archive), (bpSong.SongName ?? bpSong.Hash) + ".zip");
                 if (importResult.Type == FileImportResultType.Failed)
                 {
                     Log.Error($"Failed to import song {bpSong.Hash}: {importResult.Error}");
                 }
-                else if(importResult.ImportedSong?.Hash != bpSong.Hash)
+                else if (importResult.ImportedSong?.Hash != bpSong.Hash)
                 {
                     Log.Warning($"Downloaded song {importResult.ImportedSong?.SongName} did NOT match expected hash of {bpSong.Hash}");
                 }
@@ -122,17 +122,17 @@ public class FileImporter : IFileImporter
     {
         _io.Directory.CreateDirectory(saveDirectory);
         var outputPath = Path.Combine(saveDirectory, fileName);
-        if(_io.File.Exists(outputPath)) _io.File.Delete(outputPath);
-                
+        if (_io.File.Exists(outputPath)) _io.File.Delete(outputPath);
+
         Log.Information($"Copied {fileName} to {saveDirectory}");
         await using var outputStream = _io.File.OpenWrite(outputPath);
         await stream.CopyToAsync(outputStream);
     }
-    
+
     public async Task<FileImportResult> TryImportAsync(Stream stream, string fileName)
     {
         Log.Information($"Importing {fileName}");
-            
+
         var extension = Path.GetExtension(fileName).ToLowerInvariant().Substring(1);
 
         if (extension == "zip")
@@ -160,7 +160,7 @@ public class FileImporter : IFileImporter
                 return FileImportResult.CreateError("No copy extensions were built in to the APK, and downloading them failed");
             }
         }
-            
+
         // Attempt to import as a mod config. This only applies if the config's filename matches the ID of a loaded mod
         if (_extensions.ConfigExtensions.Contains(extension))
         {
@@ -178,7 +178,7 @@ public class FileImporter : IFileImporter
                 };
             }
         }
-            
+
         if (_extensions.PlaylistExtensions.Contains(extension))
         {
             var playlistId = await TryImportPlaylistAsync(stream, fileName);
@@ -186,14 +186,14 @@ public class FileImporter : IFileImporter
             {
                 return new FileImportResult
                 {
-                    Type = FileImportResultType.Playlist, 
+                    Type = FileImportResultType.Playlist,
                     ImportedPlaylistId = playlistId
                 };
             }
-                
+
             return FileImportResult.CreateError($"{fileName} was not a valid playlist");
         }
-        
+
         // At this point, we may need to attempt an import multiple times, therefore we copy to a memory stream
         await using var memStream = new MemoryStream();
         await stream.CopyToAsync(memStream);
@@ -228,7 +228,7 @@ public class FileImporter : IFileImporter
                 else
                 {
                     // For now, we will just fail if multiple mods/builtin extensions match the file extension
-                    return FileImportResult.CreateError($"Multiple file copy destinations found for {extension}");   
+                    return FileImportResult.CreateError($"Multiple file copy destinations found for {extension}");
                 }
             }
         }
@@ -242,7 +242,7 @@ public class FileImporter : IFileImporter
                 FileCopyInfo = new FileCopyInfo(copyDest, mod?.Id)
             };
         }
-        
+
         return FileImportResult.CreateError($"Unrecognised file type .{extension}");
     }
 

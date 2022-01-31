@@ -53,7 +53,7 @@ public class FileImporterTests
     private readonly Mock<IAssetService> _assetServiceMock = new();
     private readonly Mock<IModService> _modServiceMock = new();
     private readonly Mock<IPlaylistService> _playlistServiceMock = new();
-    
+
     private readonly IFileSystem _fileSystem = new MockFileSystem();
     private readonly BMBFSettings _settings = new()
     {
@@ -115,13 +115,13 @@ public class FileImporterTests
             ImportedSong = Song.CreateBlank(),
             Type = FileImportResultType.Song
         };
-        
-        _songServiceMock.Setup(s => 
+
+        _songServiceMock.Setup(s =>
             s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsAny<string>()))
             .ReturnsAsync(expectedResult);
-        
+
         var result = await _fileImporter.ImportAsync(songStream, "myFile.zip");
-        
+
         // Make sure that the result returns matches that returned by the ISongService
         Assert.Equal(expectedResult, result);
     }
@@ -131,9 +131,9 @@ public class FileImporterTests
     {
         // Blank stream will not be a valid archive
         using var modStream = new MemoryStream();
-    
+
         var result = await _fileImporter.TryImportAsync(modStream, "myFile.zip");
-        
+
         Assert.Equal(FileImportResultType.Failed, result.Type);
     }
 
@@ -141,7 +141,7 @@ public class FileImporterTests
     public async Task ShouldErrorWhenCannotLoadExtensions()
     {
         _assetServiceMock.Setup(a => a.GetExtensions()).ThrowsAsync(new HttpRequestException());
-        
+
         using var blankStream = new MemoryStream();
         // QSABER is arbitrary, this can be any file type that is NOT .ZIP
         var result = await _fileImporter.TryImportAsync(blankStream, "myFile.qsaber");
@@ -155,7 +155,7 @@ public class FileImporterTests
         using var blankStream = new MemoryStream();
         // YAML is used instead of JSON here, since we don't want to trigger playlist importing
         var result = await _fileImporter.TryImportAsync(blankStream, "myUnknownConfig.yml");
-        
+
         Assert.Equal(FileImportResultType.Failed, result.Type);
     }
 
@@ -167,7 +167,7 @@ public class FileImporterTests
             .Returns("example-mod");
         // Add an example mod which will allow a config with its ID to be imported
         SetupMods(modMock.Object);
-        
+
         // Import a config with the mod ID as the filename, and read the content placed in the config path
         using var exampleContent = CreateExampleContentStream();
         await _fileImporter.TryImportAsync(exampleContent, $"{modMock.Object.Id}.json");
@@ -186,7 +186,7 @@ public class FileImporterTests
         modMock.SetupGet(m => m.CopyExtensions)
             .Returns(new Dictionary<string, string> { { "png", "/ExampleModImages" } });
         SetupMods(modMock.Object);
-        
+
         using var exampleContent = CreateExampleContentStream();
         await _fileImporter.ImportAsync(exampleContent, "test.png");
         byte[] content = _fileSystem.File.ReadAllBytes("/ExampleModImages/test.png");
@@ -202,7 +202,7 @@ public class FileImporterTests
         using var exampleContent = CreateExampleContentStream();
         await _fileImporter.ImportAsync(exampleContent, "test.qsaber");
         byte[] content = _fileSystem.File.ReadAllBytes("Sabers/test.qsaber");
-        
+
         // The built-in copy extensions contains an entry for .qsaber that should copy it to the path above
         Assert.Equal(ExampleFileContent, content);
     }
@@ -216,12 +216,12 @@ public class FileImporterTests
             .Returns("example-mod");
         modMock.SetupGet(m => m.CopyExtensions)
             .Returns(new Dictionary<string, string> { { "qsaber", "/AnotherQSaberMod/" } });
-        
+
         SetupMods(modMock.Object);
 
         using var exampleContent = CreateExampleContentStream();
         var result = await _fileImporter.TryImportAsync(exampleContent, "test.qsaber");
-        
+
         // Multiple copy extensions just triggers failure at the moment
         Assert.Equal(FileImportResultType.Failed, result.Type);
     }
@@ -231,14 +231,14 @@ public class FileImporterTests
     {
         var examplePlaylist = Util.ExamplePlaylist;
         const string expectedPlaylistId = "Example_Playlist";
-        
+
         _playlistServiceMock
             .Setup(p => p.AddPlaylistAsync(It.IsAny<Playlist>()))
             .ReturnsAsync(expectedPlaylistId);
 
         using var playlistStream = CreatePlaylistStream(examplePlaylist);
         var result = await _fileImporter.TryImportAsync(playlistStream, "test.bplist");
-        
+
         // Make sure that the playlist was added to the playlist service
         _playlistServiceMock.Verify(p => p.AddPlaylistAsync(
             It.Is<Playlist>(v => v.PlaylistTitle == examplePlaylist.PlaylistTitle)),
@@ -251,14 +251,14 @@ public class FileImporterTests
     public async Task ShouldDownloadPlaylistSongs()
     {
         const string songHash = "12345";
-        
+
         var examplePlaylist = Util.ExamplePlaylist;
         examplePlaylist.Songs = ImmutableList.Create(
             new BPSong(songHash, null, null)
         );
 
         var song = Song.CreateBlank(songHash);
-        _songServiceMock.Setup(s => 
+        _songServiceMock.Setup(s =>
                 s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsNotNull<string>()))
             .ReturnsAsync(new FileImportResult
             {
@@ -294,10 +294,10 @@ public class FileImporterTests
 
         _playlistServiceMock.Setup(p => p.AddPlaylistAsync(It.IsAny<Playlist>()))
             .ReturnsAsync(expectedPlaylistId);
-        
+
         using var playlistStream = CreatePlaylistStream(examplePlaylist);
         var result = await _fileImporter.TryImportAsync(playlistStream, "my-playlist.json");
-        
+
         // The song download should have been attempted, but this should not have failed the playlist import
         Assert.Equal(expectedPlaylistId, result.ImportedPlaylistId);
         _beatSaverServiceMock.Verify(b => b.DownloadSongByHash(It.IsAny<string>()), Times.Once);
@@ -307,7 +307,7 @@ public class FileImporterTests
     public async Task ShouldPreferKeyOverHash()
     {
         const string mapKey = "ff9";
-        
+
         var examplePlaylist = Util.ExamplePlaylist;
         examplePlaylist.Songs = ImmutableList.Create(
             new BPSong("", null, mapKey)
@@ -315,10 +315,10 @@ public class FileImporterTests
 
         _beatSaverServiceMock.Setup(b => b.DownloadSongByKey(It.IsAny<string>()))
             .ReturnsAsync(CreateEmptyZipStream());
-        
+
         using var playlistStream = CreatePlaylistStream(examplePlaylist);
         await _fileImporter.TryImportAsync(playlistStream, "my-playlist.json");
-        
+
         // Verify that the song was downloaded by key, and NOT by hash
         _beatSaverServiceMock.Verify(b => b.DownloadSongByKey(mapKey), Times.Once);
         _beatSaverServiceMock.Verify(b => b.DownloadSongByHash(It.IsAny<string>()), Times.Never);
@@ -328,7 +328,7 @@ public class FileImporterTests
     public async Task ShouldFailWithUnknownExtension()
     {
         using var blankContent = new MemoryStream();
-        
+
         var result = await _fileImporter.TryImportAsync(blankContent, "my-file.unknown");
         // Since .unknown files are not supported, importing them should fail
         Assert.Equal(FileImportResultType.Failed, result.Type);
@@ -338,7 +338,7 @@ public class FileImporterTests
     public async Task ImportShouldThrowIfFailed()
     {
         using var blankContent = new MemoryStream();
-        await Assert.ThrowsAsync<ImportException>(() => 
+        await Assert.ThrowsAsync<ImportException>(() =>
             _fileImporter.ImportAsync(blankContent, "example.unknown"));
     }
 }

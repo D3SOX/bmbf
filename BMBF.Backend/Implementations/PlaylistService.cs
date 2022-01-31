@@ -35,7 +35,7 @@ public class PlaylistService : IPlaylistService, IDisposable
     private readonly Debouncey _autoUpdateDebouncey;
 
     private bool _disposed;
-        
+
     public PlaylistService(BMBFSettings settings, IFileSystem io, IFileSystemWatcher fileSystemWatcher)
     {
         _playlistsPath = settings.PlaylistsPath;
@@ -51,16 +51,16 @@ public class PlaylistService : IPlaylistService, IDisposable
         var playlists = await GetCacheAsync();
         playlist.IsPendingSave = true;
         var id = AddPlaylist(playlist, playlists, playlist.PlaylistTitle);
-        
+
         PlaylistAdded?.Invoke(this, playlist);
         return id;
     }
-        
+
     private string AddPlaylist(Playlist playlist, PlaylistCache cache, string idSuggestion)
     {
         var originalId = new string(idSuggestion.Select(c => Playlist.LegalIdCharacters.Contains(c) ? c : '_').ToArray());
         playlist.Id = originalId;
-                    
+
         // Find a playlist ID that isn't used yet
         int i = 1;
         while (!cache.TryAdd(playlist.Id, playlist))
@@ -103,7 +103,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             Log.Information("No playlists to save");
             return;
         }
-            
+
         await _cacheUpdateLock.WaitAsync().ConfigureAwait(false);
         try
         {
@@ -111,7 +111,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             foreach (var playlistPair in _cache)
             {
                 var playlist = playlistPair.Value;
-                if(!playlist.IsPendingSave) { continue; }
+                if (!playlist.IsPendingSave) { continue; }
                 Log.Debug($"Saving playlist {playlistPair.Key}");
 
                 try
@@ -151,7 +151,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             _cacheUpdateLock.Release();
         }
     }
-        
+
     public async Task<bool> DeletePlaylistAsync(string playlistId)
     {
         PlaylistCache playlists = await GetCacheAsync();
@@ -200,7 +200,7 @@ public class PlaylistService : IPlaylistService, IDisposable
 
         return _cache;
     }
-    
+
     private void StartWatching()
     {
         _fileSystemWatcher.Path = _playlistsPath;
@@ -214,11 +214,11 @@ public class PlaylistService : IPlaylistService, IDisposable
 
     private async Task UpdateCacheAsync(PlaylistCache cache, bool notify)
     {
-        foreach(var entry in cache)
+        foreach (var entry in cache)
         {
             // Skip playlists that haven't been saved yet, or have changes pending save
             // (i.e. prioritise changes made in BMBF over those made on disk)
-            if(entry.Value.LoadedFrom == null || entry.Value.IsPendingSave) continue;
+            if (entry.Value.LoadedFrom == null || entry.Value.IsPendingSave) continue;
 
             if (!_io.File.Exists(entry.Value.LoadedFrom))
             {
@@ -228,9 +228,9 @@ public class PlaylistService : IPlaylistService, IDisposable
                 {
                     PlaylistDeleted?.Invoke(this, entry.Value);
                 }
-            } 
+            }
         }
-            
+
         foreach (string playlistPath in _io.Directory.EnumerateFiles(_playlistsPath))
         {
             await ProcessNewPlaylistAsync(playlistPath, cache, notify);
@@ -299,7 +299,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             Log.Error(ex, $"Failed to load playlist {path}");
         }
     }
-    
+
     private async void AutoUpdateDebounceyTriggered(object? sender, EventArgs args)
     {
         try
@@ -318,12 +318,12 @@ public class PlaylistService : IPlaylistService, IDisposable
     private void OnPlaylistFileDeleted(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
 
     private void OnPlaylistFileRenamed(object? sender, FileSystemEventArgs args) => _autoUpdateDebouncey.Invoke();
-    
+
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
-            
+
         SavePlaylistsAsync().Wait();
 
         _cacheUpdateLock.Dispose();

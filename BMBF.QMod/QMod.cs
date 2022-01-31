@@ -27,11 +27,11 @@ namespace BMBF.QMod
 
         private IFileSystem FileSystem => _provider.FileSystem;
         private HttpClient HttpClient => _provider.HttpClient;
-        
+
         private readonly QModProvider _provider;
-        
+
         private bool _disposed;
-        
+
         public QMod(QuestPatcher.QMod.QMod mod, QModProvider provider)
         {
             Mod = mod;
@@ -48,8 +48,8 @@ namespace BMBF.QMod
             }
             return false;
         }
-        
-        
+
+
         public async Task InstallAsync()
         {
             await _provider.ModManager.InstallLock.WaitAsync();
@@ -59,7 +59,7 @@ namespace BMBF.QMod
                 {
                     throw new InvalidOperationException("Cannot install a mod which is not registered to a provider");
                 }
-                
+
                 await InstallAsyncInternal(new HashSet<string>());
             }
             finally
@@ -67,7 +67,7 @@ namespace BMBF.QMod
                 _provider.ModManager.InstallLock.Release();
             }
         }
-        
+
         public async Task UninstallAsync()
         {
             await _provider.ModManager.InstallLock.WaitAsync();
@@ -85,7 +85,7 @@ namespace BMBF.QMod
                 _provider.ModManager.InstallLock.Release();
             }
         }
-        
+
         public Stream OpenCoverImage()
         {
             if (CoverImageFileName == null)
@@ -99,28 +99,28 @@ namespace BMBF.QMod
         internal void UpdateStatusInternal()
         {
             // Check that all the mod files, library files, and file copies are installed before setting the mod as installed
-            
+
             foreach (string m in Mod.ModFileNames)
             {
-                if(!FileSystem.File.Exists(Path.Combine(_provider.ModsPath, Path.GetFileName(m))))
+                if (!FileSystem.File.Exists(Path.Combine(_provider.ModsPath, Path.GetFileName(m))))
                 {
                     Installed = false;
                     return;
                 }
             }
-            
+
             foreach (string lib in Mod.LibraryFileNames)
             {
-                if(!FileSystem.File.Exists(Path.Combine(_provider.LibsPath, Path.GetFileName(lib))))
+                if (!FileSystem.File.Exists(Path.Combine(_provider.LibsPath, Path.GetFileName(lib))))
                 {
                     Installed = false;
                     return;
                 }
             }
-            
+
             foreach (var fileCopy in Mod.FileCopies)
             {
-                if(!FileSystem.File.Exists(fileCopy.Destination))
+                if (!FileSystem.File.Exists(fileCopy.Destination))
                 {
                     Installed = false;
                     return;
@@ -133,7 +133,7 @@ namespace BMBF.QMod
         internal async Task InstallAsyncInternal(HashSet<string> installPath)
         {
             if (Installed) return;
-            
+
             installPath.Add(Id);
             try
             {
@@ -148,21 +148,21 @@ namespace BMBF.QMod
                 FileSystem.Directory.CreateDirectory(_provider.LibsPath);
 
                 // Copy over all of the mod files, lib files and file copies in order to actually install the mod
-                
+
                 foreach (var m in Mod.ModFileNames)
                 {
                     string destPath = Path.Combine(_provider.ModsPath, Path.GetFileName(m));
                     await using var modStream = Mod.OpenModFile(m);
                     await ExtractAsync(modStream, destPath).ConfigureAwait(false);
                 }
-                
+
                 foreach (var lib in Mod.LibraryFileNames)
                 {
                     string destPath = Path.Combine(_provider.LibsPath, Path.GetFileName(lib));
                     await using var libStream = Mod.OpenLibraryFile(lib);
                     await ExtractAsync(libStream, destPath).ConfigureAwait(false);
                 }
-                
+
                 foreach (var fc in Mod.FileCopies)
                 {
                     await using var copyStream = Mod.OpenFileCopy(fc);
@@ -173,7 +173,7 @@ namespace BMBF.QMod
                     {
                         FileSystem.Directory.CreateDirectory(directoryName);
                     }
-                    
+
                     await ExtractAsync(copyStream, fc.Destination).ConfigureAwait(false);
                 }
 
@@ -191,25 +191,25 @@ namespace BMBF.QMod
             if (!Installed) return new List<QMod>();
 
             // Uninstall ourself
-            
+
             foreach (string m in Mod.ModFileNames)
             {
                 string destPath = Path.Combine(_provider.ModsPath, Path.GetFileName(m));
-                if(FileSystem.File.Exists(destPath)) FileSystem.File.Delete(destPath);
+                if (FileSystem.File.Exists(destPath)) FileSystem.File.Delete(destPath);
             }
-            
+
             foreach (string lib in Mod.LibraryFileNames)
             {
                 // Skip library files still in use by other libraries
                 if (_provider.Mods.Values.Any(mod => mod.Id != Id && mod.Installed && mod.Mod.LibraryFileNames.Contains(lib))) continue;
 
                 string destPath = Path.Combine(_provider.LibsPath, Path.GetFileName(lib));
-                if(FileSystem.File.Exists(destPath)) FileSystem.File.Delete(destPath);
+                if (FileSystem.File.Exists(destPath)) FileSystem.File.Delete(destPath);
             }
-            
+
             foreach (var fileCopy in Mod.FileCopies)
             {
-                if(FileSystem.File.Exists(fileCopy.Destination)) FileSystem.File.Delete(fileCopy.Destination);
+                if (FileSystem.File.Exists(fileCopy.Destination)) FileSystem.File.Delete(fileCopy.Destination);
             }
 
             // Set ourself to uninstalled to avoid being included with potentially recursive dependency uninstalls
@@ -222,20 +222,20 @@ namespace BMBF.QMod
                 uninstalledDependants.Add(mod);
                 await mod.UninstallAsyncInternal().ConfigureAwait(false);
             }
-            
+
             // Uninstall libraries that no installed mods depend on
-            foreach(QMod mod in _provider.Mods.Values.Where(m =>
-                        m.Installed &&
-                        m.Mod.IsLibrary &&
-                        !_provider.Mods.Values.Any(dependingMod => dependingMod.Installed && dependingMod.Mod.Dependencies.Any(d => d.Id == m.Id))))
+            foreach (QMod mod in _provider.Mods.Values.Where(m =>
+                         m.Installed &&
+                         m.Mod.IsLibrary &&
+                         !_provider.Mods.Values.Any(dependingMod => dependingMod.Installed && dependingMod.Mod.Dependencies.Any(d => d.Id == m.Id))))
             {
                 await mod.UninstallAsyncInternal().ConfigureAwait(false);
             }
-            
+
             _provider.InvokeModStatusChanged(this); // Now we actually forward the uninstall to the frontend
             return uninstalledDependants;
         }
-        
+
         private async Task PrepareDependency(Dependency dependency, HashSet<string> installPath)
         {
             // Cyclical dependency!
@@ -243,7 +243,7 @@ namespace BMBF.QMod
             {
                 return;
             }
-            
+
             var existing = _provider.Mods.Values.FirstOrDefault(m => m.Mod.Id == dependency.Id);
             if (existing != null)
             {
@@ -257,28 +257,28 @@ namespace BMBF.QMod
                     return;
                 }
                 // Otherwise we will need to upgrade the dependency
-                if(dependency.DownloadIfMissing == null)
+                if (dependency.DownloadIfMissing == null)
                 {
                     throw new InstallationException(
                         $"Dependency {dependency.Id} is installed, but with an incorrect version ({existing.Mod.Version}) and does not specify a download link if missing, so the version couldn't be upgraded");
                 }
             }
-            else if(dependency.DownloadIfMissing == null)
+            else if (dependency.DownloadIfMissing == null)
             {
                 throw new InstallationException($"Dependency {dependency.Id} is not installed, and does not specify a download link if missing");
             }
-            
+
             try
             {
                 using var resp = await HttpClient.GetAsync(dependency.DownloadIfMissing, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
                 resp.EnsureSuccessStatusCode();
                 await using var content = await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                
+
                 var memStream = new MemoryStream();
                 await content.CopyToAsync(memStream);
                 memStream.Position = 0;
-                
-                var loadedDep = (QMod) await _provider.ModManager.ImportMod(_provider, memStream, $"{dependency.Id}.qmod");
+
+                var loadedDep = (QMod)await _provider.ModManager.ImportMod(_provider, memStream, $"{dependency.Id}.qmod");
 
                 // Quick sanity check to avoid people putting invalid download links and not noticing
                 if (!dependency.VersionRange.IsSatisfied(loadedDep.Version))
@@ -295,13 +295,13 @@ namespace BMBF.QMod
                 throw new InstallationException($"Failed to download dependency {dependency.Id} from {dependency.DownloadIfMissing}", ex);
             }
         }
-        
+
         private async Task ExtractAsync(Stream stream, string destination)
         {
             // If files exist, we always overwrite them first
             if (FileSystem.File.Exists(destination)) FileSystem.File.Delete(destination);
             await using var destStream = FileSystem.File.OpenWrite(destination);
-            
+
             await stream.CopyToAsync(destStream).ConfigureAwait(false);
         }
 
@@ -309,7 +309,7 @@ namespace BMBF.QMod
         {
             if (_disposed) return;
             _disposed = true;
-            
+
             Mod.Dispose();
         }
     }

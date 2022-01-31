@@ -21,17 +21,17 @@ public class MessageService : IMessageService
         // Register events to send our messages
         setupService.StatusChanged += OnSetupStatusUpdate;
         setupService.SetupComplete += OnSetupFinished;
-            
+
         songService.SongAdded += OnSongAdded;
         songService.SongRemoved += OnSongRemoved;
 
         playlistService.PlaylistAdded += OnPlaylistAdded;
         playlistService.PlaylistDeleted += OnPlaylistRemoved;
-            
+
         beatSaberService.AppChanged += OnAppChanged;
     }
 
-        
+
     private void OnSongAdded(object? sender, Song song) => Send(new SongAdded(song));
 
     private void OnSongRemoved(object? sender, Song song) => Send(new SongRemoved(song.Hash));

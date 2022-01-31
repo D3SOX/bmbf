@@ -49,7 +49,7 @@ public interface IAssetService
     /// <exception cref="HttpRequestException">If the diffs can not be fetched, for example due to lack of internet</exception>
     /// <returns></returns>
     Task<List<DiffInfo>> GetDiffs(bool refresh = false);
-        
+
     /// <summary>
     /// Gets streams of libmain.so and libmodloader.so, and the version of the modloader that they represent.
     /// Will use the inbuilt modloader if no internet is available, or if the modloader in BMBF resources

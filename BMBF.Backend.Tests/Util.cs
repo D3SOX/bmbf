@@ -12,8 +12,8 @@ public static class Util
         "./Resources/ExampleSong",
         new FileSystem()
     );
-    
-    public static Playlist ExamplePlaylist =>  new(
+
+    public static Playlist ExamplePlaylist => new(
         "Example Playlist",
         "Unicorns",
         "Example",

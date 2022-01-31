@@ -53,7 +53,7 @@ public interface ISetupService
     /// </summary>
     /// <exception cref="InvalidOperationException">If a downgrading operation was not already in progress</exception>
     Task ResumeDowngradeAsync();
-        
+
     /// <summary>
     /// Patches the current Beat Saber APK
     /// <exception cref="InvalidOperationException">If the APK has already been patched</exception>

@@ -38,7 +38,7 @@ public class AssetFileProvider : IFileProvider
                 var files = _assetManager.List(Path.GetDirectoryName(_path) ?? "");
                 if (files == null) return false;
 
-                var exists =  files.Contains(Path.GetFileName(_path));
+                var exists = files.Contains(Path.GetFileName(_path));
                 return exists;
             }
         }
@@ -52,7 +52,7 @@ public class AssetFileProvider : IFileProvider
         public DateTimeOffset LastModified => DateTimeOffset.UnixEpoch;
         public bool IsDirectory => _path.EndsWith("/");
     }
-        
+
     private class DirectoryContents : IDirectoryContents
     {
         private readonly string[]? _contents;
@@ -69,8 +69,8 @@ public class AssetFileProvider : IFileProvider
             {
                 throw new InvalidOperationException();
             }
-                
-            foreach(string path in _contents)
+
+            foreach (string path in _contents)
             {
                 yield return new FileInfo(path, _assetManager);
             }
@@ -85,7 +85,7 @@ public class AssetFileProvider : IFileProvider
 
     private readonly AssetManager _assetManager;
     private readonly string _basePath;
-        
+
     public AssetFileProvider(AssetManager assetManager, string basePath = "")
     {
         _assetManager = assetManager;
@@ -97,7 +97,7 @@ public class AssetFileProvider : IFileProvider
         var nonRootedPath = Path.IsPathRooted(path) ? path[1..] : path;
         return Path.Combine(_basePath, nonRootedPath);
     }
-        
+
     public IFileInfo GetFileInfo(string subpath)
     {
         return new FileInfo(GetAssetPath(subpath), _assetManager);

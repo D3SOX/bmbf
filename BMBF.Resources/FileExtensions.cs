@@ -10,7 +10,7 @@ namespace BMBF.Resources
         public List<string> PlaylistExtensions { get; set; }
 
         public List<string> ConfigExtensions { get; set; }
-        
+
         [JsonConstructor]
         public FileExtensions(Dictionary<string, string> copyExtensions, List<string> playlistExtensions, List<string> configExtensions)
         {

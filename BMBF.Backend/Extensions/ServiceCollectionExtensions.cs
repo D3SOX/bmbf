@@ -41,7 +41,7 @@ public static class ServiceCollectionExtensions
     /// libunity.so, and modloader. If null, then built in assets will not be used, and these files
     /// will always be downloaded manually</param>
     public static void AddBMBF(this IServiceCollection services,
-                                WebHostBuilderContext ctx, 
+                                WebHostBuilderContext ctx,
                                 BMBFSettings settings,
                                 BMBFResources resources,
                                 IFileProvider assetFileProvider)
@@ -54,7 +54,7 @@ public static class ServiceCollectionExtensions
             });
         }
         services.AddRouting(options => options.LowercaseUrls = true);
-        
+
         services.AddSingleton<ISongService, SongService>();
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();
@@ -63,10 +63,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAssetService, AssetService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
-        services.AddTransient<IFileSystemWatcher>(s => 
+        services.AddTransient<IFileSystemWatcher>(s =>
             (s.GetService<IFileSystem>() ?? throw new NullReferenceException($"No {nameof(IFileSystem)} configured"))
             .FileSystemWatcher.CreateNew());
-        
+
         services.AddHttpClient<IBeatSaverService, BeatSaverService>(client =>
         {
             ConfigureDefaults(client);
@@ -74,7 +74,7 @@ public static class ServiceCollectionExtensions
         });
         services.AddHttpClient<IAssetService, AssetService>(ConfigureDefaults);
         services.AddHttpClient();
-        
+
         services.AddSingleton(settings);
         services.AddSingleton(resources);
         services.AddSingleton(assetFileProvider);
@@ -100,13 +100,13 @@ public static class ServiceCollectionExtensions
             modService.RegisterProvider(provider);
             return modService;
         });
-        
+
         // Add controllers, making sure to include those in this assembly instead of only those in the entry assembly 
         var mvcBuilder = services.AddControllers();
         mvcBuilder.PartManager
             .ApplicationParts
             .Add(new AssemblyPart(Assembly.GetExecutingAssembly()));
-        
+
         // Configure our legacy tags
         var tagManager = new TagManager();
         tagManager.RegisterLegacyTag("modded",

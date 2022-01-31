@@ -10,7 +10,7 @@ namespace BMBF.Patching
         /// Function to open the source file for this replacement
         /// </summary>
         internal OpenFileDelegate? OpenSourceFile { get; }
-        
+
         /// <summary>
         /// Function to generate this file from an existing file in the APK
         /// </summary>
@@ -32,7 +32,7 @@ namespace BMBF.Patching
             OverwriteMode = overwriteMode;
             ApkFilePath = apkFilePath;
         }
-        
+
         internal FileModification(PatchFileDelegate generateFromSourceFile, string apkFilePath)
         {
             GenerateFromSourceFile = generateFromSourceFile;

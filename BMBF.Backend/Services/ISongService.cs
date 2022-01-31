@@ -42,8 +42,8 @@ public interface ISongService
     /// <summary>
     /// Invoked whenever a new song is loaded
     /// </summary>
-    event EventHandler<Song>? SongAdded; 
-        
+    event EventHandler<Song>? SongAdded;
+
     /// <summary>
     /// Invoked whenever a song is removed
     /// </summary>

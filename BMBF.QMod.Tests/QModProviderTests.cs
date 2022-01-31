@@ -17,7 +17,7 @@ namespace BMBF.QMod.Tests
     {
         private readonly QModProvider _provider;
         private readonly IFileSystem _fileSystem = new MockFileSystem();
-        
+
         public QModProviderTests()
         {
             _provider = Util.CreateProvider(
@@ -25,7 +25,7 @@ namespace BMBF.QMod.Tests
                 _fileSystem
             );
         }
-        
+
         [Theory]
         [InlineData(QModProvider.ModExtension, true)]
         [InlineData(".zip", false)]
@@ -34,7 +34,7 @@ namespace BMBF.QMod.Tests
         {
             Assert.Equal(expected, _provider.CanAttemptImport($"my-file{fileExtension}"));
         }
-        
+
         [Fact]
         public async Task ShouldInvokeModLoaded()
         {
@@ -43,7 +43,7 @@ namespace BMBF.QMod.Tests
 
             using var modStream = Util.CreateTestingMod();
             var parsedMod = await _provider.ParseAndAddMod(modStream);
-            
+
             Assert.Equal(parsedMod, addedMod);
         }
 
@@ -58,7 +58,7 @@ namespace BMBF.QMod.Tests
         [Theory]
         [InlineData(true, true, true, true)] // If all mod files exist, the mod should be marked as installed
         // If any are missing, then the mod is uninstalled
-        [InlineData(false, true, true, false)] 
+        [InlineData(false, true, true, false)]
         [InlineData(true, false, true, false)]
         [InlineData(true, true, false, false)]
         public async Task ShouldSetModStatus(bool modFileExists, bool libFileExists, bool fileCopyExists, bool installed)
@@ -67,12 +67,12 @@ namespace BMBF.QMod.Tests
             const string libPath = "libtest-lib.so";
             const string fileCopyPath = "myFile.txt";
             const string fileCopyDestination = "myFiles/myFile.txt";
-            
+
             var fileSystem = new MockFileSystem();
             // Create the files in the mock file system
-            if(modFileExists) fileSystem.AddFile($"/mods/{modPath}", MockFileData.NullObject);
-            if(libFileExists) fileSystem.AddFile($"/libs/{libPath}", MockFileData.NullObject);
-            if(fileCopyExists) fileSystem.AddFile(fileCopyDestination, MockFileData.NullObject);
+            if (modFileExists) fileSystem.AddFile($"/mods/{modPath}", MockFileData.NullObject);
+            if (libFileExists) fileSystem.AddFile($"/libs/{libPath}", MockFileData.NullObject);
+            if (fileCopyExists) fileSystem.AddFile(fileCopyDestination, MockFileData.NullObject);
 
             using var provider = Util.CreateProvider(new HttpClient(), fileSystem);
 
@@ -94,7 +94,7 @@ namespace BMBF.QMod.Tests
             var mod = Util.CreateTestingMod(m => m.PackageId = "com.imposter.app");
             await Assert.ThrowsAsync<InstallationException>(async () => await _provider.TryParseModAsync(mod));
         }
-        
+
         [Fact]
         public async Task ShouldRemoveExistingMod()
         {
@@ -134,7 +134,7 @@ namespace BMBF.QMod.Tests
 
             string? removedMod = null;
             _provider.ModUnloaded += (_, args) => removedMod = args;
-            
+
             await _provider.UnloadModAsync(mod);
             Assert.Equal(mod.Id, removedMod);
         }
@@ -144,7 +144,7 @@ namespace BMBF.QMod.Tests
         {
             var mod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
             await mod.InstallAsync();
-            
+
             // Since the mod as installed when it was unloaded, it should have been uninstalled before the unload
             await _provider.UnloadModAsync(mod);
             Assert.False(mod.Installed);

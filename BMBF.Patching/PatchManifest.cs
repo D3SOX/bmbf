@@ -14,7 +14,7 @@ namespace BMBF.Patching
         /// Name of the program used to patch the APK
         /// </summary>
         public string PatcherName { get; set; }
-        
+
         /// <summary>
         /// Version of the program used to patch the APK. Null if unknown
         /// </summary>
@@ -35,13 +35,13 @@ namespace BMBF.Patching
         /// Name of the modloader that the APK was patched with
         /// </summary>
         public string? ModloaderName { get; set; }
-        
+
         /// <summary>
         /// Version of the modloader that the APK was patched with
         /// </summary>
         [JsonIgnore]
         public Version? ModloaderVersion { get; set; }
-        
+
         /// <summary>
         /// String representation of <see cref="ModloaderVersion"/>
         /// </summary>
@@ -56,7 +56,7 @@ namespace BMBF.Patching
         /// A list of all the modified files in the APK
         /// </summary>
         public HashSet<string> ModifiedFiles { get; set; } = new();
-        
+
         [JsonConstructor]
         public PatchManifest(string patcherName, string? patcherVersionString)
         {

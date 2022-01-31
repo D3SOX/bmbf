@@ -8,7 +8,7 @@ namespace BMBF.Backend.Models;
 public class ModActionResult
 {
     public bool Success => Error == null;
-    
+
     /// <summary>
     /// If non-null, specifies the error that occured during mod installation
     /// </summary>

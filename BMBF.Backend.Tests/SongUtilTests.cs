@@ -20,7 +20,7 @@ public class SongUtilTests
         Assert.Null(await SongUtil.TryLoadSongInfoAsync(folderProvider));
     }
 
-    [Theory] 
+    [Theory]
     [InlineData("info.dat")]
     [InlineData("Info.dat")]
     public async Task ShouldAllowBothInfoDatPaths(string infoDatPath)
@@ -39,10 +39,10 @@ public class SongUtilTests
             infoStream.Position = 0;
             return infoStream;
         });
-        
+
         Assert.NotNull(await SongUtil.TryLoadSongInfoAsync(folderProvider.Object));
     }
-    
+
     [Fact]
     public async Task ShouldMatchSongDetails()
     {
@@ -57,7 +57,7 @@ public class SongUtilTests
             LevelAuthorName = "Unicorns",
             CoverImageFilename = "cover.jpg"
         };
-        
+
         folderProvider.Setup(f => f.Open("info.dat")).Returns(() =>
         {
             var infoStream = new MemoryStream();
@@ -65,10 +65,10 @@ public class SongUtilTests
             infoStream.Position = 0;
             return infoStream;
         });
-        
+
         var song = await SongUtil.TryLoadSongInfoAsync(folderProvider.Object);
         Debug.Assert(song != null);
-        
+
         // Make sure that all of the song details match
         Assert.Equal(exampleInfoDat.SongName, song.SongName);
         Assert.Equal(exampleInfoDat.SongSubName, song.SongSubName);
@@ -82,7 +82,7 @@ public class SongUtilTests
     {
         var song = await SongUtil.TryLoadSongInfoAsync(Util.ExampleSongProvider);
         Debug.Assert(song != null);
-        
+
         // ff9
         Assert.Equal("CB9F1581FF6C09130C991DB8823C5953C660688F", song.Hash);
     }

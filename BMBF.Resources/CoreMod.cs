@@ -14,14 +14,14 @@ namespace BMBF.Resources
             get => Version.ToString();
             set => Version = Version.Parse(value);
         }
-        
+
         [JsonIgnore]
         public Version Version { get; set; }
-        
+
         public Uri DownloadLink { get; set; }
-        
+
         public string FileName { get; set; }
-        
+
         [JsonConstructor]
         public CoreMod(string id, string versionString, Uri downloadLink, string fileName)
         {

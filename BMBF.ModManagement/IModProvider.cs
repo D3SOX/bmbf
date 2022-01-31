@@ -41,7 +41,7 @@ namespace BMBF.ModManagement
         /// <returns>The parsed mod, or null if the given stream was not a mod type this provider can load. Calling install/uninstall operations on this mod is not safe</returns>
         /// <exception cref="InstallationException">If the mod was the correct mod type for this provider, but had another format issue</exception>
         Task<IMod?> TryParseModAsync(Stream stream, bool leaveOpen = false);
-        
+
         /// <summary>
         /// Adds the given mod to the providers mod set.
         /// </summary>

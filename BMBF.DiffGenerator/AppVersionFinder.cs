@@ -11,7 +11,7 @@ public class AppVersionFinder
 {
     private readonly string _accessToken;
     private readonly HttpClient _httpClient = new();
-    
+
     public AppVersionFinder(string accessToken, string requestUrl = "https://graph.oculus.com/graphql")
     {
         _httpClient.BaseAddress = new Uri(requestUrl);
@@ -24,7 +24,7 @@ public class AppVersionFinder
         dict["access_token"] = _accessToken;
         dict["doc_id"] = "1586217024733717";
         dict["variables"] = $"{{\"id\":\"{appId}\"}}";
-        
+
         using var resp = await _httpClient.PostAsync("", new FormUrlEncodedContent(dict));
         resp.EnsureSuccessStatusCode();
 
@@ -35,13 +35,13 @@ public class AppVersionFinder
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-        
+
         return document.RootElement.GetProperty("data")
             .GetProperty("node")
             .GetProperty("supportedBinaries")
             .GetProperty("edges").EnumerateArray()
             .Select(element => element.GetProperty("node").Deserialize<OculusAppVersion>(options)!).ToList();
     }
-    
-    
+
+
 }

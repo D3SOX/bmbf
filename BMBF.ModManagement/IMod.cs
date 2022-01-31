@@ -14,32 +14,32 @@ namespace BMBF.ModManagement
         /// Identifier for the mod. Must not contain whitespace
         /// </summary>
         string Id { get; }
-        
+
         /// <summary>
         /// Human-readable name of the mod
         /// </summary>
         string Name { get; }
-        
+
         /// <summary>
         /// Author of the mod, optional
         /// </summary>
         string? Author { get; }
-        
+
         /// <summary>
         /// Person who ported this mod from another platform, optional
         /// </summary>
         string? Porter { get; }
-        
+
         /// <summary>
         /// Version of the mod
         /// </summary>
         string Version { get; }
-        
+
         /// <summary>
         /// Description of this mod, optional
         /// </summary>
         string? Description { get; }
-        
+
         /// <summary>
         /// Version of the package that this mod is designed for
         /// </summary>
@@ -71,12 +71,12 @@ namespace BMBF.ModManagement
         /// Null if there is no cover image
         /// </summary>
         string? CoverImageFileName { get; }
-        
+
         /// <summary>
         /// Whether or not the mod is currently installed
         /// </summary>
         bool Installed { get; }
-        
+
         /// <summary>
         /// Map of file extensions to paths which indicate file types this mod loads and where it loads them from.
         /// Key is lower(!) case file extension without(!) period prefix, value is path.
