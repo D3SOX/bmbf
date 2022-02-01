@@ -20,7 +20,26 @@ namespace BMBF.Backend.Implementations;
 
 public class AssetService : IAssetService
 {
-    private const string PatchingAssetsPath = "patching";
+    #region Asset Paths
+
+    internal const string IndexPath = "patching_assets.json";
+    internal const string ExtensionsPath = "extensions.json";
+    internal const string PatchingAssetsFolder = "patching";
+    internal const string CoreModsFolder = "core_mods";
+    
+    // These are deliberately NOT suffixed with .so !
+    // This is because any SO files in the xamarin assets folder are always treated as native libraries
+    // and are copied to the libs folder within the APK.
+    // Removing the .so suffix gets round this.
+    internal const string ModLoader32Path = $"{PatchingAssetsFolder}/libmodloader32";
+    internal const string Main32Path = $"{PatchingAssetsFolder}/libmain32";
+    internal const string ModLoader64Path = $"{PatchingAssetsFolder}/libmodloader64";
+    internal const string Main64Path = $"{PatchingAssetsFolder}/libmain64";
+
+    internal const string UnityPath = $"{PatchingAssetsFolder}/libunity";
+
+    #endregion
+    
     private readonly BuiltInAssets _builtInAssets;
     private readonly HttpClient _httpClient;
     private readonly BMBFResources _bmbfResources;
@@ -39,7 +58,7 @@ public class AssetService : IAssetService
         _assetProvider = assetProvider;
         _httpClient = httpClient;
 
-        var indexFile = assetProvider.GetFileInfo("patching_assets.json");
+        var indexFile = assetProvider.GetFileInfo(IndexPath);
         if (indexFile.Exists)
         {
             using var indexStream = indexFile.CreateReadStream();
@@ -114,7 +133,7 @@ public class AssetService : IAssetService
         if (_builtInAssets.CoreMods?.Contains(coreMod) ?? false)
         {
             Log.Information($"Extracting inbuilt core mod {coreMod.FileName}");
-            return OpenAsset(Path.Combine("core_mods", coreMod.FileName));
+            return OpenAsset(Path.Combine(CoreModsFolder, coreMod.FileName));
         }
 
         Log.Information($"Downloading core mod {coreMod.FileName}");
@@ -138,8 +157,8 @@ public class AssetService : IAssetService
 
     private (Stream modloader, Stream main, Version version) OpenBuiltInModloader(bool is64Bit)
     {
-        var modloaderPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmodloader64" : "libmodloader32");
-        var mainPath = Path.Combine(PatchingAssetsPath, is64Bit ? "libmain64" : "libmain32");
+        var modloaderPath = is64Bit ? ModLoader64Path : ModLoader32Path;
+        var mainPath = is64Bit ? Main64Path : Main32Path;
         return (OpenAsset(modloaderPath), OpenAsset(mainPath), Version.Parse(_builtInAssets.ModLoaderVersion));
     }
 
@@ -182,7 +201,7 @@ public class AssetService : IAssetService
         if (beatSaberVersion == _builtInAssets.BeatSaberVersion)
         {
             Log.Information($"Using built-in libunity.so for Beat Saber v{beatSaberVersion}");
-            return OpenAsset(Path.Combine(PatchingAssetsPath, "libunity"));
+            return OpenAsset(UnityPath);
         }
 
         var unityIndex = await DownloadJson<UnityIndex>(_bmbfResources.LibUnityIndex);
@@ -211,7 +230,7 @@ public class AssetService : IAssetService
         }
         catch (Exception)
         {
-            var extensionsFile = _assetProvider.GetFileInfo("extensions.json");
+            var extensionsFile = _assetProvider.GetFileInfo(ExtensionsPath);
             if (extensionsFile.Exists)
             {
                 Log.Warning("Could not fetch extensions from BMBF resources, using built in extensions instead!");
