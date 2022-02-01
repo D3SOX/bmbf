@@ -109,9 +109,8 @@ public class AssetService : IAssetService
         }
     }
 
-    public async Task<Stream> ExtractOrDownloadCoreMod(CoreMod coreMod, string path)
+    public async Task<Stream> ExtractOrDownloadCoreMod(CoreMod coreMod)
     {
-        await using var outputStream = File.OpenWrite(path);
         if (_builtInAssets.CoreMods?.Contains(coreMod) ?? false)
         {
             Log.Information($"Extracting inbuilt core mod {coreMod.FileName}");

@@ -31,9 +31,8 @@ public interface IAssetService
     /// This may download the core mod if it is not builtin
     /// </summary>
     /// <param name="coreMod">Core mod to download</param>
-    /// <param name="path">Path to extract or download the core mod to</param>
     /// <returns>A stream which can be used to read the core mod</returns>
-    Task<Stream> ExtractOrDownloadCoreMod(CoreMod coreMod, string path);
+    Task<Stream> ExtractOrDownloadCoreMod(CoreMod coreMod);
 
     /// <summary>
     /// Downloads the given diff and returns a stream to read it
