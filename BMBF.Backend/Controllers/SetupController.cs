@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.Backend.Extensions;
 using BMBF.Backend.Models.Setup;
@@ -81,7 +82,14 @@ public class SetupController : Controller
             return BadRequest("Setup already started");
         }
 
-        await _setupService.BeginSetupAsync();
+        try
+        {
+            await _setupService.BeginSetupAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            return BadRequest("Cannot begin setup when Beat Saber is not installed");
+        }
         return Ok();
     }
 
@@ -118,6 +126,11 @@ public class SetupController : Controller
         {
             return BadRequest("Incorrect setup stage");
         }
+        catch (HttpRequestException)
+        {
+            return BadRequest("Could not download modloader, and no modloader was built-in");
+        }
+        
         return Ok();
     }
 

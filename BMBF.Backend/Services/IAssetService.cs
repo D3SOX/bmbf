@@ -39,6 +39,7 @@ public interface IAssetService
     /// </summary>
     /// <param name="diffInfo">The diff to download</param>
     /// <param name="ct">Token to cancel the diff download</param>
+    /// <returns>Seekable stream to read the delta from</returns>
     Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct);
 
     /// <summary>
@@ -62,8 +63,12 @@ public interface IAssetService
 
     /// <summary>
     /// Gets a stream to read the unstripped libunity.so for the given Beat Saber version
-    /// <param name="ct">Token to cancel the libunity.so download</param>
     /// </summary>
+    /// <param name="ct">Token to cancel the libunity.so download</param>
+    /// <param name="beatSaberVersion">Beat Saber version name to download the libunity.so for</param>
+    /// <returns>Stream to read the libunity.so for the given Beat Saber version, or null if no libunity.so
+    /// is available for the Beat Saber version</returns>
+    /// <exception cref="HttpRequestException">If no libunity.so for this version is built-in, and download it failed</exception>
     Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct);
 
     /// <summary>

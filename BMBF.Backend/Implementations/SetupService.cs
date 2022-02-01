@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -228,6 +229,12 @@ public class SetupService : ISetupService, IDisposable
         if (CurrentStatus != null)
         {
             CurrentStatus.IsInProgress = false;
+            
+            // Failsafe delete temporary APK for this stage
+            if (_io.File.Exists(_tempApkPath))
+            {
+                _io.File.Delete(_tempApkPath);
+            }
             await ProcessStatusChange();
         }
     }
@@ -253,12 +260,12 @@ public class SetupService : ISetupService, IDisposable
                  i < currentStatus.DowngradingStatus.Path.Count;
                  i++)
             {
-                DiffInfo diffInfo = currentStatus.DowngradingStatus.Path[i];
+                var diffInfo = currentStatus.DowngradingStatus.Path[i];
 
                 _logger.Information($"Downloading patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
                 Stream? deltaStream = null;
 
-                // Attempt to download the delta multiple times
+                // Attempt to download the delta until canceled or until it succeeds
                 while (deltaStream == null)
                 {
                     try
@@ -334,15 +341,12 @@ public class SetupService : ISetupService, IDisposable
             var libFolder = "lib/arm64-v8a";
 
             // Download/extract necessary files for patching
-            _logger.Information("Preparing modloader");
             var modloader = await _assetService.GetModLoader(true, _cts.Token);
             await using var modloaderStream = modloader.modloader;
             await using var mainStream = modloader.main;
             var modloaderVersion = modloader.version;
-
-            _logger.Information("Preparing unstripped libunity.so");
-            await using var unityStream = await _assetService.GetLibUnity(currentStatus.CurrentBeatSaberVersion, _cts.Token);
-
+            _logger.Debug($"Using modloader version: {modloaderVersion}");
+            
             var builder = new PatchBuilder("BMBF", semVersion, _tagManager)
                 .WithModloader("QuestLoader", modloaderVersion)
                 .ModifyFile($"{libFolder}/libmain.so", OverwriteMode.MustExist, () => mainStream)
@@ -359,17 +363,21 @@ public class SetupService : ISetupService, IDisposable
                     manifest.SetDebuggable(true);
                     manifest.SetRequestLegacyExternalStorage(true);
                 })
+                .ModifyFileAsync($"{libFolder}/libunity.so", OverwriteMode.MustExist, async ct =>
+                {
+                    _logger.Information("Downloading unstripped libunity.so . . .");
+                    try
+                    {
+                        return await _assetService.GetLibUnity(currentStatus.CurrentBeatSaberVersion, ct);
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        _logger.Warning("Could not download libunity.so - skipping!");
+                        _logger.Verbose(ex, "libunity.so error");
+                        return null;
+                    }
+                })
                 .Sign(CertificateProvider.DebugCertificate);
-
-            if (unityStream is null)
-            {
-                _logger.Warning(
-                    $"No libunity.so found for Beat Saber version {currentStatus.CurrentBeatSaberVersion}");
-            }
-            else
-            {
-                builder.ModifyFile($"{libFolder}/libunity.so", OverwriteMode.MustExist, () => unityStream);
-            }
 
             await builder.Patch(_tempApkPath, _logger, _cts.Token);
 

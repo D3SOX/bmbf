@@ -46,6 +46,8 @@ public interface ISetupService
     /// </summary>
     /// <param name="downgradePath">The set of diffs to use for downgrading</param>
     /// <exception cref="InvalidOperationException">If the APK has already been downgraded or patched</exception>
+    /// <exception cref="System.Net.Http.HttpRequestException">If no modloader is built in to the APK,
+    /// and downloading the modloader fails</exception>
     Task DowngradeAsync(List<DiffInfo> downgradePath);
 
     /// <summary>
