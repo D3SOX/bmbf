@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,23 +79,10 @@ public class AssetService : IAssetService
         return _assetProvider.GetFileInfo(path).CreateReadStream();
     }
 
-    private async Task<MemoryStream> DownloadToMemoryStream(Uri uri, CancellationToken ct)
-    {
-        using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
-        resp.EnsureSuccessStatusCode();
-        var memStream = new MemoryStream();
-        var respStream = await resp.Content.ReadAsStreamAsync(ct);
-        await respStream.CopyToAsync(memStream, ct);
-        memStream.Position = 0;
-        return memStream;
-    }
-
     private async Task<T> DownloadJson<T>(Uri uri)
     {
-        using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
-        resp.EnsureSuccessStatusCode();
-        await using var respStream = await resp.Content.ReadAsStreamAsync();
-        return await respStream.ReadAsCamelCaseJsonAsync<T>();
+        using var resp = await _httpClient.GetStreamAsync(uri);
+        return await resp.ReadAsCamelCaseJsonAsync<T>();
     }
 
     public async Task<CoreModsIndex> GetCoreMods(bool refresh)
@@ -130,7 +118,7 @@ public class AssetService : IAssetService
 
     public async Task<Stream> ExtractOrDownloadCoreMod(CoreMod coreMod)
     {
-        if (_builtInAssets.CoreMods?.Contains(coreMod) ?? false)
+        if (_builtInAssets.CoreMods?.Any(mod => mod.Version == coreMod.Version && mod.Id == coreMod.Id) ?? false)
         {
             Log.Information($"Extracting inbuilt core mod {coreMod.FileName}");
             return OpenAsset(Path.Combine(CoreModsFolder, coreMod.FileName));
@@ -143,7 +131,23 @@ public class AssetService : IAssetService
     public async Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct)
     {
         var uri = new Uri(string.Format(_bmbfResources.DeltaVersionTemplate, diffInfo.Name));
-        return await DownloadToMemoryStream(uri, ct);
+        var resultStream = new MemoryStream();
+        try
+        {
+            // Diffs must be seekable for use with octodiff, so we copy to a MemoryStream
+            await using var respStream =  await _httpClient.GetStreamAsync(uri, ct);
+            await respStream.CopyToAsync(resultStream, ct);
+            resultStream.Position = 0;
+
+            return respStream;
+        }
+        catch (Exception)
+        {
+            // In the case that downloading the delta fails, we must dispose the MemoryStream
+            // Since ownership is NOT passed to the caller
+            await resultStream.DisposeAsync();
+            throw;
+        }
     }
 
     public async Task<List<DiffInfo>> GetDiffs(bool refresh)
@@ -175,10 +179,9 @@ public class AssetService : IAssetService
             }
 
             Log.Information("Downloading modloader");
-            // TODO: This downloads to a MemoryStream, which is unnecessary but does reduce the headache of disposing the HttpResponseMessage
             return (
-                await DownloadToMemoryStream(is64Bit ? modLoaderVersion.ModLoader64 : modLoaderVersion.ModLoader32, ct),
-                await DownloadToMemoryStream(is64Bit ? modLoaderVersion.Main64 : modLoaderVersion.Main32, ct),
+                await _httpClient.GetStreamAsync(is64Bit ? modLoaderVersion.ModLoader64 : modLoaderVersion.ModLoader32, ct),
+                await _httpClient.GetStreamAsync(is64Bit ? modLoaderVersion.Main64 : modLoaderVersion.Main32, ct),
                 Version.Parse(modLoaderVersion.Version)
             );
         }
@@ -215,7 +218,7 @@ public class AssetService : IAssetService
         {
             Log.Information($"Downloading libunity.so for Beat Saber v{beatSaberVersion}");
             var uri = new Uri(string.Format(_bmbfResources.LibUnityVersionTemplate, libUnityVersion));
-            return await DownloadToMemoryStream(uri, ct);
+            return await _httpClient.GetStreamAsync(uri, ct);
         }
 
         Log.Warning($"No libunity version found for {_packageId} v{beatSaberVersion}");

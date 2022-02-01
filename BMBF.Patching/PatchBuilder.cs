@@ -146,8 +146,6 @@ namespace BMBF.Patching
                         {
                             throw new PatchingException($"File {fileModification.ApkFilePath} already existed");
                         }
-                        // Delete the existing entry if allowed
-                        fileEntry.Delete();
                     }
 
                     // Create a new entry (since any existing entry must've been deleted by this point), and copy our source file into it
@@ -169,6 +167,7 @@ namespace BMBF.Patching
 
                     using var chosenSourceFile = sourceFile; // Make sure that the file gets disposed
                     
+                    fileEntry?.Delete(); // Remove the existing entry
                     await using var fileStream = apkArchive.CreateEntry(fileModification.ApkFilePath).Open();
                     await sourceFile.CopyToAsync(fileStream, ct);
                     continue;
