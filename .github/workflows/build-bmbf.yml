@@ -13,12 +13,12 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '6.0.101'
-    - uses: actions/setup-java@v2
-      with:
-        distribution: 'microsoft'
-        java-version: '11'
-    - name: Install Android workload
-      run: dotnet workload install android
+    #- uses: actions/setup-java@v2
+    #  with:
+    #    distribution: 'microsoft'
+    #    java-version: '11'
+    #- name: Install Android workload
+    #  run: dotnet workload install android
     - uses: nuget/setup-nuget@v1
       with:
         nuget-version: '6.x'
@@ -26,16 +26,18 @@ jobs:
       id: cache
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
     - name: Fetch keystore
       run: curl ${{ secrets.KEYSTORE_URL }} -o ./BMBF.keystore
     - name: Test 
       run: dotnet test
-    - name: Publish
-      run: dotnet publish BMBF/BMBF.csproj -c Release
-      env:
-        BMBF_PASS: ${{ secrets.KEYSTORE_PASS }}
-    - uses: actions/upload-artifact@v2
-      with:
-        name: com.weareneutralaboutoculus.BMBF.apk
-        path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk
+    #- name: Publish
+    #  run: dotnet publish BMBF/BMBF.csproj -c Release
+    #  env:
+    #    BMBF_PASS: ${{ secrets.KEYSTORE_PASS }}
+    #- uses: actions/upload-artifact@v2
+    #  with:
+    #    name: com.weareneutralaboutoculus.BMBF.apk
+    #    path: ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk
