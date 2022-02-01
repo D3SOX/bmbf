@@ -9,7 +9,12 @@ namespace BMBF.Patching
         /// <summary>
         /// Function to open the source file for this replacement
         /// </summary>
-        internal OpenFileDelegate? OpenSourceFile { get; }
+        internal GetFileDelegate? GetSourceFile { get; }
+        
+        /// <summary>
+        /// Async function to open the source file for this replacement
+        /// </summary>
+        internal GetFileAsyncDelegate? GetSourceFileAsync { get; }
 
         /// <summary>
         /// Function to generate this file from an existing file in the APK
@@ -26,9 +31,16 @@ namespace BMBF.Patching
         /// </summary>
         public string ApkFilePath { get; }
 
-        internal FileModification(OpenFileDelegate openSourceFile, OverwriteMode overwriteMode, string apkFilePath)
+        internal FileModification(GetFileDelegate getSourceFile, OverwriteMode overwriteMode, string apkFilePath)
         {
-            OpenSourceFile = openSourceFile;
+            GetSourceFile = getSourceFile;
+            OverwriteMode = overwriteMode;
+            ApkFilePath = apkFilePath;
+        }
+        
+        internal FileModification(GetFileAsyncDelegate getSourceFileAsync, OverwriteMode overwriteMode, string apkFilePath)
+        {
+            GetSourceFileAsync = getSourceFileAsync;
             OverwriteMode = overwriteMode;
             ApkFilePath = apkFilePath;
         }
@@ -37,12 +49,6 @@ namespace BMBF.Patching
         {
             GenerateFromSourceFile = generateFromSourceFile;
             OverwriteMode = OverwriteMode.MustExist; // As we are generating this file from an existing one, it must already exist and will be overwritten
-            ApkFilePath = apkFilePath;
-        }
-
-        public FileModification(OverwriteMode overwriteMode, string apkFilePath)
-        {
-            OverwriteMode = overwriteMode;
             ApkFilePath = apkFilePath;
         }
     }

@@ -13,7 +13,7 @@ namespace BMBF.Patching
     public class PatchBuilder
     {
         private readonly PatchManifest _manifest;
-        private readonly List<FileModification> _fileModifications = new List<FileModification>();
+        private readonly List<FileModification> _fileModifications = new();
 
         private TagManager? _tagManager;
         private string? _signingCertificate;
@@ -54,10 +54,22 @@ namespace BMBF.Patching
         /// </summary>
         /// <param name="apkFilePath">Path of the file within the APK</param>
         /// <param name="overwriteMode">Settings for file overwriting</param>
-        /// <param name="openFileDelegate">Delegate used to open the source file</param>
-        public PatchBuilder ModifyFile(string apkFilePath, OverwriteMode overwriteMode, OpenFileDelegate openFileDelegate)
+        /// <param name="getFileDelegate">Delegate used to open the source file</param>
+        public PatchBuilder ModifyFile(string apkFilePath, OverwriteMode overwriteMode, GetFileDelegate getFileDelegate)
         {
-            _fileModifications.Add(new FileModification(openFileDelegate, overwriteMode, apkFilePath));
+            _fileModifications.Add(new FileModification(getFileDelegate, overwriteMode, apkFilePath));
+            return this;
+        }
+        
+        /// <summary>
+        /// Adds a file to be added/replaced in the APK
+        /// </summary>
+        /// <param name="apkFilePath">Path of the file within the APK</param>
+        /// <param name="overwriteMode">Settings for file overwriting</param>
+        /// <param name="getFileDelegate">Delegate used to fetch the source file asynchronously</param>
+        public PatchBuilder ModifyFileAsync(string apkFilePath, OverwriteMode overwriteMode, GetFileAsyncDelegate getFileDelegate)
+        {
+            _fileModifications.Add(new FileModification(getFileDelegate, overwriteMode, apkFilePath));
             return this;
         }
 
@@ -92,7 +104,7 @@ namespace BMBF.Patching
 
         private async Task DoFileModifications(ZipArchive apkArchive, ILogger logger, CancellationToken ct)
         {
-            foreach (FileModification fileModification in _fileModifications)
+            foreach (var fileModification in _fileModifications)
             {
                 logger.Debug($"Modding {fileModification.ApkFilePath}");
                 var fileEntry = apkArchive.GetEntry(fileModification.ApkFilePath);
@@ -121,7 +133,7 @@ namespace BMBF.Patching
                     continue;
                 }
 
-                if (fileModification.OpenSourceFile != null)
+                if (fileModification.GetSourceFile != null || fileModification.GetSourceFileAsync != null)
                 {
                     if (fileEntry == null && fileModification.OverwriteMode == OverwriteMode.MustExist)
                     {
@@ -139,8 +151,26 @@ namespace BMBF.Patching
                     }
 
                     // Create a new entry (since any existing entry must've been deleted by this point), and copy our source file into it
+                    Stream? sourceFile = null;
+                    if (fileModification.GetSourceFile != null)
+                    {
+                        sourceFile = fileModification.GetSourceFile();
+                    }
+                    else if(fileModification.GetSourceFileAsync != null)
+                    {
+                        sourceFile = await fileModification.GetSourceFileAsync(ct);
+                    }
+                    
+                    if (sourceFile == null)
+                    {
+                        logger.Information($"File modification {fileModification.ApkFilePath} skipped");
+                        return;
+                    }
+
+                    using var chosenSourceFile = sourceFile; // Make sure that the file gets disposed
+                    
                     await using var fileStream = apkArchive.CreateEntry(fileModification.ApkFilePath).Open();
-                    await fileModification.OpenSourceFile().CopyToAsync(fileStream, ct);
+                    await sourceFile.CopyToAsync(fileStream, ct);
                     continue;
                 }
 

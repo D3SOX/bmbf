@@ -148,7 +148,7 @@ namespace BMBF.Patching
             using (ZipArchive apkArchive = ZipFile.OpenRead(path))
             {
                 foreach (ZipArchiveEntry entry in apkArchive.Entries.Where(entry =>
-                     !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
+                             !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
                 {
                     ct.ThrowIfCancellationRequested();
                     await WriteEntryHash(entry, manifestFile, sigFileBody);
