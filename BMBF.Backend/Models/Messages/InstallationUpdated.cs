@@ -8,7 +8,7 @@ public class InstallationUpdated : IMessage
     }
 
     public MessageType Type => MessageType.InstallationUpdated;
-        
+
     /// <summary>
     /// Null if Beat Saber is no longer installed
     /// </summary>

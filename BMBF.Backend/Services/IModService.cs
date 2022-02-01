@@ -39,7 +39,7 @@ public interface IModService
     /// <returns>The result of importing the mod, or null if the given stream/filename do not constitute
     /// a mod type any of the registered providers can load.</returns>
     Task<FileImportResult?> TryImportModAsync(Stream stream, string fileName);
-    
+
     /// <summary>
     /// Removes the given mod.
     /// This does nothing if the mod is not registered with this <see cref="IModService"/>

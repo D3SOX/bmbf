@@ -1,0 +1,53 @@
+# To learn more about .editorconfig see https://aka.ms/editorconfigdocs
+
+# All files
+[*]
+indent_style = space
+insert_final_newline=true
+csharp_prefer_braces=true:suggestion
+csharp_style_expression_bodied_lambdas=true:silent
+csharp_style_expression_bodied_properties=true:suggestion
+dotnet_style_prefer_simplified_boolean_expressions=true:warning
+dotnet_style_prefer_conditional_expression_over_return=true:suggestion
+csharp_style_prefer_range_operator=true:warning
+csharp_style_prefer_index_operator=true:warning
+csharp_style_inlined_variable_declaration=true:warning
+dotnet_style_qualification_for_field=false:warning
+dotnet_style_qualification_for_property=false:warning
+dotnet_style_qualification_for_method=false:warning
+dotnet_style_qualification_for_event=false:warning
+csharp_style_var_elsewhere=true:suggestion
+csharp_space_after_cast=true
+csharp_space_after_keywords_in_control_flow_statements=true
+dotnet_diagnostic.xUnit2001.severity=warning
+dotnet_diagnostic.CA1047.severity=warning
+dotnet_diagnostic.CA1018.severity=warning
+dotnet_diagnostic.CA1041.severity=warning
+dotnet_diagnostic.CA1507.severity=warning
+dotnet_diagnostic.CA1829.severity=warning
+dotnet_diagnostic.CA1832.severity=warning
+dotnet_diagnostic.CA1833.severity=warning
+dotnet_diagnostic.CA1846.severity=warning
+dotnet_diagnostic.CA1847.severity=warning
+dotnet_diagnostic.CA1825.severity=warning
+dotnet_diagnostic.CA1845.severity=suggestion
+dotnet_diagnostic.CA1841.severity=warning
+dotnet_diagnostic.CA2016.severity=warning
+dotnet_diagnostic.CA2208.severity=warning
+dotnet_diagnostic.CA2231.severity=warning
+dotnet_diagnostic.CA2242.severity=warning
+dotnet_diagnostic.CA2250.severity=warning
+
+# Xml files
+
+# IDE0008: Use explicit type
+csharp_style_var_when_type_is_apparent=true:suggestion
+csharp_style_var_for_built_in_types=false:suggestion
+csharp_style_prefer_pattern_matching=true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check=true:warning
+
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = warning
+
+[*.xml]
+indent_size = 2

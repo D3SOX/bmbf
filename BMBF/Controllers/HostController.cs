@@ -38,7 +38,7 @@ public class HostController : Controller
         // Tell frontend to quit too
         Intent intent = new Intent(BMBFIntents.Quit);
         _bmbfService.SendBroadcast(intent);
-            
+
         // Actually stop BMBFService
         _bmbfService.StopSelf();
     }
@@ -60,7 +60,7 @@ public class HostController : Controller
             Log.Information("Running in background disabled");
             System.IO.File.Delete(Constants.RunForegroundConfig);
         }
-        else if(!currentlyEnabled && runInBackground)
+        else if (!currentlyEnabled && runInBackground)
         {
             Log.Information("Running in background enabled");
             System.IO.File.Create(Constants.RunForegroundConfig).Dispose();

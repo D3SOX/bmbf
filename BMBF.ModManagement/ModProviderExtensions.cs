@@ -23,7 +23,7 @@ namespace BMBF.ModManagement
             await provider.AddModAsync(mod);
             return mod;
         }
-        
+
         /// <summary>
         /// Parses and adds a mod to the given provider.
         /// </summary>

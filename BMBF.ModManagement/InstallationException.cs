@@ -8,7 +8,7 @@ namespace BMBF.ModManagement
     public class InstallationException : Exception
     {
         public InstallationException(string message) : base(message) { }
-        
+
         public InstallationException(string message, Exception cause) : base(message, cause) { }
     }
 }

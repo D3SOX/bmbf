@@ -29,7 +29,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
     private InstallationInfo? _installationInfo;
     private readonly SemaphoreSlim _appInfoLoadLock = new(1);
     private bool _disposed;
-        
+
     public BeatSaberService(Service bmbfService, BMBFSettings bmbfSettings, TagManager tagManager)
     {
         _packageManager = bmbfService.PackageManager ?? throw new NullReferenceException(nameof(bmbfService.PackageManager));
@@ -78,7 +78,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
         intent.PutExtra("PackageId", _packageId);
         _bmbfService.SendBroadcast(intent);
     }
-    
+
     private async Task<InstallationInfo?> LoadInstallationInfoAsync()
     {
         var packageInfo = _packageManager.GetInstalledPackages(0).FirstOrDefault(package => package.PackageName == _packageId);
@@ -115,7 +115,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
 
         return new InstallationInfo(
             packageInfo.VersionName ?? "unknown",
-            (int) packageInfo.LongVersionCode,
+            (int)packageInfo.LongVersionCode,
             tag,
             apkPath
         );
@@ -125,7 +125,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
     {
         try
         {
-            if (context == null || intent == null)  { return; }
+            if (context == null || intent == null) { return; }
             string? packageId = intent.Data?.EncodedSchemeSpecificPart;
             if (packageId != _packageId) { return; }
 
@@ -133,12 +133,12 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
             {
                 Log.Information($"{_packageId} replaced");
             }
-            
+
             if (intent.Action == Intent.ActionPackageAdded)
             {
                 Log.Information($"{_packageId} installed");
             }
-            else if(intent.Action == Intent.ActionPackageRemoved)
+            else if (intent.Action == Intent.ActionPackageRemoved)
             {
                 Log.Information($"{_packageId} uninstalled");
             }
@@ -166,7 +166,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
     {
         if (_disposed) return;
         _disposed = true;
-            
+
         _appInfoLoadLock.Dispose();
         base.Dispose();
         try

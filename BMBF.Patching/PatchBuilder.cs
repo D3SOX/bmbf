@@ -18,7 +18,7 @@ namespace BMBF.Patching
         private TagManager? _tagManager;
         private string? _signingCertificate;
         private bool _allowExistingTag;
-        
+
 
         public PatchBuilder(string patcherName, Version patcherVersion, TagManager tagManager)
         {
@@ -110,7 +110,7 @@ namespace BMBF.Patching
                         await fileStream.CopyToAsync(tempStream, ct);
                     }
                     tempStream.Position = 0;
-                    
+
                     // Delete the existing entry and create a new one to write to
                     fileEntry.Delete();
                     fileEntry = apkArchive.CreateEntry(fileModification.ApkFilePath);
@@ -161,10 +161,10 @@ namespace BMBF.Patching
             using (var apkArchive = ZipFile.Open(apkPath, ZipArchiveMode.Update))
             {
                 _manifest.ModifiedFiles = _fileModifications.Select(f => f.ApkFilePath).ToHashSet();
-                
+
                 // Actually modify the APK
                 await DoFileModifications(apkArchive, logger, ct);
-                
+
                 // Add the tag to the APK if configured
                 if (_tagManager != null)
                 {
@@ -173,7 +173,7 @@ namespace BMBF.Patching
                 }
                 logger.Information("Disposing archive (this takes a minute)");
             }
-            
+
             if (_signingCertificate != null)
             {
                 logger.Information("Signing APK");

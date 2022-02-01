@@ -9,7 +9,7 @@ namespace BMBF.Resources
         public string LastUpdated { get; set; }
 
         public List<CoreMod> Mods { get; set; }
-        
+
         [JsonConstructor]
         public CoreMods(string lastUpdated, List<CoreMod> mods)
         {

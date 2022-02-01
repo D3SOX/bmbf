@@ -14,11 +14,11 @@ namespace BMBF.QMod
     public class QModProvider : IModProvider
     {
         public const string ModExtension = ".qmod";
-        
+
         public event EventHandler<IMod>? ModLoaded;
 
         public event EventHandler<string>? ModUnloaded;
-        
+
         public event EventHandler<IMod>? ModStatusChanged;
 
         internal Dictionary<string, QMod> Mods { get; } = new Dictionary<string, QMod>();
@@ -61,16 +61,16 @@ namespace BMBF.QMod
                 {
                     throw new InstallationException("Mod was not a valid ZIP archive");
                 }
-            
+
                 try
                 {
                     qMod = await QuestPatcher.QMod.QMod.ParseAsync(modArchive, false);
-                
+
                     if (qMod.PackageId != _packageId)
                     {
                         throw new InstallationException($"Incorrect package ID {qMod.PackageId}");
                     }
-                
+
                     return new QMod(qMod, this);
                 }
                 catch (InvalidModException ex)
@@ -90,14 +90,14 @@ namespace BMBF.QMod
         public async Task AddModAsync(IMod genericMod)
         {
             if (!(genericMod is QMod mod)) throw new ArgumentException("Cannot add non-qmod to qmod provider");
-            
+
             await AddModAsyncInternal(mod, new HashSet<string>());
         }
-        
+
         public async Task<bool> UnloadModAsync(IMod genericMod)
         {
             if (!(genericMod is QMod mod)) return false;
-                
+
             if (mod.Installed)
             {
                 await mod.UninstallAsyncInternal();
@@ -124,7 +124,7 @@ namespace BMBF.QMod
         internal async Task AddModAsyncInternal(QMod mod, HashSet<string> installPath)
         {
             mod.UpdateStatusInternal(); // Check whether or not the mod is installed
-            
+
             // If an existing mod exists with this same ID, we will need to uninstall it
             // This may uninstall several dependant mods
             List<QMod> uninstalledDependants = new List<QMod>();
@@ -137,15 +137,15 @@ namespace BMBF.QMod
 
                 UnloadModInternal(existing);
             }
-            
+
             Mods.Add(mod.Id, mod);
             ModLoaded?.Invoke(mod.Id, mod);
 
             if (uninstalledDependants.Count > 0)
             {
                 // Install the mod now, so that we can reinstall dependencies
-                await mod.InstallAsyncInternal(installPath); 
-                
+                await mod.InstallAsyncInternal(installPath);
+
                 // Now reinstall the dependant mods
                 foreach (QMod uninstalledDependant in uninstalledDependants)
                 {
@@ -155,17 +155,17 @@ namespace BMBF.QMod
                     {
                         continue;
                     }
-                    
+
                     await uninstalledDependant.InstallAsyncInternal(installPath);
                 }
             }
         }
-        
+
         public void Dispose()
         {
             if (_disposed) return;
             _disposed = true;
-            
+
             foreach (QMod mod in Mods.Values)
             {
                 mod.Dispose();

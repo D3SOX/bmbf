@@ -59,7 +59,7 @@ public class PhysicalSongProviderTests
         _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), _exampleContent);
 
         await _provider.CopyToAsync("/ExtractPath", _extractFileSystem);
-        Assert.Equal(_exampleContent, 
+        Assert.Equal(_exampleContent,
             _extractFileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
     }
 
@@ -68,13 +68,13 @@ public class PhysicalSongProviderTests
     {
         _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), _exampleContent);
         _extractFileSystem.Directory.CreateDirectory("/ExtractPath");
-        
+
         // We write a longer content than the overwriting content
         // This is to check that the file is deleted and recreated, instead of just the initial bytes being overwritten,
         // with corrupt file content left on the end
         _extractFileSystem.File.WriteAllBytes("/ExtractPath/example.txt",
             new byte[_exampleContent.Length + 10]);
-        
+
         await _provider.CopyToAsync("/ExtractPath", _extractFileSystem);
         Assert.Equal(_exampleContent, _extractFileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
     }

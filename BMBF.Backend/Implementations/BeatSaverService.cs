@@ -11,7 +11,7 @@ namespace BMBF.Backend.Implementations;
 public class BeatSaverService : IBeatSaverService
 {
     private readonly HttpClient _httpClient;
-        
+
     public BeatSaverService(HttpClient httpClient)
     {
         _httpClient = httpClient;
@@ -51,7 +51,7 @@ public class BeatSaverService : IBeatSaverService
             {
                 continue;
             }
-            
+
             if (latest == null || latest.CreatedAt < version.CreatedAt)
             {
                 latest = version;

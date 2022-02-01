@@ -20,7 +20,7 @@ public class MainActivity : Activity
         // Set our view from the "main" layout resource
         SetContentView(Resource.Layout.activity_loading);
 
-        RequestPermissions(new[]{ Manifest.Permission.WriteExternalStorage, Manifest.Permission.ReadExternalStorage }, 1);
+        RequestPermissions(new[] { Manifest.Permission.WriteExternalStorage, Manifest.Permission.ReadExternalStorage }, 1);
     }
 
     protected override void OnResume()
@@ -40,7 +40,7 @@ public class MainActivity : Activity
             // Navigate to the main page when WebServer startup finishes
             _receiver.WebServerStartupComplete +=
                 (_, port) => RunOnUiThread(() => OnLoaded($"http://localhost:{port}"));
-                
+
             // Make sure to inform of errors
             _receiver.WebServerStartupFailed +=
                 (_, error) => RunOnUiThread(() => OnFailedToLoad(error));
@@ -52,7 +52,7 @@ public class MainActivity : Activity
             _receiver.Restart += (_, _) => Restart();
         }
         RegisterReceiver(_receiver, intentFilter);
-            
+
         if (BMBFService.RunningUrl == null)
         {
             StartMainService();
@@ -98,7 +98,7 @@ public class MainActivity : Activity
     {
         // Move back to the loading view while the service restarts
         SetContentView(Resource.Layout.activity_loading);
-            
+
         // Restart the service, which will send a broadcast to navigate us back to the frontend page
         StopService(new Intent(this, typeof(BMBFService)));
         StartMainService();

@@ -43,9 +43,9 @@ public class SongServiceTests : IDisposable
         var songs = await _songService.GetSongsAsync();
         Song? addedSong = null;
         _songService.SongAdded += (_, song) => addedSong = song;
-        
+
         await _songService.ImportSongAsync(Util.ExampleSongProvider, "example.zip");
-        
+
         Assert.Equal(songs.Values.Single(), addedSong);
     }
 
@@ -54,11 +54,11 @@ public class SongServiceTests : IDisposable
     {
         await _songService.ImportSongAsync(Util.ExampleSongProvider, "example.zip");
         var songs = await _songService.GetSongsAsync();
-        
+
         _songService.Dispose();
         using var newSongService = CreateSongService();
         var newSongs = await _songService.GetSongsAsync();
-        
+
         Assert.Equal(songs.Single(), newSongs.Single());
     }
 
@@ -73,7 +73,7 @@ public class SongServiceTests : IDisposable
         Song? addedSong = null;
         _songService.SongAdded += (_, song) => addedSong = song;
         await _songService.UpdateSongCacheAsync();
-        
+
         Assert.Single(songs); // There should now be 1 song
         Assert.NotNull(addedSong); // SongAdded should have been invoked
     }
@@ -85,13 +85,13 @@ public class SongServiceTests : IDisposable
         await _songService.ImportSongAsync(Util.ExampleSongProvider, "song.zip");
         var songs = await _songService.GetSongsAsync();
         var song = songs.Values.Single();
-        
+
         // Remove the song on disk and update the song cache
         _fileSystem.Directory.Delete(song.Path, true);
         Song? removedSong = null;
         _songService.SongRemoved += (_, s) => removedSong = s;
         await _songService.UpdateSongCacheAsync();
-        
+
         Assert.Empty(songs); // The song should be removed
         Assert.Equal(song, removedSong);
     }
@@ -101,12 +101,12 @@ public class SongServiceTests : IDisposable
     {
         await _songService.ImportSongAsync(Util.ExampleSongProvider, "song.zip");
         var songs = await _songService.GetSongsAsync();
-        
+
         var song = songs.Values.Single();
         Song? removedSong = null;
         _songService.SongRemoved += (_, s) => removedSong = s;
         await _songService.DeleteSongAsync(song.Hash);
-        
+
         Assert.Empty(songs);
         Assert.False(_fileSystem.Directory.Exists(song.Path));
         Assert.Equal(song, removedSong);
@@ -121,9 +121,9 @@ public class SongServiceTests : IDisposable
         using var songService = CreateSongService();
         await songService.ImportSongAsync(Util.ExampleSongProvider, "song.zip");
         await Util.ExampleSongProvider.CopyToAsync(Path.Combine(_settings.SongsPath, "Example_Duplicate"), _fileSystem);
-        
+
         await songService.UpdateSongCacheAsync();
-        
+
         var songDirectoryCount = _fileSystem.Directory.EnumerateDirectories(_settings.SongsPath).Count();
         if (deleteDuplicates)
         {
@@ -146,9 +146,9 @@ public class SongServiceTests : IDisposable
         using var songService = CreateSongService();
         var invalidSongPath = Path.Combine(_settings.SongsPath, "Example_Invalid");
         _fileSystem.Directory.CreateDirectory(invalidSongPath);
-        
+
         await songService.UpdateSongCacheAsync();
-        
+
         // If we enable deleting invalid folders, then the folder should not exist, otherwise it should
         Assert.Equal(deleteInvalids, !_fileSystem.Directory.Exists(invalidSongPath));
     }

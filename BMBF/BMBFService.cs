@@ -23,7 +23,7 @@ namespace BMBF;
 public class BMBFService : Service
 {
     public static string? RunningUrl { get; private set; }
-        
+
     private IWebHost? _webHost;
 
     public override IBinder? OnBind(Intent? intent)
@@ -37,7 +37,7 @@ public class BMBFService : Service
 
         SetupLogging();
         Log.Information("BMBF service starting up!");
-            
+
         Task.Run(async () => await StartWebServer());
     }
 
@@ -48,7 +48,7 @@ public class BMBFService : Service
             var builder = CreateHostBuilder();
             _webHost = builder.Build();
             await _webHost.StartAsync();
-                
+
             Log.Information("BMBF service startup complete");
             RunningUrl = Constants.BindAddress; // Notify future activity startups that the service has already started
             Intent intent = new Intent(BMBFIntents.WebServerStartedIntent);
@@ -83,11 +83,11 @@ public class BMBFService : Service
     public override void OnDestroy()
     {
         base.OnDestroy();
-            
+
         Log.Information("Shutting down web host");
         StopWebServerAsync().Wait();
         Log.Information("Goodbye!");
-        Log.CloseAndFlush(); 
+        Log.CloseAndFlush();
     }
 
     private void SetupLogging()
@@ -108,7 +108,7 @@ public class BMBFService : Service
         var assetManager = Assets ?? throw new NullReferenceException("Asset manager was null");
         var assetFileProvider = new AssetFileProvider(assetManager);
         var webRootFileProvider = new AssetFileProvider(assetManager, Constants.WebRootPath);
-        
+
         return WebHost.CreateDefaultBuilder()
             .ConfigureAppConfiguration(configBuilder =>
             {
@@ -135,7 +135,7 @@ public class BMBFService : Service
             .UseUrls(Constants.BindAddress)
             .UseSerilog();
     }
-        
+
     private void SetupForegroundService()
     {
         var serviceChannel = new NotificationChannel(
@@ -144,7 +144,7 @@ public class BMBFService : Service
             NotificationImportance.Default
         );
 
-        var manager = (NotificationManager) GetSystemService(Class.FromType(typeof(NotificationManager)))!;
+        var manager = (NotificationManager)GetSystemService(Class.FromType(typeof(NotificationManager)))!;
         manager.CreateNotificationChannel(serviceChannel);
 
         var notificationIntent = new Intent(this, typeof(MainActivity));
@@ -158,8 +158,9 @@ public class BMBFService : Service
             .Build();
         StartForeground(1, notification);
     }
-        
-    public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags startCommandFlags, int startId) {
+
+    public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags startCommandFlags, int startId)
+    {
         // If BMBF is configured to run in the background permanently, we are starting as a foreground service
         // Foreground services run forever once they have a notification registered, so we register the notification now
         if (System.IO.File.Exists(Constants.RunForegroundConfig))

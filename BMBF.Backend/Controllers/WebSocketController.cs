@@ -21,10 +21,10 @@ public class WebSocketController : ControllerBase
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
-        
+
     private readonly ILogger _logger;
     private readonly IMessageService _messageService;
-        
+
     public WebSocketController(IHostApplicationLifetime appLifetime, IMessageService messageService)
     {
         _appLifetime = appLifetime;
@@ -40,7 +40,7 @@ public class WebSocketController : ControllerBase
             _logger.Information($"Accepting WebSocket connection from {HttpContext.Connection.RemoteIpAddress}");
             using var socket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             _logger.Debug("Connection successful");
-                
+
             var channel = Channel.CreateUnbounded<IMessage>();
             // TryWrite will always succeed, as the queue is unbounded
             void QueueMessageSend(IMessage message) => channel.Writer.TryWrite(message);
@@ -61,7 +61,7 @@ public class WebSocketController : ControllerBase
         }
         else
         {
-            HttpContext.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+            HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
         }
     }
 
@@ -83,18 +83,18 @@ public class WebSocketController : ControllerBase
                 Log.Warning($"Failed to properly close WebSocket: {ex.Message}");
             }
         });
-            
+
         var readBuffer = WebSocket.CreateServerBuffer(1024);
         using var msgStream = new MemoryStream();
         Task<WebSocketReceiveResult>? receiveTask = null;
         Task<IMessage>? messageTask = null;
-        while(webSocket.State == WebSocketState.Open)
+        while (webSocket.State == WebSocketState.Open)
         {
             // Wait until either we receive another message to send to the frontend, or we receive a message from the WebSocket
             receiveTask ??= webSocket.ReceiveAsync(readBuffer, default);
             messageTask ??= messageChannel.Reader.ReadAsync(ct).AsTask();
             await Task.WhenAny(receiveTask, messageTask);
-                
+
             if (receiveTask.IsCompleted)
             {
                 var message = await receiveTask;
@@ -118,11 +118,11 @@ public class WebSocketController : ControllerBase
 
                 // Make sure to overwrite the (potentially) existing message in the buffer
                 msgStream.Position = 0;
-                    
+
                 // No need for SerializeAsync - we are writing to a MemoryStream
                 JsonSerializer.Serialize(msgStream, message, _serializerOptions);
 
-                int length = (int) msgStream.Position;
+                int length = (int)msgStream.Position;
 
                 await webSocket.SendAsync(
                     // Select only the portion of the buffer for this message

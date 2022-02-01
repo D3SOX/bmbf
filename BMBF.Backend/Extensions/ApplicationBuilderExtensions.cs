@@ -21,7 +21,7 @@ public static class ApplicationBuilderExtensions
     public static void UseBMBF(this IApplicationBuilder app, WebHostBuilderContext ctx, IFileProvider webRootFileProvider, string apiEndpointPrefix = "/api")
     {
         app.UseWebSockets();
-        
+
         // Map /api requests to MVC controllers
         app.Map(apiEndpointPrefix, appBuilder =>
         {
@@ -54,17 +54,17 @@ public static class ApplicationBuilderExtensions
             var file = webRootFileProvider.GetFileInfo(reqCtx.Request.Path);
             if (!file.Exists)
             {
-                reqCtx.Response.StatusCode = (int) HttpStatusCode.NotFound;
+                reqCtx.Response.StatusCode = (int)HttpStatusCode.NotFound;
                 return;
             }
-            
+
             var extension = Path.GetExtension(reqCtx.Request.Path);
             // Attempt to find the Content-Type for this file extension
             if (MimeTypeMap.TryGetMimeType(extension, out var mimeType))
             {
-                reqCtx.Response.StatusCode = (int) HttpStatusCode.OK;
+                reqCtx.Response.StatusCode = (int)HttpStatusCode.OK;
                 reqCtx.Response.Headers["Content-Type"] = mimeType;
-                
+
                 // Copy the static file into our response
                 await using var fileStream = file.CreateReadStream();
                 await fileStream.CopyToAsync(reqCtx.Response.Body);
@@ -73,7 +73,7 @@ public static class ApplicationBuilderExtensions
             {
                 // Fallback failure if no mime type is available
                 Log.Warning($"Could not serve static file {reqCtx.Request.Path} - could not determine Content-Type for {extension}");
-                reqCtx.Response.StatusCode = (int) HttpStatusCode.NotFound;
+                reqCtx.Response.StatusCode = (int)HttpStatusCode.NotFound;
             }
         });
     }

@@ -20,7 +20,7 @@ public class Debouncey : IDisposable
     /// Invoked when the debounce interval has passed since the last invocation.
     /// </summary>
     public event EventHandler? Debounced;
-    
+
     /// <summary>
     /// Creates a new debouncey that will wait for <paramref name="debounceInterval"/> milliseconds with no calls to <see cref="Invoke"/> before calling <see cref="Debounced"/>
     /// </summary>
@@ -36,7 +36,7 @@ public class Debouncey : IDisposable
     public void Invoke()
     {
         if (_disposed) return;
-        
+
         lock (_timerLock)
         {
             _debounceTimer?.Change(Timeout.Infinite, Timeout.Infinite);
@@ -51,7 +51,7 @@ public class Debouncey : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        
+
         _debounceTimer?.Dispose();
     }
 }

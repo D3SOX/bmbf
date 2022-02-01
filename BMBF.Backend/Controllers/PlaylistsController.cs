@@ -30,11 +30,11 @@ public class PlaylistsController : Controller
     [Produces("image/png")]
     public async Task<IActionResult> GetPlaylistCover(string playlistId)
     {
-        if(!(await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching) || matching.Image == null)
+        if (!(await _playlistService.GetPlaylistsAsync()).TryGetValue(playlistId, out var matching) || matching.Image == null)
         {
             return NotFound();
         }
-        
+
         return File(new MemoryStream(matching.Image), "image/png");
     }
 
@@ -82,8 +82,8 @@ public class PlaylistsController : Controller
         }
         return NotFound();
     }
-        
-        
+
+
     [HttpDelete("[action]/{playlistId}")]
     public async Task<IActionResult> Delete(string playlistId)
     {

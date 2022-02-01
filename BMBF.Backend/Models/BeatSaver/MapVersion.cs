@@ -15,13 +15,13 @@ public class MapVersion
         DownloadUrl = downloadUrl;
         CreatedAt = createdAt;
     }
-    
+
     [JsonPropertyName("hash")]
     public string Hash { get; set; }
-    
+
     [JsonPropertyName("downloadURL")]
     public Uri DownloadUrl { get; set; }
-    
+
     [JsonPropertyName("createdAt")]
     public DateTime CreatedAt { get; set; }
 }

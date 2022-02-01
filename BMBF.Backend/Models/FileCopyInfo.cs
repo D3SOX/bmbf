@@ -11,13 +11,13 @@ public class FileCopyInfo
     /// Destination that the files are copied to
     /// </summary>
     public string Destination { get; set; }
-        
+
     /// <summary>
     /// Name of the mod registering this extension, if any
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ModId { get; set; }
-        
+
     [JsonConstructor]
     public FileCopyInfo(string destination, string? modId)
     {

@@ -7,20 +7,20 @@ namespace BMBF.Resources
     /// Stored in the resources repository to indicate which modloader version to use
     /// </summary>
     public class ModLoaderVersion
-    { 
+    {
         public string Version { get; set; }
-        
-#region Download Links
+
+        #region Download Links
         public Uri ModLoader32 { get; set; }
-        
+
         public Uri Main32 { get; set; }
-        
+
         public Uri ModLoader64 { get; set; }
-        
+
         public Uri Main64 { get; set; }
-        
-#endregion
-        
+
+        #endregion
+
         [JsonConstructor]
         public ModLoaderVersion(string version, Uri modLoader32, Uri main32, Uri modLoader64, Uri main64)
         {

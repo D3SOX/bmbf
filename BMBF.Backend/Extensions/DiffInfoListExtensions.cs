@@ -28,10 +28,10 @@ public static class DiffInfoListExtensions
         }
 
         List<DiffInfo>? shortestPath = null;
-            
+
         // Find the diffs that can move us somewhere from our current version
         List<DiffInfo> availableDiffsFromPoint = diffs.Where(diff => diff.FromVersion == fromVersion).ToList();
-        for(int i = 0; i < availableDiffsFromPoint.Count; i++)
+        for (int i = 0; i < availableDiffsFromPoint.Count; i++)
         {
             // If this is the last diff in this stage, then we can safely use the original list (optimisation)
             // Otherwise, we clone the list
@@ -39,13 +39,13 @@ public static class DiffInfoListExtensions
             var newPath = i == availableDiffsFromPoint.Count - 1 ? currentPath : currentPath.ToList();
 
             var currentDiff = availableDiffsFromPoint[i];
-                
+
             // Recursively find the shortest path from this diff
             newPath.Add(currentDiff);
             var resultingPath = FindShortestPathInternal(diffs, currentDiff.ToVersion, toVersion, newPath);
             // Skip if no path found
             if (resultingPath == null) continue;
-                
+
             // Update the shortest path
             if (shortestPath == null || resultingPath.Count < shortestPath.Count)
             {

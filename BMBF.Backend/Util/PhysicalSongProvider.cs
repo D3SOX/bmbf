@@ -11,18 +11,18 @@ public class PhysicalSongProvider : ISongProvider
 {
     private readonly string _directoryName;
     private readonly IFileSystem _io;
-        
+
     public PhysicalSongProvider(string directoryName, IFileSystem io)
     {
         if (!io.Directory.Exists(directoryName))
         {
             throw new DirectoryNotFoundException($"Could not find directory {directoryName}");
         }
-        
+
         _directoryName = directoryName;
         _io = io;
     }
-        
+
     public bool Exists(string name)
     {
         return _io.File.Exists(Path.Combine(_directoryName, name));
@@ -40,7 +40,7 @@ public class PhysicalSongProvider : ISongProvider
             var relativePath = Path.GetRelativePath(_directoryName, file);
             string newPath = Path.Combine(path, relativePath);
             var directory = Path.GetDirectoryName(newPath);
-            if(directory != null) fileSystem.Directory.CreateDirectory(directory);
+            if (directory != null) fileSystem.Directory.CreateDirectory(directory);
 
             if (fileSystem.File.Exists(newPath)) fileSystem.File.Delete(newPath);
 

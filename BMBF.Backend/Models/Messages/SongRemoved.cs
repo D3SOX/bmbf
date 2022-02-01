@@ -8,6 +8,6 @@ public class SongRemoved : IMessage
     }
 
     public MessageType Type => MessageType.SongRemoved;
-        
+
     public string Hash { get; set; }
 }

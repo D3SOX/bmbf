@@ -89,7 +89,7 @@ public class SetupService : ISetupService, IDisposable
     public async Task LoadCurrentStatusAsync()
     {
         if (CurrentStatus != null) return;
-            
+
         await _stageBeginLock.WaitAsync();
         try
         {
@@ -104,10 +104,11 @@ public class SetupService : ISetupService, IDisposable
     private async Task LoadSavedStatusAsync()
     {
         if (CurrentStatus != null || !_io.File.Exists(_statusFile)) return;
-            
+
         try
         {
-            await using(var statusStream = _io.File.OpenRead(_statusFile)) {
+            await using (var statusStream = _io.File.OpenRead(_statusFile))
+            {
                 CurrentStatus = await statusStream.ReadAsCamelCaseJsonAsync<SetupStatus>();
 
                 // Update installing modded/uninstalling original status, since BS may have been installed or uninstalled since the status was saved
@@ -126,14 +127,14 @@ public class SetupService : ISetupService, IDisposable
     {
         if (CurrentStatus == null) throw new NullReferenceException(nameof(CurrentStatus));
         StatusChanged?.Invoke(this, CurrentStatus);
-            
+
         // Save new status for later
-        if(_io.File.Exists(_statusFile)) _io.File.Delete(_statusFile);
-        
+        if (_io.File.Exists(_statusFile)) _io.File.Delete(_statusFile);
+
         using var statusStream = _io.File.OpenWrite(_statusFile);
         await CurrentStatus.WriteAsCamelCaseJsonAsync(statusStream);
     }
-        
+
 
     public async Task BeginSetupAsync()
     {
@@ -141,7 +142,7 @@ public class SetupService : ISetupService, IDisposable
         try
         {
             _cts = new CancellationTokenSource();
-                
+
             await LoadSavedStatusAsync();
             if (CurrentStatus != null)
             {
@@ -149,9 +150,9 @@ public class SetupService : ISetupService, IDisposable
             }
 
             _logger.Information("Beginning setup");
-            if(_io.Directory.Exists(_setupDirName)) _io.Directory.Delete(_setupDirName, true);
+            if (_io.Directory.Exists(_setupDirName)) _io.Directory.Delete(_setupDirName, true);
             _io.Directory.CreateDirectory(_setupDirName);
-            
+
             _logger.Information("Copying APK to temp");
             var installInfo = await _beatSaberService.GetInstallationInfoAsync() ?? throw new InvalidOperationException("Cannot begin setup when Beat Saber is not installed");
             _io.File.Copy(installInfo.ApkPath, _latestCompleteApkPath);
@@ -181,7 +182,7 @@ public class SetupService : ISetupService, IDisposable
                     Log.Warning("Setup stage did not shut down, quitting setup anyway");
                 }
             }
-                
+
             QuitSetupInternal();
         }
         finally
@@ -205,9 +206,9 @@ public class SetupService : ISetupService, IDisposable
         try
         {
             await LoadSavedStatusAsync();
-            if (CurrentStatus == null) throw new InvalidOperationException("Setup not ongoing"); 
+            if (CurrentStatus == null) throw new InvalidOperationException("Setup not ongoing");
             if (CurrentStatus.Stage != beginningStage && CurrentStatus.Stage != allowStage) throw new InvalidOperationException("Incorrect setup stage");
-                
+
             CurrentStatus.IsInProgress = true;
             CurrentStatus.Stage = beginningStage;
             if (updateNow)
@@ -221,7 +222,7 @@ public class SetupService : ISetupService, IDisposable
         }
         return CurrentStatus;
     }
-        
+
     private async Task EndSetupStage()
     {
         if (CurrentStatus != null)
@@ -246,7 +247,7 @@ public class SetupService : ISetupService, IDisposable
             {
                 throw new InvalidOperationException("Cannot resume downgrade - downgrade was not ongoing");
             }
-                
+
             var deltaApplier = new DeltaApplier();
             for (int i = currentStatus.DowngradingStatus.CurrentDiff;
                  i < currentStatus.DowngradingStatus.Path.Count;
@@ -369,10 +370,10 @@ public class SetupService : ISetupService, IDisposable
             {
                 builder.ModifyFile($"{libFolder}/libunity.so", OverwriteMode.MustExist, () => unityStream);
             }
-            
+
             await builder.Patch(_tempApkPath, _logger, _cts.Token);
 
-                // Move the current APK back to the latest complete
+            // Move the current APK back to the latest complete
             _io.File.Delete(_latestCompleteApkPath);
             _io.File.Move(_tempApkPath, _latestCompleteApkPath);
 
@@ -418,7 +419,8 @@ public class SetupService : ISetupService, IDisposable
                 await ProcessStatusChange();
                 _logger.Information("Beat Saber was uninstalled");
             }
-        }   else if (installationInfo.ModTag == null)
+        }
+        else if (installationInfo.ModTag == null)
         {
             // Non-modded Beat Saber was installed, so we need to uninstall it
             if (CurrentStatus.Stage != SetupStage.UninstallingOriginal)
@@ -459,7 +461,7 @@ public class SetupService : ISetupService, IDisposable
                     }
                 }
             }
-                
+
             _beatSaberService.TriggerUninstall();
         }
         finally
@@ -501,10 +503,10 @@ public class SetupService : ISetupService, IDisposable
             {
                 _logger.Warning("Could not find backup to restore");
             }
-                
+
             // TODO: Install core mods, etc
             // Install a song by default?
-                
+
             QuitSetupInternal();
             SetupComplete?.Invoke(this, EventArgs.Empty);
             Log.Information("Setup finished");
@@ -515,7 +517,7 @@ public class SetupService : ISetupService, IDisposable
             await EndSetupStage();
         }
     }
-        
+
     private async void OnBeatSaberServiceAppChanged(object? sender, InstallationInfo? installationInfo)
     {
         if (CurrentStatus == null) return;
@@ -534,7 +536,7 @@ public class SetupService : ISetupService, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-            
+
         if (CurrentStatus is { IsInProgress: true })
         {
             Log.Information("Waiting for setup stage to finish");

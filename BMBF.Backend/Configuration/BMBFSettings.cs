@@ -8,7 +8,7 @@ namespace BMBF.Backend.Configuration;
 public class BMBFSettings
 {
     public const string Position = "BMBFSettings";
-        
+
     public string PackageId { get; set; }
 
     public string SongsPath { get; set; }
@@ -18,27 +18,27 @@ public class BMBFSettings
     public string RootDataPath { get; set; }
 
     public string SongsCacheName { get; set; }
-        
+
     public string ModsDirectoryName { get; set; }
-        
+
     public bool DeleteDuplicateSongs { get; set; }
-        
+
     public bool DeleteInvalidSongs { get; set; }
-        
+
     public bool DeleteInvalidMods { get; set; }
-        
+
     public bool UpdateCachesAutomatically { get; set; }
-    
+
     public int SongFolderDebounceDelay { get; set; }
-    
+
     public int PlaylistFolderDebounceDelay { get; set; }
-        
+
     public string PatchingFolderName { get; set; }
-        
+
     public string ConfigsPath { get; set; }
-    
+
     public string ModFilesPath { get; set; }
-    
+
     public string LibFilesPath { get; set; }
 
     public Uri BeatSaverBaseUri { get; set; }

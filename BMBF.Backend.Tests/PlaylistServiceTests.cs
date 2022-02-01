@@ -29,7 +29,7 @@ public class PlaylistServiceTests : IDisposable
     {
         UpdateCachesAutomatically = false
     };
-    
+
     private PlaylistService CreatePlaylistService() => new(_settings, _fileSystem, Mock.Of<IFileSystemWatcher>());
 
     [Fact]
@@ -49,7 +49,7 @@ public class PlaylistServiceTests : IDisposable
         Playlist? addedPlaylist = null;
         _playlistService.PlaylistAdded += (_, playlist) => addedPlaylist = playlist;
         var playlistId = await _playlistService.AddPlaylistAsync(examplePlaylist);
-        
+
         Assert.Equal(examplePlaylist, addedPlaylist);
         Assert.Equal(examplePlaylist, playlists[playlistId]);
     }
@@ -58,14 +58,14 @@ public class PlaylistServiceTests : IDisposable
     public async Task ShouldDeletePlaylistWhenDeleteInvoked()
     {
         var playlist = Util.ExamplePlaylist;
-        
+
         var playlistId = await _playlistService.AddPlaylistAsync(playlist);
         await _playlistService.SavePlaylistsAsync();
 
         Playlist? deletedPlaylist = null;
         _playlistService.PlaylistDeleted += (_, p) => deletedPlaylist = p;
         await _playlistService.DeletePlaylistAsync(playlistId);
-        
+
         Assert.Equal(deletedPlaylist, playlist);
         Assert.Empty(await _playlistService.GetPlaylistsAsync());
         Assert.False(_fileSystem.File.Exists(playlist.LoadedFrom));
@@ -79,7 +79,7 @@ public class PlaylistServiceTests : IDisposable
 
         using var newPlaylistService = CreatePlaylistService();
         var newPlaylists = await newPlaylistService.GetPlaylistsAsync();
-        
+
         Assert.True(newPlaylists.ContainsKey(playlistId));
     }
 
@@ -121,12 +121,12 @@ public class PlaylistServiceTests : IDisposable
 
         await _playlistService.AddPlaylistAsync(playlist);
         await _playlistService.SavePlaylistsAsync();
-        
+
         // As the playlist was modified, changes made in BMBF should be prioritised, so it will not be deleted
         playlist.PlaylistTitle = "New title";
         _fileSystem.File.Delete(playlist.LoadedFrom);
         await _playlistService.UpdatePlaylistCacheAsync();
-        
+
         Assert.Single(await _playlistService.GetPlaylistsAsync());
     }
 
@@ -145,7 +145,7 @@ public class PlaylistServiceTests : IDisposable
             await JsonSerializer.SerializeAsync(playlistFile, modifiedPlaylist);
         }
         await _playlistService.UpdatePlaylistCacheAsync();
-        
+
         // As the playlist was modified in BMBF, the BMBF modifications should be prioritised over those made on disk
         Assert.Equal("Modified title", playlist.PlaylistTitle);
     }
@@ -165,7 +165,7 @@ public class PlaylistServiceTests : IDisposable
             await JsonSerializer.SerializeAsync(playlistFile, modifiedPlaylist);
         }
         await _playlistService.UpdatePlaylistCacheAsync();
-        
+
         // As the playlist was NOT modified, it should have been reloaded from disk
         Assert.Equal("Reloaded title", playlist.PlaylistTitle);
     }

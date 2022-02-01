@@ -30,7 +30,7 @@ public class SongService : IDisposable, ISongService
     private readonly bool _deleteInvalidFolders;
     private readonly bool _automaticUpdates;
     private bool _disposed;
-        
+
     private readonly JsonSerializerOptions _serializerOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
@@ -38,7 +38,7 @@ public class SongService : IDisposable, ISongService
 
     private readonly IFileSystemWatcher _fileSystemWatcher;
 
-    public event EventHandler<Song>? SongAdded; 
+    public event EventHandler<Song>? SongAdded;
     public event EventHandler<Song>? SongRemoved;
 
     private readonly SemaphoreSlim _cacheUpdateLock = new(1);
@@ -66,7 +66,7 @@ public class SongService : IDisposable, ISongService
             await GetSongCacheAsync();
             return;
         }
-            
+
         await _cacheUpdateLock.WaitAsync();
         try
         {
@@ -77,7 +77,7 @@ public class SongService : IDisposable, ISongService
             _cacheUpdateLock.Release();
         }
     }
-        
+
     public async Task<FileImportResult> ImportSongAsync(ISongProvider folderProvider, string fileName)
     {
         Song? song = await SongUtil.TryLoadSongInfoAsync(folderProvider, fileName);
@@ -98,7 +98,7 @@ public class SongService : IDisposable, ISongService
 
             var invalidNameChars = Path.GetInvalidFileNameChars();
             var songPathBase = $"{song.SongName} ({song.SongAuthorName} - {song.LevelAuthorName})";
-            
+
             var fixedPathBase = new string(songPathBase.Select(c => invalidNameChars.Contains(c) ? '_' : c).ToArray());
             var originalSavePath = Path.Combine(_songsPath, Path.GetFileNameWithoutExtension(fixedPathBase));
 
@@ -109,10 +109,10 @@ public class SongService : IDisposable, ISongService
                 song.Path = $"{originalSavePath}_{i}";
                 i++;
             }
-            
+
             Log.Information($"Extracting {fileName} to {song.Path}");
             await folderProvider.CopyToAsync(song.Path, _io);
-                
+
             cache[song.Hash] = song;
             Log.Information($"Song {song.SongName} import complete");
             SongAdded?.Invoke(this, song);
@@ -132,7 +132,7 @@ public class SongService : IDisposable, ISongService
     {
         return await GetSongCacheAsync();
     }
-        
+
     public async Task<bool> DeleteSongAsync(string hash)
     {
         SongCache songs = await GetSongCacheAsync();
@@ -156,7 +156,7 @@ public class SongService : IDisposable, ISongService
         {
             return _songs;
         }
-            
+
         await _cacheUpdateLock.WaitAsync(); // Avoid another call beginning cache loading while we start
         try
         {
@@ -165,7 +165,7 @@ public class SongService : IDisposable, ISongService
             {
                 return _songs;
             }
-                
+
             _io.Directory.CreateDirectory(_songsPath);
 
             // Attempt to load the cache from BMBFData first, since it's expensive to generate
@@ -252,7 +252,7 @@ public class SongService : IDisposable, ISongService
 
         return songs;
     }
-        
+
     private async Task ProcessNewSongAsync(string path, SongCache cache, bool notify)
     {
         try
@@ -271,7 +271,7 @@ public class SongService : IDisposable, ISongService
                     {
                         return;
                     }
-                        
+
                     // Remove the existing song with the same path but different hash to replace with our new song
                     cache.TryRemove(existingWithPath.Hash, out _);
                     SongRemoved?.Invoke(this, existingWithPath);
@@ -287,7 +287,7 @@ public class SongService : IDisposable, ISongService
 
                     Log.Warning($"Duplicate song {(_deleteDuplicateSongs ? "deleted" : "found")}: {song.Path} ({existingSong.Path} has identical hash {song.Hash})");
                 }
-                    
+
                 Log.Information($"Song {song.SongName} (Hash: {song.Hash}) loaded");
                 cache[song.Hash] = song;
                 if (notify)
@@ -301,7 +301,7 @@ public class SongService : IDisposable, ISongService
         {
             Log.Error(ex, $"Failed to load song from {path}");
         }
-        
+
         if (_deleteInvalidFolders)
         {
             Log.Warning("Deleting invalid song");
@@ -330,11 +330,11 @@ public class SongService : IDisposable, ISongService
     {
         if (_disposed) return;
         _disposed = true;
-            
+
         _cacheUpdateLock.Dispose();
         _fileSystemWatcher.Dispose();
         _autoUpdateDebouncey.Dispose();
-        
+
         // Save the cache
         if (_songs != null)
         {
@@ -342,8 +342,8 @@ public class SongService : IDisposable, ISongService
             {
                 var cacheDirectory = Path.GetDirectoryName(_cachePath);
                 if (cacheDirectory != null) _io.Directory.CreateDirectory(cacheDirectory);
-                if(_io.File.Exists(_cachePath)) _io.File.Delete(_cachePath);
-                
+                if (_io.File.Exists(_cachePath)) _io.File.Delete(_cachePath);
+
                 using var cacheStream = _io.File.OpenWrite(_cachePath);
                 cacheStream.Position = 0;
                 JsonSerializer.Serialize(cacheStream, _songs, _serializerOptions);

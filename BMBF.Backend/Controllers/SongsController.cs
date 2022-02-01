@@ -12,12 +12,12 @@ namespace BMBF.Backend.Controllers;
 public class SongsController : Controller
 {
     private readonly ISongService _songService;
-        
+
     public SongsController(ISongService songService)
     {
         _songService = songService;
     }
-        
+
     [HttpGet]
     public async Task<IEnumerable<Song>> Get()
     {
@@ -49,11 +49,11 @@ public class SongsController : Controller
         }
 
         var coverStream = System.IO.File.OpenRead(fullCoverPath);
-        if(!MimeTypeMap.TryGetMimeType(Path.GetExtension(matching.CoverImageFileName), out var mimeType))
+        if (!MimeTypeMap.TryGetMimeType(Path.GetExtension(matching.CoverImageFileName), out var mimeType))
         {
             return NotFound();
         }
-        
+
         return File(coverStream, mimeType);
     }
 }

@@ -45,7 +45,7 @@ public class ArchiveSongProviderTests : IDisposable
             entryStream.Write(_exampleContent);
         }
 
-        using (var entryStream = _provider.Open("example.txt")) 
+        using (var entryStream = _provider.Open("example.txt"))
         using (var streamReader = new BinaryReader(entryStream))
         {
             Assert.Equal(_exampleContent, streamReader.ReadBytes(_exampleContent.Length));
@@ -75,13 +75,13 @@ public class ArchiveSongProviderTests : IDisposable
         }
 
         _fileSystem.Directory.CreateDirectory("/ExtractPath");
-        
+
         // We write a longer content than the overwriting content
         // This is to check that the file is deleted and recreated, instead of just the initial bytes being overwritten,
         // with corrupt file content left on the end
-        _fileSystem.File.WriteAllBytes("/ExtractPath/example.txt", 
+        _fileSystem.File.WriteAllBytes("/ExtractPath/example.txt",
             new byte[_exampleContent.Length + 10]);
-        
+
         await _provider.CopyToAsync("/ExtractPath", _fileSystem);
         Assert.Equal(_exampleContent, _fileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
     }

@@ -20,10 +20,10 @@ public class BeatSaberService : IBeatSaberService, IDisposable
 
     private readonly FileSystemWatcher _apkWatcher = new();
     private readonly TagManager _tagManager;
-    
+
     private readonly SemaphoreSlim _appInfoLoadLock = new(1);
     private readonly Debouncey _appUpdateDebouncey = new(3000);
-    
+
     private bool _disposed;
     private InstallationInfo? _installationInfo;
 
@@ -60,7 +60,7 @@ public class BeatSaberService : IBeatSaberService, IDisposable
             try
             {
                 _installationInfo = await LoadInstallationInfoAsync();
-                
+
                 StartWatching();
                 _loadedInitialInstallation = true;
             }
@@ -69,14 +69,14 @@ public class BeatSaberService : IBeatSaberService, IDisposable
                 _appInfoLoadLock.Release();
             }
         }
-        
+
         return _installationInfo;
     }
 
     private async Task<InstallationInfo?> LoadInstallationInfoAsync()
     {
         if (!File.Exists(_apkPath)) return null;
-        
+
         await using var apkStream = File.OpenRead(_apkPath);
         using var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Read);
 
@@ -93,8 +93,8 @@ public class BeatSaberService : IBeatSaberService, IDisposable
 
         // Load the manifest in order to fetch the APK version
         var manifest = AxmlLoader.LoadDocument(tempStream);
-        int versionCode = (int) manifest.Attributes.Single(attr => attr.Name == "versionCode").Value;
-        string versionName = (string) manifest.Attributes.Single(attr => attr.Name == "versionName").Value;
+        int versionCode = (int)manifest.Attributes.Single(attr => attr.Name == "versionCode").Value;
+        string versionName = (string)manifest.Attributes.Single(attr => attr.Name == "versionName").Value;
 
         // Fetch the APK to tag (checking if modded)
         var tag = _tagManager.GetTag(apkArchive);
@@ -142,7 +142,7 @@ public class BeatSaberService : IBeatSaberService, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        
+
         _apkWatcher.Dispose();
         _appUpdateDebouncey.Dispose();
         _appInfoLoadLock.Dispose();

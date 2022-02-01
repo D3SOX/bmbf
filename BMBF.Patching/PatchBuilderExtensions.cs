@@ -30,7 +30,7 @@ namespace BMBF.Patching
                 AxmlElement element = AxmlLoader.LoadDocument(readFrom);
                 ApkManifest manifest = new ApkManifest(element);
                 manifestModDelegate(manifest);
-                
+
                 AxmlSaver.SaveDocument(writeTo, element);
             });
             return patchBuilder;

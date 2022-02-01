@@ -13,7 +13,7 @@ public enum SetupStage
     Patching,
     UninstallingOriginal,
     InstallingModded,
-        
+
     /// <summary>
     /// Installing core mods
     /// </summary>

@@ -16,11 +16,11 @@ public class Playlist
     [JsonPropertyName("playlistTitle")]
     public string PlaylistTitle { get => _playlistTitle; set { if (_playlistTitle != value) { _playlistTitle = value; NotifyInfoUpdated(); } } }
     private string _playlistTitle;
-        
+
     [JsonPropertyName("playlistAuthor")]
     public string PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyInfoUpdated(); } } }
     private string _playlistAuthor;
-        
+
     [JsonPropertyName("playlistDescription")]
     public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyInfoUpdated(); } } }
     private string _playlistDescription;
@@ -28,7 +28,8 @@ public class Playlist
     [JsonIgnore] public string Id { get; set; } = null!;
 
     [JsonPropertyName("image")]
-    public string? ImageString {
+    public string? ImageString
+    {
         get => Image == null ? null : "data:image/png;base64," + Convert.ToBase64String(Image);
         set
         {
@@ -58,7 +59,7 @@ public class Playlist
         }
     }
     private byte[]? _image;
-        
+
     [JsonIgnore]
     public bool IsPendingSave { get; set; }
 
@@ -68,8 +69,9 @@ public class Playlist
     [JsonPropertyName("songs")]
     public ImmutableList<BPSong> Songs
     {
-        get => _songs; 
-        set { 
+        get => _songs;
+        set
+        {
             if (_songs != value)
             {
                 _songs = value;
@@ -81,14 +83,14 @@ public class Playlist
 
 
     // The below intentionally do not notify changes
-        
+
     /// <summary>
     /// The time that the playlist was loaded from the playlists folder
     /// Used to avoid reloading playlists unless necessary
     /// </summary>
     [JsonIgnore]
     public DateTime LastLoadTime { get; set; }
-        
+
     /// <summary>
     /// Path that the playlist was loaded from
     /// </summary>

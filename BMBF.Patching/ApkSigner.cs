@@ -64,7 +64,7 @@ namespace BMBF.Patching
         private static byte[] GetSignature(byte[] signatureFileData, string pemCertData)
         {
             var (cert, privateKey) = LoadCertificate(pemCertData);
-            
+
             var certStore = X509StoreFactory.Create("Certificate/Collection", new X509CollectionStoreParameters(new List<X509Certificate> { cert }));
             var dataGen = new CmsSignedDataGenerator();
             dataGen.AddCertificates(certStore);
@@ -133,7 +133,7 @@ namespace BMBF.Patching
             // Create streams to save the signature data to during the first path
             await using var manifestFile = new MemoryStream();
             await using var sigFileBody = new MemoryStream();
-            await using(var manifestWriter = OpenStreamWriter(manifestFile))
+            await using (var manifestWriter = OpenStreamWriter(manifestFile))
             {
                 await manifestWriter.WriteLineAsync("Manifest-Version: 1.0");
                 await manifestWriter.WriteLineAsync($"Created-By: {signerName}");
@@ -145,20 +145,20 @@ namespace BMBF.Patching
             // Two passes are used since we require ZipArchiveMode.Update to save the hash
             // In this pass, we can open the APK with ZipArchiveMode.Read and avoid increasing the save time in the
             // update pass, as opening a file with ZipArchiveMode.Update triggers a recompression during dispose
-            using(ZipArchive apkArchive = ZipFile.OpenRead(path))
+            using (ZipArchive apkArchive = ZipFile.OpenRead(path))
             {
-                foreach(ZipArchiveEntry entry in apkArchive.Entries.Where(entry =>
-                    !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
+                foreach (ZipArchiveEntry entry in apkArchive.Entries.Where(entry =>
+                     !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
                 {
                     ct.ThrowIfCancellationRequested();
                     await WriteEntryHash(entry, manifestFile, sigFileBody);
                 }
             }
 
-            using(ZipArchive apkArchive = ZipFile.Open(path, ZipArchiveMode.Update))
+            using (ZipArchive apkArchive = ZipFile.Open(path, ZipArchiveMode.Update))
             {
                 // Delete the previous signature first!
-                foreach(ZipArchiveEntry entry in apkArchive.Entries.Where(entry => entry.FullName.StartsWith("META-INF")).ToList())
+                foreach (ZipArchiveEntry entry in apkArchive.Entries.Where(entry => entry.FullName.StartsWith("META-INF")).ToList())
                 {
                     entry.Delete();
                 }
@@ -172,15 +172,15 @@ namespace BMBF.Patching
                 byte[] manifestHash = Sha.ComputeHash(manifestFile);
                 manifestFile.Position = 0;
                 await manifestFile.CopyToAsync(manifestStream, ct);
-                
-                await using(var signatureWriter = OpenStreamWriter(signaturesFile))
+
+                await using (var signatureWriter = OpenStreamWriter(signaturesFile))
                 {
                     await signatureWriter.WriteLineAsync("Signature-Version: 1.0");
                     await signatureWriter.WriteLineAsync($"SHA1-Digest-Manifest: {Convert.ToBase64String(manifestHash)}");
                     await signatureWriter.WriteLineAsync($"Created-By: {signerName}");
                     await signatureWriter.WriteLineAsync();
                 }
-                
+
                 // Copy the entry hashes into the signature file
                 sigFileBody.Position = 0;
                 await sigFileBody.CopyToAsync(signaturesFile, ct);
@@ -205,7 +205,7 @@ namespace BMBF.Patching
 
             // Write the digest for this entry to the manifest
             await using var sectStream = new MemoryStream();
-            await using(var sectWriter = OpenStreamWriter(sectStream))
+            await using (var sectWriter = OpenStreamWriter(sectStream))
             {
                 await sectWriter.WriteLineAsync($"Name: {entry.FullName}");
                 await sectWriter.WriteLineAsync($"SHA1-Digest: {Convert.ToBase64String(hash)}");
@@ -215,11 +215,11 @@ namespace BMBF.Patching
             // Sign the section of manifest, then write it to the signature file
             sectStream.Position = 0;
             string sectHash = Convert.ToBase64String(Sha.ComputeHash(sectStream));
-            await using(StreamWriter signatureWriter = OpenStreamWriter(signatureStream))
+            await using (StreamWriter signatureWriter = OpenStreamWriter(signatureStream))
             {
                 await signatureWriter.WriteLineAsync($"Name: {entry.FullName}");
                 await signatureWriter.WriteLineAsync($"SHA1-Digest: {sectHash}");
-                await signatureWriter.WriteLineAsync(); 
+                await signatureWriter.WriteLineAsync();
             }
 
             sectStream.Position = 0;
@@ -230,7 +230,7 @@ namespace BMBF.Patching
         {
             return new StreamWriter(stream, Encoding, 1024, true);
         }
-        
+
         /// <summary>
         /// Creates a new X509 certificate and returns its data in PEM format.
         /// </summary>
@@ -241,7 +241,7 @@ namespace BMBF.Patching
             var certificateGenerator = new X509V3CertificateGenerator();
             var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(Int64.MaxValue), random);
             certificateGenerator.SetSerialNumber(serialNumber);
-            
+
 #pragma warning disable 618
             certificateGenerator.SetSignatureAlgorithm("SHA256WithRSA");
 #pragma warning restore 618
@@ -263,7 +263,7 @@ namespace BMBF.Patching
 
             using var writer = new StringWriter();
             var pemWriter = new Org.BouncyCastle.OpenSsl.PemWriter(writer);
-                                
+
             pemWriter.WriteObject(new PemObject("CERTIFICATE", cert.GetEncoded()));
             pemWriter.WriteObject(subjectKeyPair.Private);
             return writer.ToString();

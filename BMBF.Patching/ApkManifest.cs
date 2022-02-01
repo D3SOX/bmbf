@@ -11,7 +11,7 @@ namespace BMBF.Patching
         /// Manifest/root element of AndroidManifest.xml
         /// </summary>
         public AxmlElement Manifest { get; }
-        
+
         /// <summary>
         /// <code>application</code> element
         /// </summary>
@@ -33,13 +33,13 @@ namespace BMBF.Patching
             {
                 throw new FormatException("Root element of manifest was not a 'manifest' tag");
             }
-            
+
             Manifest = rootElement;
             ApplicationElement = rootElement.Children.Single(e => e.Name == "application");
             _existingPermissions = GetExistingChildren(Manifest, "uses-permission");
             _existingFeatures = GetExistingChildren(Manifest, "uses-feature");
         }
-        
+
         /// <summary>
         /// Scans the attributes of the children of the given element for their "name" attribute.
         /// </summary>
@@ -77,13 +77,13 @@ namespace BMBF.Patching
             {
                 return;
             }
-            
+
             var permElement = new AxmlElement("uses-permission");
             permElement.Attributes.Add(new AxmlAttribute("name", AndroidNamespace, NameAttributeResourceId, name));
             Manifest.Children.Add(permElement);
             _existingPermissions[name] = permElement;
         }
-        
+
         /// <summary>
         /// Adds a feature to the manifest
         /// </summary>
@@ -115,7 +115,7 @@ namespace BMBF.Patching
                 // If we already have an attribute, simply set its value
                 attribute.Value = value;
             }
-            else if(value) // Only bother adding the attribute if we actually want the APK to have it be true
+            else if (value) // Only bother adding the attribute if we actually want the APK to have it be true
             {
                 ApplicationElement.Attributes.Add(new AxmlAttribute(name, AndroidNamespace, resourceId, value));
             }

@@ -56,8 +56,8 @@ public class SetupController : Controller
             Log.Error(ex, "Failed to fetch diffs for downgrading");
             return NotFound("Could not fetch diffs for downgrading - this is usually caused by lack of internet");
         }
-            
-            
+
+
         var installInfo = await _beatSaberService.GetInstallationInfoAsync();
         if (installInfo == null)
         {
@@ -89,7 +89,7 @@ public class SetupController : Controller
     public async Task<IActionResult> Downgrade([FromBody] string toVersion)
     {
         List<DiffInfo> diffs = await _assetService.GetDiffs();
-            
+
         var installInfo = await _beatSaberService.GetInstallationInfoAsync();
         if (installInfo == null) return BadRequest("Beat Saber is not installed");
         var path = diffs.FindShortestPath(installInfo.Version, toVersion);
@@ -134,7 +134,7 @@ public class SetupController : Controller
         }
         return Ok();
     }
-        
+
     [HttpPost("[action]")]
     public async Task<IActionResult> TriggerInstall()
     {

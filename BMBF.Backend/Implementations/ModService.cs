@@ -26,7 +26,7 @@ public class ModService : IModService, IDisposable, IModManager
     private readonly List<IModProvider> _modProviders = new();
 
     private ModsCache? _modsById;
-    
+
     private bool _disposed;
 
     private readonly string _modsPath;
@@ -65,7 +65,7 @@ public class ModService : IModService, IDisposable, IModManager
             _installLock.Release();
         }
     }
-    
+
     public async Task<FileImportResult?> TryImportModAsync(Stream stream, string fileName)
     {
         await _installLock.WaitAsync();
@@ -164,17 +164,17 @@ public class ModService : IModService, IDisposable, IModManager
             throw;
         }
     }
-    
+
     private async Task<ModsCache> GetCacheAsyncInternal()
     {
         if (_modsById != null) return _modsById;
-            
+
         var newCache = new ModsCache();
         await LoadNewModsAsyncInternal(newCache);
         _modsById = newCache;
         return _modsById;
     }
-    
+
     private async Task<IMod> CacheAndImportMod(IModProvider provider, Stream modStream, string fileName)
     {
         // Once we've parsed the mod temporarily, we need to cache it to a local file
@@ -198,13 +198,13 @@ public class ModService : IModService, IDisposable, IModManager
         {
             await modStream.CopyToAsync(cacheStream); // Copy our mod to the mod file on disk
             cacheStream.Position = 0; // Move back to the beginning in order to reparse and add the mod
-            
+
             Log.Debug("Reparsing and adding mod");
-            
+
             cachedMod = await provider.TryParseModAsync(cacheStream);
             if (cachedMod == null)
                 throw new InstallationException("Cached mod was null after previously successfully parsing mod");
-            
+
             await AddModAsync(savePath, cachedMod, provider, modsById);
             return cachedMod;
         }
@@ -222,7 +222,7 @@ public class ModService : IModService, IDisposable, IModManager
     private async Task LoadNewModsAsyncInternal(ModsCache cacheById)
     {
         _io.Directory.CreateDirectory(_modsPath);
-        
+
         foreach (string modPath in _io.Directory.EnumerateFiles(_modsPath))
         {
             if (cacheById.Any(pair => pair.Value.path == modPath)) continue;
@@ -232,7 +232,7 @@ public class ModService : IModService, IDisposable, IModManager
             try
             {
                 modStream = _io.File.OpenRead(modPath);
-                 
+
                 var result = await FindProvider(modStream, Path.GetFileName(modPath), false);
                 if (result is not null)
                 {
@@ -297,14 +297,14 @@ public class ModService : IModService, IDisposable, IModManager
         await provider.AddModAsync(cachedMod);
         modsById[cachedMod.Id] = (cachedMod, savePath);
         ModAdded?.Invoke(this, cachedMod);
-        
+
         Log.Information($"Successfully added {cachedMod.Id} v{cachedMod.Version}");
     }
 
     private void OnModUnloaded(object? sender, string modId)
     {
         if (_modsById == null) return;
-        
+
         if (_modsById.Remove(modId, out var removedMod))
         {
             Log.Information($"Mod {modId} removed - deleting {removedMod.path}");
@@ -328,7 +328,7 @@ public class ModService : IModService, IDisposable, IModManager
         {
             provider.Dispose();
         }
-        
+
         _installLock.Dispose();
     }
 }

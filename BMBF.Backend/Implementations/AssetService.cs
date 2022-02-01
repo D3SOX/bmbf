@@ -27,13 +27,13 @@ public class AssetService : IAssetService
     private readonly string _packageId;
 
     private readonly IFileProvider _assetProvider;
-    
+
 
     private List<DiffInfo>? _cachedDiffs;
     private CoreModsIndex? _cachedCoreMods;
 
     public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
-        
+
     public AssetService(IFileProvider assetProvider, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
     {
         _assetProvider = assetProvider;
@@ -69,7 +69,7 @@ public class AssetService : IAssetService
         memStream.Position = 0;
         return memStream;
     }
-        
+
     private async Task<T> DownloadJson<T>(Uri uri)
     {
         using var resp = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
@@ -97,7 +97,7 @@ public class AssetService : IAssetService
                 Log.Error(ex, "Failed to download core mods, and no core mods were built in");
                 return new CoreModsIndex();
             }
-                
+
             Log.Warning(ex, "Failed to download core mods - using inbuilt core mods");
             return new CoreModsIndex
             {
@@ -117,7 +117,7 @@ public class AssetService : IAssetService
             Log.Information($"Extracting inbuilt core mod {coreMod.FileName}");
             return OpenAsset(Path.Combine("core_mods", coreMod.FileName));
         }
-        
+
         Log.Information($"Downloading core mod {coreMod.FileName}");
         return await _httpClient.GetStreamAsync(coreMod.DownloadLink);
     }
@@ -155,7 +155,7 @@ public class AssetService : IAssetService
                 Log.Information($"Latest modloader (v{modLoaderVersion.Version}), matches inbuilt version. Using inbuilt");
                 return OpenBuiltInModloader(is64Bit);
             }
-                
+
             Log.Information("Downloading modloader");
             // TODO: This downloads to a MemoryStream, which is unnecessary but does reduce the headache of disposing the HttpResponseMessage
             return (
@@ -172,7 +172,7 @@ public class AssetService : IAssetService
                 Log.Error("Downloading modloader failed, and no version was built in!");
                 throw;
             }
-            
+
             Log.Warning($"Could not download modloader - using builtin version (v{_builtInAssets.ModLoaderVersion})");
             return OpenBuiltInModloader(is64Bit);
         }
@@ -220,7 +220,7 @@ public class AssetService : IAssetService
                 await using var extensionsStream = extensionsFile.CreateReadStream();
                 return extensionsStream.ReadAsCamelCaseJson<FileExtensions>();
             }
-            
+
             throw;
         }
     }

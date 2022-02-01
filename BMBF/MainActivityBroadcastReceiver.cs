@@ -25,7 +25,7 @@ public class WebServerStartedReceiver : BroadcastReceiver
     /// Argument is APK path
     /// </summary>
     public event EventHandler<string>? PackageInstallTriggered;
-        
+
     /// <summary>
     /// Invoked to trigger a package uninstall, since only activities can do this
     /// Argument is package ID
@@ -41,30 +41,35 @@ public class WebServerStartedReceiver : BroadcastReceiver
     /// Invoked when the service requests the activity to restart itself
     /// </summary>
     public event EventHandler? Restart;
-        
+
     public override void OnReceive(Context? context, Intent? intent)
     {
         if (intent == null)
         {
             return;
         }
-            
+
         if (intent.Action == BMBFIntents.WebServerStartedIntent)
         {
             WebServerStartupComplete?.Invoke(this, int.Parse(intent.GetStringExtra("BindPort")!));
-        }   else if (intent.Action == BMBFIntents.WebServerFailedToStartIntent)
+        }
+        else if (intent.Action == BMBFIntents.WebServerFailedToStartIntent)
         {
             WebServerStartupFailed?.Invoke(this, intent.GetStringExtra("Exception")!);
-        }   else if (intent.Action == BMBFIntents.TriggerPackageInstall)
+        }
+        else if (intent.Action == BMBFIntents.TriggerPackageInstall)
         {
             PackageInstallTriggered?.Invoke(this, intent.GetStringExtra("ApkPath")!);
-        }   else if (intent.Action == BMBFIntents.TriggerPackageUninstall)
+        }
+        else if (intent.Action == BMBFIntents.TriggerPackageUninstall)
         {
             PackageUninstallTriggered?.Invoke(this, intent.GetStringExtra("PackageId")!);
-        }   else if (intent.Action == BMBFIntents.Quit)
+        }
+        else if (intent.Action == BMBFIntents.Quit)
         {
             Quit?.Invoke(this, EventArgs.Empty);
-        }   else if (intent.Action == BMBFIntents.Restart)
+        }
+        else if (intent.Action == BMBFIntents.Restart)
         {
             Restart?.Invoke(this, EventArgs.Empty);
         }
