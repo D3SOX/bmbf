@@ -5,7 +5,6 @@ using System.IO.Abstractions.TestingHelpers;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
-using Moq;
 using QuestPatcher.QMod;
 using RichardSzalay.MockHttp;
 using Xunit;
@@ -41,7 +40,7 @@ namespace BMBF.QMod.Tests
             IMod? addedMod = null;
             _provider.ModLoaded += (_, mod) => addedMod = mod;
 
-            using var modStream = Util.CreateTestingMod();
+            using var modStream = await Util.CreateTestingModAsync();
             var parsedMod = await _provider.ParseAndAddMod(modStream);
 
             Assert.Equal(parsedMod, addedMod);
@@ -76,7 +75,7 @@ namespace BMBF.QMod.Tests
 
             using var provider = Util.CreateProvider(new HttpClient(), fileSystem);
 
-            var modStream = Util.CreateTestingMod(m =>
+            var modStream = await Util.CreateTestingModAsync(m =>
             {
                 using var emptyStream = new MemoryStream();
                 m.CreateModFileAsync(modPath, emptyStream);
@@ -91,18 +90,21 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldFailWithIncorrectPackageId()
         {
-            var mod = Util.CreateTestingMod(m => m.PackageId = "com.imposter.app");
-            await Assert.ThrowsAsync<InstallationException>(async () => await _provider.TryParseModAsync(mod));
+            using var modStream =  await Util.CreateTestingModAsync(m => m.PackageId = "com.imposter.app");
+            await Assert.ThrowsAsync<InstallationException>(async () => await _provider.TryParseModAsync(modStream));
         }
 
         [Fact]
         public async Task ShouldRemoveExistingMod()
         {
+            using var modStream = await Util.CreateTestingModAsync();
             // Loading a new mod with the same ID should uninstall the old mod
-            var existingMod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
+            var existingMod = await _provider.ParseAndAddMod(modStream);
             string? deletedModId = null;
             _provider.ModUnloaded += (_, args) => { deletedModId = args; };
-            await _provider.ParseAndAddMod(Util.CreateTestingMod());
+            
+            using var duplicateModStream = await Util.CreateTestingModAsync();
+            await _provider.ParseAndAddMod(duplicateModStream);
 
             Assert.Equal(existingMod.Id, deletedModId);
         }
@@ -112,17 +114,24 @@ namespace BMBF.QMod.Tests
         [InlineData("^1.0.0", "2.0.0", false)] // Otherwise, they should not have been reinstalled
         public async Task ShouldUninstallIncompatibleDependants(string versionRange, string newlyInstalled, bool shouldBeInstalled)
         {
-            var dependantStream = Util.CreateTestingMod(m =>
+            // This mod will depend on our example mod
+            using var dependantStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Id = "dependant-mod";
                 m.Dependencies.Add(new Dependency("test-mod", versionRange));
             });
 
-            await _provider.ParseAndAddMod(Util.CreateTestingMod());
+            // This older dependency will be within its version range
+            using var oldDependencyStream = await Util.CreateTestingModAsync();
+            await _provider.ParseAndAddMod(oldDependencyStream);
 
             var dependant = await _provider.ParseAndAddMod(dependantStream);
-            await dependant.InstallAsync();
-            await _provider.ParseAndAddMod(Util.CreateTestingMod(m => m.Version = Version.Parse(newlyInstalled)));
+            await dependant.InstallAsync(); // Mark the mod as installed
+
+            // This new dependency will NOT match the version range,
+            // so adding it to the provider should uninstall the dependant
+            using var newDependencyStream = await Util.CreateTestingModAsync(m => m.Version = Version.Parse(newlyInstalled));
+            await _provider.ParseAndAddMod(newDependencyStream);
 
             Assert.Equal(shouldBeInstalled, dependant.Installed);
         }
@@ -130,7 +139,8 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldInvokeModUnloaded()
         {
-            var mod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
+            using var modStream = await Util.CreateTestingModAsync();
+            var mod = await _provider.ParseAndAddMod(modStream);
 
             string? removedMod = null;
             _provider.ModUnloaded += (_, args) => removedMod = args;
@@ -142,7 +152,8 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldUninstallBeforeModRemoved()
         {
-            var mod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
+            using var modStream = await Util.CreateTestingModAsync();
+            var mod = await _provider.ParseAndAddMod(modStream);
             await mod.InstallAsync();
 
             // Since the mod as installed when it was unloaded, it should have been uninstalled before the unload

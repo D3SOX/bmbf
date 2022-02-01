@@ -38,7 +38,7 @@ namespace BMBF.QMod.Tests
             const string fileCopyName = "myFile.txt";
             const string fileCopyPath = "myFiles/myFile.txt";
 
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 var emptyStream = new MemoryStream();
                 // Create empty mod files, lib files, and file copies
@@ -63,7 +63,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldThrowIfModUnregistered()
         {
-            using var modStream = Util.CreateTestingMod();
+            using var modStream = await Util.CreateTestingModAsync();
             using var mod = await _provider.TryParseModAsync(modStream);
             if (mod == null) throw new FormatException("Invalid testing mod");
 
@@ -76,13 +76,13 @@ namespace BMBF.QMod.Tests
         {
             const string libFileName = "my-library.so";
 
-            var otherModStream = Util.CreateTestingMod(m =>
+            using var otherModStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Id = "other-mod";
                 m.CreateLibraryFileAsync(libFileName, new MemoryStream());
             });
 
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 m.CreateLibraryFileAsync(libFileName, new MemoryStream());
             });
@@ -100,7 +100,8 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldBeInstalledAfterInstall()
         {
-            var mod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
+            using var modStream = await Util.CreateTestingModAsync();
+            var mod = await _provider.ParseAndAddMod(modStream);
             await mod.InstallAsync();
             Assert.True(mod.Installed);
         }
@@ -108,7 +109,9 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldBeUninstalledAfterUninstall()
         {
-            var mod = await _provider.ParseAndAddMod(Util.CreateTestingMod());
+            using var modStream = await Util.CreateTestingModAsync();
+            var mod = await _provider.ParseAndAddMod(modStream);
+            
             await mod.InstallAsync();
             await mod.UninstallAsync();
             Assert.False(mod.Installed);
@@ -117,9 +120,9 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldInstallDependencies()
         {
-            var dependencyStream = Util.CreateTestingMod(m => m.Id = DependencyId);
+            using var dependencyStream = await Util.CreateTestingModAsync(m => m.Id = DependencyId);
             var dependencyUrl = "https://example.com/my-dependency.qmod";
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
             });
@@ -142,11 +145,11 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldReinstallUninstalledDependencies()
         {
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0"));
             });
-            var dependencyStream = Util.CreateTestingMod(m => m.Id = DependencyId);
+            using var dependencyStream = await Util.CreateTestingModAsync(m => m.Id = DependencyId);
             var dependency = await _provider.ParseAndAddMod(dependencyStream);
             // The dependency is loaded, but not installed
             var mod = await _provider.ParseAndAddMod(modStream);
@@ -160,7 +163,7 @@ namespace BMBF.QMod.Tests
         public async Task ShouldThrowIfDependencyDownloadFails()
         {
             var dependencyUrl = "https://example.com/my-dependency.qmod";
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
             });
@@ -177,18 +180,18 @@ namespace BMBF.QMod.Tests
         {
             // Mod depends on version ^1.0.0
             var dependencyUrl = "https://example.com/my-dependency.qmod";
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0", dependencyUrl));
             });
             // Version 0.5.0 does not intersect this, so the dependency should be upgraded
-            var oldDepStream = Util.CreateTestingMod(m =>
+            using var oldDepStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Id = DependencyId;
                 m.Version = Version.Parse("0.5.0");
             });
             // The downloadIfMissing will link to this version
-            var newDepStream = Util.CreateTestingMod(m => m.Id = DependencyId);
+            using var newDepStream = await Util.CreateTestingModAsync(m => m.Id = DependencyId);
 
             // Create an HttpClient that will mock the dependency download and inject it into our provider
             _messageHandler.When(dependencyUrl)
@@ -209,7 +212,7 @@ namespace BMBF.QMod.Tests
         public async Task ShouldFailWithNoDownloadUri()
         {
             // Mod depends on version ^1.0.0
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 // But does not state a download link to get the dependency if missing
                 m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0"));
@@ -223,9 +226,10 @@ namespace BMBF.QMod.Tests
         public async Task ShouldFailOnUpgradeWithNoDownloadUri()
         {
             // Mod depends on version ^1.0.0
-            var modStream = Util.CreateTestingMod(m => m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0")));
+            using var modStream = await Util.CreateTestingModAsync(m =>
+                m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0")));
             // Version 0.5.0 does not intersect this, so the dependency needs to be upgraded
-            var oldDepStream = Util.CreateTestingMod(m =>
+            using var oldDepStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Id = DependencyId;
                 m.Version = Version.Parse("0.5.0");
@@ -242,7 +246,7 @@ namespace BMBF.QMod.Tests
         [InlineData("mySubDir/cover.png", "cover.png")]
         public async Task ShouldHaveCorrectCoverFileName(string coverPath, string fileName)
         {
-            var modStream = Util.CreateTestingMod(m => m.WriteCoverImageAsync(coverPath, new MemoryStream()).Wait());
+            using var modStream = await Util.CreateTestingModAsync(m => m.WriteCoverImageAsync(coverPath, new MemoryStream()).Wait());
 
             var mod = await _provider.ParseAndAddMod(modStream);
 
@@ -252,7 +256,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldThrowWhenNoCover()
         {
-            var modStream = Util.CreateTestingMod();
+            using var modStream = await Util.CreateTestingModAsync();
 
             var mod = await _provider.ParseAndAddMod(modStream);
 
@@ -261,11 +265,11 @@ namespace BMBF.QMod.Tests
         }
 
         [Fact]
-        public async Task TestCoverContent()
+        public async Task CoverContentShouldMatch()
         {
             const string content = "Hello World!";
 
-            var modStream = Util.CreateTestingMod(m =>
+            using var modStream = await Util.CreateTestingModAsync(m =>
             {
                 using var coverStream = new MemoryStream();
                 using var coverWriter = new StreamWriter(coverStream);
@@ -285,12 +289,13 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldUninstallLibraryWithNoDependants()
         {
-            var libStream = Util.CreateTestingMod(m =>
+            using var libStream = await Util.CreateTestingModAsync(m =>
             {
                 m.Id = DependencyId;
                 m.IsLibrary = true;
             });
-            var modStream = Util.CreateTestingMod(m => m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0")));
+            using var modStream = await Util.CreateTestingModAsync(m =>
+                m.Dependencies.Add(new Dependency(DependencyId, "^1.0.0")));
             var lib = await _provider.ParseAndAddMod(libStream);
             var mod = await _provider.ParseAndAddMod(modStream);
 

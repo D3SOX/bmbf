@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using BMBF.ModManagement;
 using Moq;
 using QuestPatcher.QMod;
@@ -28,20 +29,20 @@ namespace BMBF.QMod.Tests
         {
             var modManagerMock = new Mock<IModManager>();
 
-            QModProvider provider = new QModProvider(PackageId, "/mods", "/libs", httpClient, fileSystem, modManagerMock.Object);
+            var provider = new QModProvider(PackageId, "/mods", "/libs", httpClient, fileSystem, modManagerMock.Object);
 
             var installLock = new SemaphoreSlim(1);
             modManagerMock.SetupGet(m => m.InstallLock).Returns(installLock);
             modManagerMock.Setup(m => m.ImportMod(provider, It.IsAny<Stream>(), It.IsAny<string>()))
                 .Returns(async delegate (IModProvider genericProvider, Stream stream, string _)
-                {
-                    var modProvider = (QModProvider)genericProvider;
+                    {
+                        var modProvider = (QModProvider)genericProvider;
 
-                    var mod = await modProvider.TryParseModAsync(stream) ?? throw new NullReferenceException();
-                    await provider.AddModAsyncInternal((QMod)mod, new HashSet<string>());
-                    return (QMod)mod;
-                }
-            );
+                        var mod = await modProvider.TryParseModAsync(stream) ?? throw new NullReferenceException();
+                        await provider.AddModAsyncInternal((QMod)mod, new HashSet<string>());
+                        return (QMod)mod;
+                    }
+                );
 
             return provider;
         }
@@ -50,35 +51,36 @@ namespace BMBF.QMod.Tests
         /// Creates an example mod for use during testing and saves it to a <see cref="MemoryStream"/>
         /// </summary>
         /// <param name="configureOptions">A delegate used to configure details of the mod</param>
-        /// <param name="addFile"></param>
-        /// <returns></returns>
-        public static MemoryStream CreateTestingMod(Action<QuestPatcher.QMod.QMod>? configureOptions = null, bool addFile = true)
+        /// <param name="addFile">Whether or not to add an example file</param>
+        /// <returns>Stream containing the mod's content</returns>
+        public static async Task<MemoryStream> CreateTestingModAsync(Action<QuestPatcher.QMod.QMod>? configureOptions = null, bool addFile = true)
         {
-            var backingStream = new MemoryStream();
-            var stream = new MemoryStream();
-            var mod = new QuestPatcher.QMod.QMod(
-                stream,
-                "test-mod",
-                "Test Mod",
-                Version.Parse("1.0.0"),
-                PackageId,
-                "1.0.0",
-                "BMBF"
-            );
-            if (addFile)
+            await using var modStream = new MemoryStream();
+            await using (var mod = new QuestPatcher.QMod.QMod(
+                             modStream,
+                             "test-mod",
+                             "Test Mod",
+                             Version.Parse("1.0.0"),
+                             PackageId,
+                             "1.0.0",
+                             "Unicorns"
+                         ))
             {
-                // Add a simple file copy
-                // This exists primarily to avoid the mod being treated as always enabled after importing since all of the files are copied
-                mod.AddFileCopyAsync(new FileCopy("example.txt", "test/example.txt"), new MemoryStream()).Wait();
+                if (addFile)
+                {
+                    // Add a simple file copy
+                    // This exists primarily to avoid the mod being treated as always enabled after importing since all of the files are copied
+                    await mod.AddFileCopyAsync(new FileCopy("example.txt", "test/example.txt"), new MemoryStream());
+                }
+
+                configureOptions?.Invoke(mod);
             }
 
-            configureOptions?.Invoke(mod);
-            mod.Dispose(); // Save the manifest
-            stream.Dispose();
+            var resultStream = new MemoryStream();
+            resultStream.Write(modStream.ToArray());
+            resultStream.Position = 0;
 
-            backingStream.Write(stream.ToArray()); // ToArray is safe, even if the MemoryStream is disposed
-            backingStream.Position = 0;
-            return backingStream;
+            return resultStream;
         }
     }
 }
