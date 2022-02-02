@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
@@ -70,7 +69,7 @@ public class ModServiceTests : IDisposable
     }
 
     private readonly ModService _modService;
-    private readonly IFileSystem _fileSystem = new MockFileSystem();
+    private readonly IFileSystem _fileSystem = Util.CreateMockFileSystem();
     private readonly BMBFSettings _settings = new()
     {
         RootDataPath = Path.GetFullPath("/BMBFData"),
@@ -108,8 +107,8 @@ public class ModServiceTests : IDisposable
         using var modStream = CreateExampleContentStream();
 
         _providerMock.Setup(p => p.TryParseModAsync(
-            It.IsNotNull<Stream>(),
-            It.IsAny<bool>()))
+                It.IsNotNull<Stream>(),
+                It.IsAny<bool>()))
             .Returns(Task.FromResult<IMod?>(null));
 
         var result = await _modService.TryImportModAsync(modStream, $"example.{FileExtension}");

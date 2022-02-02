@@ -2,11 +2,9 @@
 using System.Collections.Immutable;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
@@ -25,17 +23,16 @@ namespace BMBF.Backend.Tests;
 
 public class FileImporterTests
 {
-    private static readonly byte[] ExampleFileContent = Encoding.UTF8.GetBytes("Hello World!");
     public FileImporterTests()
     {
         _modServiceMock.Setup(m => m.GetModsAsync()).ReturnsAsync(new Dictionary<string, (IMod mod, string path)>());
         _songServiceMock.Setup(s => s.GetSongsAsync()).ReturnsAsync(new Dictionary<string, Song>());
         _assetServiceMock.Setup(m => m.GetExtensions())
-        .ReturnsAsync(() => new FileExtensions(
-            new Dictionary<string, string> { { "qsaber", "/Sabers" } },
-            new List<string> { "json", "bplist" },
-            new List<string> { "json", "yml" }
-        ));
+            .ReturnsAsync(() => new FileExtensions(
+                new Dictionary<string, string> { { "qsaber", "/Sabers" } },
+                new List<string> { "json", "bplist" },
+                new List<string> { "json", "yml" }
+            ));
         _fileImporter = new FileImporter(
             _songServiceMock.Object,
             _playlistServiceMock.Object,
@@ -54,7 +51,7 @@ public class FileImporterTests
     private readonly Mock<IModService> _modServiceMock = new();
     private readonly Mock<IPlaylistService> _playlistServiceMock = new();
 
-    private readonly IFileSystem _fileSystem = new MockFileSystem();
+    private readonly IFileSystem _fileSystem = Util.CreateMockFileSystem();
     private readonly BMBFSettings _settings = new()
     {
         ConfigsPath = "/Configs"
@@ -69,18 +66,6 @@ public class FileImporterTests
         var modsDictionary = mods.ToDictionary(m => m.Id, m => (m, ""));
         _modServiceMock.Setup(m => m.GetModsAsync())
             .ReturnsAsync(modsDictionary);
-    }
-
-    /// <summary>
-    /// Creates a stream containing the bytes in <see cref="ExampleFileContent"/>
-    /// </summary>
-    /// <returns>Stream containing the bytes in <see cref="ExampleFileContent"/>, seeked to position 0</returns>
-    private Stream CreateExampleContentStream()
-    {
-        var stream = new MemoryStream();
-        stream.Write(ExampleFileContent);
-        stream.Position = 0;
-        return stream;
     }
 
     /// <summary>
@@ -117,7 +102,7 @@ public class FileImporterTests
         };
 
         _songServiceMock.Setup(s =>
-            s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsAny<string>()))
+                s.ImportSongAsync(It.IsNotNull<ISongProvider>(), It.IsAny<string>()))
             .ReturnsAsync(expectedResult);
 
         var result = await _fileImporter.ImportAsync(songStream, "myFile.zip");
@@ -169,11 +154,11 @@ public class FileImporterTests
         SetupMods(modMock.Object);
 
         // Import a config with the mod ID as the filename, and read the content placed in the config path
-        using var exampleContent = CreateExampleContentStream();
+        using var exampleContent = Util.CreateExampleContentStream();
         await _fileImporter.TryImportAsync(exampleContent, $"{modMock.Object.Id}.json");
         byte[] content = _fileSystem.File.ReadAllBytes(Path.Combine(_settings.ConfigsPath, "example-mod.json"));
 
-        Assert.Equal(ExampleFileContent, content);
+        Assert.Equal(Util.ExampleFileContent, content);
     }
 
     [Fact]
@@ -187,24 +172,24 @@ public class FileImporterTests
             .Returns(new Dictionary<string, string> { { "png", "/ExampleModImages" } });
         SetupMods(modMock.Object);
 
-        using var exampleContent = CreateExampleContentStream();
+        using var exampleContent = Util.CreateExampleContentStream();
         await _fileImporter.ImportAsync(exampleContent, "test.png");
         byte[] content = _fileSystem.File.ReadAllBytes("/ExampleModImages/test.png");
 
         // Copy extensions stated by mods should be used when importing files,
         // so the file should be copied to ExampleModImages
-        Assert.Equal(ExampleFileContent, content);
+        Assert.Equal(Util.ExampleFileContent, content);
     }
 
     [Fact]
     public async Task ShouldUtiliseCopyExtension()
     {
-        using var exampleContent = CreateExampleContentStream();
+        using var exampleContent = Util.CreateExampleContentStream();
         await _fileImporter.ImportAsync(exampleContent, "test.qsaber");
         byte[] content = _fileSystem.File.ReadAllBytes("Sabers/test.qsaber");
 
         // The built-in copy extensions contains an entry for .qsaber that should copy it to the path above
-        Assert.Equal(ExampleFileContent, content);
+        Assert.Equal(Util.ExampleFileContent, content);
     }
 
     [Fact]
@@ -219,7 +204,7 @@ public class FileImporterTests
 
         SetupMods(modMock.Object);
 
-        using var exampleContent = CreateExampleContentStream();
+        using var exampleContent = Util.CreateExampleContentStream();
         var result = await _fileImporter.TryImportAsync(exampleContent, "test.qsaber");
 
         // Multiple copy extensions just triggers failure at the moment
@@ -241,7 +226,7 @@ public class FileImporterTests
 
         // Make sure that the playlist was added to the playlist service
         _playlistServiceMock.Verify(p => p.AddPlaylistAsync(
-            It.Is<Playlist>(v => v.PlaylistTitle == examplePlaylist.PlaylistTitle)),
+                It.Is<Playlist>(v => v.PlaylistTitle == examplePlaylist.PlaylistTitle)),
             Times.Once()
         );
         Assert.Equal(expectedPlaylistId, result.ImportedPlaylistId);

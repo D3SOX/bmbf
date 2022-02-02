@@ -11,9 +11,8 @@ public class PhysicalSongProviderTests
 {
     private readonly PhysicalSongProvider _provider;
 
-    private readonly byte[] _exampleContent = System.Text.Encoding.UTF8.GetBytes("Hello World!");
-    private readonly IFileSystem _inputFileSystem = new MockFileSystem(null, Path.GetFullPath("/"));
-    private readonly IFileSystem _extractFileSystem = new MockFileSystem(null, Path.GetFullPath("/"));
+    private readonly IFileSystem _inputFileSystem = Util.CreateMockFileSystem();
+    private readonly IFileSystem _extractFileSystem = Util.CreateMockFileSystem();
 
     private readonly string _inputDir = "/Input";
 
@@ -33,7 +32,7 @@ public class PhysicalSongProviderTests
     [Fact]
     public void FileShouldExist()
     {
-        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), _exampleContent);
+        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), Util.ExampleFileContent);
         Assert.True(_provider.Exists("example.txt"));
     }
 
@@ -46,36 +45,35 @@ public class PhysicalSongProviderTests
     [Fact]
     public void FileContentShouldMatch()
     {
-        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), _exampleContent);
+        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), Util.ExampleFileContent);
 
         using var entryStream = _provider.Open("example.txt");
-        using var streamReader = new BinaryReader(entryStream);
-        Assert.Equal(_exampleContent, streamReader.ReadBytes(_exampleContent.Length));
+        Util.AssertIsExampleContent(entryStream);
     }
 
     [Fact]
     public async Task ShouldExtractFiles()
     {
-        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), _exampleContent);
+        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), Util.ExampleFileContent);
 
         await _provider.CopyToAsync("/ExtractPath", _extractFileSystem);
-        Assert.Equal(_exampleContent,
+        Assert.Equal(Util.ExampleFileContent,
             _extractFileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
     }
 
     [Fact]
     public async Task ShouldOverwriteFiles()
     {
-        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), _exampleContent);
+        _inputFileSystem.File.WriteAllBytes(Path.Combine(_inputDir, "example.txt"), Util.ExampleFileContent);
         _extractFileSystem.Directory.CreateDirectory("/ExtractPath");
 
         // We write a longer content than the overwriting content
         // This is to check that the file is deleted and recreated, instead of just the initial bytes being overwritten,
         // with corrupt file content left on the end
         _extractFileSystem.File.WriteAllBytes("/ExtractPath/example.txt",
-            new byte[_exampleContent.Length + 10]);
+            new byte[Util.ExampleFileContent.Length + 10]);
 
         await _provider.CopyToAsync("/ExtractPath", _extractFileSystem);
-        Assert.Equal(_exampleContent, _extractFileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
+        Assert.Equal(Util.ExampleFileContent, _extractFileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
     }
 }

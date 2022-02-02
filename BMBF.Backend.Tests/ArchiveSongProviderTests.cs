@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using BMBF.Backend.Util;
@@ -14,8 +13,7 @@ public class ArchiveSongProviderTests : IDisposable
     private readonly ArchiveSongProvider _provider;
     private readonly ZipArchive _archive;
 
-    private readonly byte[] _exampleContent = System.Text.Encoding.UTF8.GetBytes("Hello World!");
-    private readonly IFileSystem _fileSystem = new MockFileSystem();
+    private readonly IFileSystem _fileSystem = Util.CreateMockFileSystem();
 
     public ArchiveSongProviderTests()
     {
@@ -42,13 +40,12 @@ public class ArchiveSongProviderTests : IDisposable
         var entry = _archive.CreateEntry("example.txt");
         using (var entryStream = entry.Open())
         {
-            entryStream.Write(_exampleContent);
+            entryStream.Write(Util.ExampleFileContent);
         }
 
         using (var entryStream = _provider.Open("example.txt"))
-        using (var streamReader = new BinaryReader(entryStream))
         {
-            Assert.Equal(_exampleContent, streamReader.ReadBytes(_exampleContent.Length));
+            Util.AssertIsExampleContent(entryStream);
         }
     }
 
@@ -58,11 +55,11 @@ public class ArchiveSongProviderTests : IDisposable
         var entry = _archive.CreateEntry("example.txt");
         await using (var entryStream = entry.Open())
         {
-            entryStream.Write(_exampleContent);
+            entryStream.Write(Util.ExampleFileContent);
         }
 
         await _provider.CopyToAsync("/ExtractPath", _fileSystem);
-        Assert.Equal(_exampleContent, _fileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
+        Assert.Equal(Util.ExampleFileContent, _fileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
     }
 
     [Fact]
@@ -71,19 +68,19 @@ public class ArchiveSongProviderTests : IDisposable
         var entry = _archive.CreateEntry("example.txt");
         await using (var entryStream = entry.Open())
         {
-            entryStream.Write(_exampleContent);
+            entryStream.Write(Util.ExampleFileContent);
         }
 
         _fileSystem.Directory.CreateDirectory("/ExtractPath");
 
         // We write a longer content than the overwriting content
-        // This is to check that the file is deleted and recreated, instead of just the initial bytes being overwritten,
+        // This is to check that the file is deleted and recreated - instead of just the initial bytes being overwritten,
         // with corrupt file content left on the end
         _fileSystem.File.WriteAllBytes("/ExtractPath/example.txt",
-            new byte[_exampleContent.Length + 10]);
+            new byte[Util.ExampleFileContent.Length + 10]);
 
         await _provider.CopyToAsync("/ExtractPath", _fileSystem);
-        Assert.Equal(_exampleContent, _fileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
+        Assert.Equal(Util.ExampleFileContent, _fileSystem.File.ReadAllBytes("/ExtractPath/example.txt"));
     }
 
 

@@ -41,7 +41,7 @@ public class BeatSaverServiceTests : IDisposable
         _handlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync",
                 ItExpr.Is<HttpRequestMessage>(m => m.Method == HttpMethod.Get &&
-                                                                                m.RequestUri == new Uri(BaseAddress, requestUrl)),
+                                                   m.RequestUri == new Uri(BaseAddress, requestUrl)),
                 ItExpr.IsAny<CancellationToken>())
             .Returns(() => Task.FromResult(new HttpResponseMessage
             {

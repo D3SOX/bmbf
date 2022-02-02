@@ -22,7 +22,7 @@ public class SongServiceTests : IDisposable
     private SongService CreateSongService() => new(_settings, _fileSystem, Mock.Of<IFileSystemWatcher>());
 
     private readonly SongService _songService;
-    private readonly MockFileSystem _fileSystem = new();
+    private readonly MockFileSystem _fileSystem = Util.CreateMockFileSystem();
     private readonly BMBFSettings _settings = new()
     {
         SongsCacheName = "songCache.json",

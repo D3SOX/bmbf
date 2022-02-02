@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
@@ -17,14 +16,16 @@ public class PlaylistServiceTests : IDisposable
     public PlaylistServiceTests()
     {
         // Due to an issue with how MockFileSystem works, we always re-root the playlists path
-        // Essentially, it always treats / as C:/ even if using a different boot drive letter,
-        // which causes it to mismatch with Path.GetFullPath("/") - which will return the correct boot drive letter.
-        _settings.PlaylistsPath = Path.Combine(Path.GetFullPath("/") ?? throw new NullReferenceException(), "Playlists");
+        // Essentially, it always treats / as C:/ even if the test runner is on another drive.
+        // Usually this would make sense (a mock file system should consider where the tests are running), but
+        // unfortunately this causes it to mismatch with Path.GetFullPath("/") -
+        // which will return the current drive letter.
+        _settings.PlaylistsPath = Path.GetFullPath("/Playlists");
         _playlistService = CreatePlaylistService();
     }
 
     private readonly PlaylistService _playlistService;
-    private readonly IFileSystem _fileSystem = new MockFileSystem();
+    private readonly IFileSystem _fileSystem = Util.CreateMockFileSystem();
     private readonly BMBFSettings _settings = new()
     {
         UpdateCachesAutomatically = false
@@ -162,7 +163,7 @@ public class PlaylistServiceTests : IDisposable
         _fileSystem.File.Delete(playlist.LoadedFrom);
         await using (var playlistFile = _fileSystem.File.OpenWrite(playlist.LoadedFrom))
         {
-            await JsonSerializer.SerializeAsync(playlistFile, modifiedPlaylist);
+            JsonSerializer.Serialize(playlistFile, modifiedPlaylist);
         }
         await _playlistService.UpdatePlaylistCacheAsync();
 

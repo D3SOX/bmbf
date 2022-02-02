@@ -2,7 +2,6 @@
 using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
 using QuestPatcher.QMod;
@@ -67,13 +66,22 @@ namespace BMBF.QMod.Tests
             const string fileCopyPath = "myFile.txt";
             const string fileCopyDestination = "myFiles/myFile.txt";
 
-            var fileSystem = new MockFileSystem();
             // Create the files in the mock file system
-            if (modFileExists) fileSystem.AddFile($"/mods/{modPath}", MockFileData.NullObject);
-            if (libFileExists) fileSystem.AddFile($"/libs/{libPath}", MockFileData.NullObject);
-            if (fileCopyExists) fileSystem.AddFile(fileCopyDestination, MockFileData.NullObject);
-
-            using var provider = Util.CreateProvider(new HttpClient(), fileSystem);
+            if (modFileExists)
+            {
+                _fileSystem.Directory.CreateDirectory("/mods");
+                _fileSystem.File.WriteAllText($"/mods/{modPath}", "");
+            }
+            if (libFileExists)
+            {
+                _fileSystem.Directory.CreateDirectory("/libs");
+                _fileSystem.File.WriteAllText($"/libs/{libPath}", "");
+            }
+            if (fileCopyExists)
+            {
+                _fileSystem.Directory.CreateDirectory(Path.GetDirectoryName(fileCopyDestination));
+                _fileSystem.File.WriteAllText(fileCopyDestination, "");
+            }
 
             var modStream = await Util.CreateTestingModAsync(m =>
             {
@@ -83,7 +91,7 @@ namespace BMBF.QMod.Tests
                 m.AddFileCopyAsync(new FileCopy(fileCopyPath, fileCopyDestination), emptyStream);
             }, false);
 
-            var result = await provider.ParseAndAddMod(modStream);
+            var result = await _provider.ParseAndAddMod(modStream);
             Assert.Equal(installed, result.Installed);
         }
 
