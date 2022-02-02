@@ -139,7 +139,7 @@ public class AssetService : IAssetService
             await respStream.CopyToAsync(resultStream, ct);
             resultStream.Position = 0;
 
-            return respStream;
+            return resultStream;
         }
         catch (Exception)
         {

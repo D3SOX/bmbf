@@ -39,8 +39,9 @@ public interface IAssetService
     /// </summary>
     /// <param name="diffInfo">The diff to download</param>
     /// <param name="ct">Token to cancel the diff download</param>
+    /// <exception cref="HttpRequestException">Delta could not be downloaded</exception>
     /// <returns>Seekable stream to read the delta from</returns>
-    Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct);
+    Task<Stream> GetDelta(DiffInfo diffInfo, CancellationToken ct = default);
 
     /// <summary>
     /// Gets an index of diffs for downgrading
@@ -59,7 +60,7 @@ public interface IAssetService
     /// </summary>
     /// <param name="is64Bit">Whether or not to use the 64 bit modloader</param>
     /// <param name="ct">Token to cancel the modloader download</param>
-    Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct);
+    Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct = default);
 
     /// <summary>
     /// Gets a stream to read the unstripped libunity.so for the given Beat Saber version
@@ -69,7 +70,7 @@ public interface IAssetService
     /// <returns>Stream to read the libunity.so for the given Beat Saber version, or null if no libunity.so
     /// is available for the Beat Saber version</returns>
     /// <exception cref="HttpRequestException">If no libunity.so for this version is built-in, and download it failed</exception>
-    Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct);
+    Task<Stream?> GetLibUnity(string beatSaberVersion, CancellationToken ct = default);
 
     /// <summary>
     /// Gets or uses the inbuilt file copy extensions
