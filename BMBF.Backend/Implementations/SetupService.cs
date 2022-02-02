@@ -36,7 +36,6 @@ public class SetupService : ISetupService, IDisposable
 
     private readonly IBeatSaberService _beatSaberService;
     private readonly IAssetService _assetService;
-    private readonly TagManager _tagManager;
 
     private readonly string _setupDirName;
     private readonly string _statusFile;
@@ -62,16 +61,17 @@ public class SetupService : ISetupService, IDisposable
 
     private readonly SemaphoreSlim _stageBeginLock = new(1);
     private readonly IFileSystem _io;
+    private readonly Func<IPatchBuilder> _patcherFactory;
 
     public SetupService(IBeatSaberService beatSaberService,
         IAssetService assetService,
-        TagManager tagManager,
         BMBFSettings settings,
-        IFileSystem io)
+        IFileSystem io,
+        Func<IPatchBuilder> patcherFactory)
     {
         _beatSaberService = beatSaberService;
         _assetService = assetService;
-        _tagManager = tagManager;
+        _patcherFactory = patcherFactory;
         _setupDirName = Path.Combine(settings.RootDataPath, settings.PatchingFolderName);
         _statusFile = Path.Combine(_setupDirName, "status.json");
         _latestCompleteApkPath = Path.Combine(_setupDirName, "PostCurrentStage.apk");
@@ -336,9 +336,8 @@ public class SetupService : ISetupService, IDisposable
             {
                 throw new NullReferenceException("Assembly version could not be determined");
             }
-            var semVersion =
-                new SemanticVersioning.Version(assemblyVersion.Major, assemblyVersion.Minor, assemblyVersion.Build);
-            var libFolder = "lib/arm64-v8a";
+            
+            const string libFolder = "lib/arm64-v8a";
 
             // Download/extract necessary files for patching
             var modloader = await _assetService.GetModLoader(true, _cts.Token);
@@ -347,10 +346,10 @@ public class SetupService : ISetupService, IDisposable
             var modloaderVersion = modloader.version;
             _logger.Debug($"Using modloader version: {modloaderVersion}");
             
-            var builder = new PatchBuilder("BMBF", semVersion, _tagManager)
+            var builder = _patcherFactory()
                 .WithModloader("QuestLoader", modloaderVersion)
-                .ModifyFile($"{libFolder}/libmain.so", OverwriteMode.MustExist, () => mainStream)
-                .ModifyFile($"{libFolder}/libmodloader.so", OverwriteMode.MustBeNew, () => modloaderStream)
+                .ModifyFile($"{libFolder}/libmain.so", OverwriteMode.MustExist, mainStream)
+                .ModifyFile($"{libFolder}/libmodloader.so", OverwriteMode.MustBeNew, modloaderStream)
                 .ModifyManifest(manifest =>
                 {
                     _logger.Information("Patching manifest");

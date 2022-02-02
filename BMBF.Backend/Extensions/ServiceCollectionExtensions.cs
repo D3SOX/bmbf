@@ -41,10 +41,10 @@ public static class ServiceCollectionExtensions
     /// libunity.so, and modloader. If null, then built in assets will not be used, and these files
     /// will always be downloaded manually</param>
     public static void AddBMBF(this IServiceCollection services,
-                                WebHostBuilderContext ctx,
-                                BMBFSettings settings,
-                                BMBFResources resources,
-                                IFileProvider assetFileProvider)
+        WebHostBuilderContext ctx,
+        BMBFSettings settings,
+        BMBFResources resources,
+        IFileProvider assetFileProvider)
     {
         if (ctx.HostingEnvironment.IsDevelopment())
         {
@@ -82,8 +82,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ModService>();
         services.AddSingleton<IModService>(s =>
         {
-            var modService = s.GetService<ModService>() ?? throw new NullReferenceException($"{nameof(ModService)} not configured");
-            var httpClientFactory = s.GetService<IHttpClientFactory>() ?? throw new NullReferenceException($"No {nameof(IHttpClientFactory)} configured");
+            var httpClientFactory = s.GetRequiredService<IHttpClientFactory>();
+            var modService = s.GetRequiredService<ModService>();
+            
             var httpClient = httpClientFactory.CreateClient();
             ConfigureDefaults(httpClient);
 
@@ -114,6 +115,18 @@ public static class ServiceCollectionExtensions
         tagManager.RegisterLegacyTag("BMBF.modded",
             () => new PatchManifest("BMBF", null) { ModloaderName = "QuestLoader" });
 
-        services.AddSingleton(tagManager);
+        services.AddSingleton<ITagManager>(tagManager);
+        services.AddSingleton<Func<IPatchBuilder>>(() =>
+        {
+            var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version ?? 
+                                  throw new NullReferenceException("Assembly had no version!");
+            var semVersion = new SemanticVersioning.Version(assemblyVersion.Major, assemblyVersion.Minor, assemblyVersion.Build);
+            
+            return new PatchBuilder("BMBF",
+                semVersion,
+                tagManager,
+                new ApkSigner()
+            );
+        });
     }
 }

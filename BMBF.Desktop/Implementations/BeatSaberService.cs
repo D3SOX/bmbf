@@ -19,7 +19,7 @@ public class BeatSaberService : IBeatSaberService, IDisposable
     public event EventHandler<InstallationInfo?>? AppChanged;
 
     private readonly FileSystemWatcher _apkWatcher = new();
-    private readonly TagManager _tagManager;
+    private readonly ITagManager _tagManager;
 
     private readonly SemaphoreSlim _appInfoLoadLock = new(1);
     private readonly Debouncey _appUpdateDebouncey = new(3000);
@@ -31,7 +31,7 @@ public class BeatSaberService : IBeatSaberService, IDisposable
 
     private readonly string _apkPath;
 
-    public BeatSaberService(BMBFDesktopSettings desktopSettings, TagManager tagManager)
+    public BeatSaberService(BMBFDesktopSettings desktopSettings, ITagManager tagManager)
     {
         _tagManager = tagManager;
         _apkPath = Path.Combine(desktopSettings.DeviceRoot, desktopSettings.ApkPath);

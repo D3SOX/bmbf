@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Reflection;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Android.App;
 using Android.Content;
 using Microsoft.AspNetCore.Mvc;

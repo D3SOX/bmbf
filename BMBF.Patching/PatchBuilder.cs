@@ -10,93 +10,71 @@ using Version = SemanticVersioning.Version;
 
 namespace BMBF.Patching
 {
-    public class PatchBuilder
+
+    public class PatchBuilder : IPatchBuilder
     {
         private readonly PatchManifest _manifest;
         private readonly List<FileModification> _fileModifications = new();
 
-        private TagManager? _tagManager;
+        private ITagManager? _tagManager;
+        private readonly IApkSigner _apkSigner;
         private string? _signingCertificate;
         private bool _allowExistingTag;
 
 
-        public PatchBuilder(string patcherName, Version patcherVersion, TagManager tagManager)
+        /// <summary>
+        /// Creates a new <see cref="PatchBuilder"/>
+        /// </summary>
+        /// <param name="patcherName">Name of the patcher that will be reported in the tag</param>
+        /// <param name="patcherVersion">Version of the patcher that will be reported in the tag</param>
+        /// <param name="tagManager">If not null, this overrides the default implementation of <see cref="ITagManager"/>
+        /// </param>
+        /// <param name="apkSigner">If not null, this overrides the default implementation of <see cref="IApkSigner"/></param>
+        public PatchBuilder(string patcherName, Version patcherVersion, ITagManager? tagManager = null, IApkSigner? apkSigner = null)
         {
             _manifest = new PatchManifest(patcherName, patcherVersion.ToString());
-            _tagManager = tagManager;
+            _tagManager = tagManager ?? new TagManager();
+            _apkSigner = apkSigner ?? new ApkSigner();
         }
-
-        /// <summary>
-        /// Specifies the modloader type to save in the tag
-        /// </summary>
-        /// <param name="modloaderName">Name of the modloader</param>
-        /// <param name="modloaderVersion">Semver of the modloader</param>
-        public PatchBuilder WithModloader(string modloaderName, Version modloaderVersion)
+        
+        public IPatchBuilder WithModloader(string modloaderName, Version modloaderVersion)
         {
             _manifest.ModloaderName = modloaderName;
             _manifest.ModloaderVersion = modloaderVersion;
             return this;
         }
-
-        /// <summary>
-        /// Adds a file to patch
-        /// </summary>
-        /// <param name="apkFilePath">Path of the file within the APK</param>
-        /// <param name="patchFileDelegate">Delegate used to modify the file's contents</param>
-        public PatchBuilder PatchFile(string apkFilePath, PatchFileDelegate patchFileDelegate)
+        
+        public IPatchBuilder PatchFile(string apkFilePath, PatchFileDelegate patchFileDelegate)
         {
             _fileModifications.Add(new FileModification(patchFileDelegate, apkFilePath));
             return this;
         }
-
-        /// <summary>
-        /// Adds a file to be added/replaced in the APK
-        /// </summary>
-        /// <param name="apkFilePath">Path of the file within the APK</param>
-        /// <param name="overwriteMode">Settings for file overwriting</param>
-        /// <param name="getFileDelegate">Delegate used to open the source file</param>
-        public PatchBuilder ModifyFile(string apkFilePath, OverwriteMode overwriteMode, GetFileDelegate getFileDelegate)
+        
+        public IPatchBuilder ModifyFile(string apkFilePath, OverwriteMode overwriteMode, GetFileDelegate getFileDelegate)
         {
             _fileModifications.Add(new FileModification(getFileDelegate, overwriteMode, apkFilePath));
             return this;
         }
         
-        /// <summary>
-        /// Adds a file to be added/replaced in the APK
-        /// </summary>
-        /// <param name="apkFilePath">Path of the file within the APK</param>
-        /// <param name="overwriteMode">Settings for file overwriting</param>
-        /// <param name="getFileDelegate">Delegate used to fetch the source file asynchronously</param>
-        public PatchBuilder ModifyFileAsync(string apkFilePath, OverwriteMode overwriteMode, GetFileAsyncDelegate getFileDelegate)
+        public IPatchBuilder ModifyFileAsync(string apkFilePath, OverwriteMode overwriteMode, GetFileAsyncDelegate getFileDelegate)
         {
             _fileModifications.Add(new FileModification(getFileDelegate, overwriteMode, apkFilePath));
             return this;
         }
-
-        /// <summary>
-        /// Disables adding the modded tag to this APK
-        /// </summary>
-        public PatchBuilder DisableTagging()
+        
+        public IPatchBuilder DisableTagging()
         {
             _tagManager = null;
             return this;
         }
-
-        /// <summary>
-        /// Sets whether or not patching will fail if a modded tag already exists within the APK
-        /// </summary>
-        /// <param name="allowExistingTag">If true, patching will not fail if a tag already exists</param>
-        public PatchBuilder SetAllowExistingTag(bool allowExistingTag)
+        
+        public IPatchBuilder SetAllowExistingTag(bool allowExistingTag)
         {
             _allowExistingTag = allowExistingTag;
             return this;
         }
-
-        /// <summary>
-        /// Sets the certificate to sign the APK with after patching
-        /// </summary>
-        /// <param name="certificate">Certificate and private key, in PEM format</param>
-        public PatchBuilder Sign(string certificate)
+        
+        public IPatchBuilder Sign(string certificate)
         {
             _signingCertificate = certificate;
             return this;
@@ -177,13 +155,7 @@ namespace BMBF.Patching
                 throw new ArgumentException("File modification was not set to open file or patch file");
             }
         }
-
-        /// <summary>
-        /// Patches the APK with the given path with the options in this builder
-        /// </summary>
-        /// <param name="apkPath">Path of the APK to patch</param>
-        /// <param name="logger">Logger to print information to during patching</param>
-        /// <param name="ct">Token to cancel patching</param>
+        
         public async Task Patch(string apkPath, ILogger logger, CancellationToken ct)
         {
             logger.Information($"Patching {Path.GetFileName(apkPath)}");
@@ -206,7 +178,7 @@ namespace BMBF.Patching
             if (_signingCertificate != null)
             {
                 logger.Information("Signing APK");
-                await ApkSigner.SignApk(apkPath, _signingCertificate, _manifest.PatcherName, ct);
+                await _apkSigner.SignApk(apkPath, _signingCertificate, _manifest.PatcherName, ct);
             }
         }
     }

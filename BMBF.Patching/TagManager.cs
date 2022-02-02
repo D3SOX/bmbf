@@ -10,7 +10,7 @@ namespace BMBF.Patching
     /// <summary>
     /// Utility for managing APK tags
     /// </summary>
-    public class TagManager
+    public class TagManager : ITagManager
     {
         private readonly string _tagLocation;
         private readonly Dictionary<string, Func<PatchManifest>> _legacyTags = new();
@@ -24,28 +24,17 @@ namespace BMBF.Patching
         /// <summary>
         /// Creates a new tag manager
         /// </summary>
-        /// <param name="tagLocation">The path modern tags within the APK</param>
+        /// <param name="tagLocation">The path modern tags take within the APK</param>
         public TagManager(string tagLocation = "modded.json")
         {
             _tagLocation = tagLocation;
         }
-
-        /// <summary>
-        /// Registers a file within the APK that will be detected as a tag.
-        /// Useful for tags from patching tools that are not using this tag format.
-        /// </summary>
-        /// <param name="tagPath">Path of the legacy tag within the APK</param>
-        /// <param name="manifestGetter">Used to generate the manifest for this tag</param>
+        
         public void RegisterLegacyTag(string tagPath, Func<PatchManifest> manifestGetter)
         {
             _legacyTags[tagPath] = manifestGetter;
         }
-
-        /// <summary>
-        /// Finds the tag on the given APK
-        /// </summary>
-        /// <param name="apkArchive">APK to find the tag of</param>
-        /// <returns>In order: A modern tag, if found, a legacy tag, if found, if neither found then null</returns>
+        
         public PatchManifest? GetTag(ZipArchive apkArchive)
         {
             var tagEntry = apkArchive.GetEntry(_tagLocation);
@@ -53,20 +42,13 @@ namespace BMBF.Patching
             {
                 // If no modern tag exists, and a legacy tag exists, use that
                 var legacyTagPair = _legacyTags.FirstOrDefault(pair => apkArchive.GetEntry(pair.Key) != null);
-                return legacyTagPair.Value?.Invoke() ?? null;
+                return legacyTagPair.Value?.Invoke();
             }
 
             using var tagStream = tagEntry.Open();
             return JsonSerializer.Deserialize<PatchManifest>(tagStream, _serializerOptions);
         }
-
-        /// <summary>
-        /// Tags the given APK
-        /// </summary>
-        /// <param name="apkArchive">The archive to add the tag to</param>
-        /// <param name="manifest">Manifest to tag the APK with</param>
-        /// <param name="addToExistingTags">Whether or not to merge this manifest with an existing tag if found. Existing tags will error if this is false</param>
-        /// <exception cref="InvalidOperationException">Thrown if the APK is already tagged, and <paramref name="addToExistingTags"/> is false</exception>
+        
         public void AddTag(ZipArchive apkArchive, PatchManifest manifest, bool addToExistingTags)
         {
             var existingManifest = GetTag(apkArchive);

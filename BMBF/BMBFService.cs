@@ -5,6 +5,8 @@ using Android.Content;
 using Android.OS;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
+using BMBF.Backend.Services;
+using BMBF.Implementations;
 using Java.Lang;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -124,6 +126,7 @@ public class BMBFService : Service
                 var configuration = ctx.Configuration;
                 var settings = configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>();
                 var resources = configuration.GetSection(BMBFResources.Position).Get<BMBFResources>();
+                services.AddSingleton<IBeatSaberService, BeatSaberService>();
                 services.AddBMBF(ctx, settings, resources, assetFileProvider);
 
                 services.AddSingleton<Service>(this);

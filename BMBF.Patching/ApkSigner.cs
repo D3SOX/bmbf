@@ -50,7 +50,7 @@ namespace BMBF.Patching
     /// <summary>
     /// Utility for signing APKs
     /// </summary>
-    public static class ApkSigner
+    public class ApkSigner : IApkSigner
     {
         private static readonly Encoding Encoding = new UTF8Encoding();
         private static readonly SHA1 Sha = SHA1.Create();
@@ -61,7 +61,7 @@ namespace BMBF.Patching
         /// <param name="signatureFileData">Content of the signature file to be signed</param>
         /// <param name="pemCertData">PEM data of the certificate and private key for signing</param>
         /// <returns>The RSA signature</returns>
-        private static byte[] GetSignature(byte[] signatureFileData, string pemCertData)
+        private byte[] GetSignature(byte[] signatureFileData, string pemCertData)
         {
             var (cert, privateKey) = LoadCertificate(pemCertData);
 
@@ -122,13 +122,42 @@ namespace BMBF.Patching
         }
 
         /// <summary>
-        /// Signs the APK with the given path with the given certificate
+        /// Writes the MANIFEST.MF and signature file hashes for the given entry
         /// </summary>
-        /// <param name="path">Path to the APK to sign</param>
-        /// <param name="pemData">PEM of the certificate and private key</param>
-        /// <param name="signerName">Name of the signer in the manifest</param>
-        /// <param name="ct">Token which can be used to cancel signing the APK</param>
-        public static async Task SignApk(string path, string pemData, string signerName, CancellationToken ct)
+        private async Task WriteEntryHash(ZipArchiveEntry entry, Stream manifestStream, Stream signatureStream)
+        {
+            await using Stream sourceStream = entry.Open();
+            byte[] hash = Sha.ComputeHash(sourceStream);
+
+            // Write the digest for this entry to the manifest
+            await using var sectStream = new MemoryStream();
+            await using (var sectWriter = OpenStreamWriter(sectStream))
+            {
+                await sectWriter.WriteLineAsync($"Name: {entry.FullName}");
+                await sectWriter.WriteLineAsync($"SHA1-Digest: {Convert.ToBase64String(hash)}");
+                await sectWriter.WriteLineAsync();
+            }
+
+            // Sign the section of manifest, then write it to the signature file
+            sectStream.Position = 0;
+            string sectHash = Convert.ToBase64String(Sha.ComputeHash(sectStream));
+            await using (StreamWriter signatureWriter = OpenStreamWriter(signatureStream))
+            {
+                await signatureWriter.WriteLineAsync($"Name: {entry.FullName}");
+                await signatureWriter.WriteLineAsync($"SHA1-Digest: {sectHash}");
+                await signatureWriter.WriteLineAsync();
+            }
+
+            sectStream.Position = 0;
+            await sectStream.CopyToAsync(manifestStream);
+        }
+
+        private static StreamWriter OpenStreamWriter(Stream stream)
+        {
+            return new StreamWriter(stream, Encoding, 1024, true);
+        }
+        
+        public async Task SignApk(string path, string pemData, string signerName, CancellationToken ct)
         {
             // Create streams to save the signature data to during the first path
             await using var manifestFile = new MemoryStream();
@@ -194,47 +223,8 @@ namespace BMBF.Patching
                 await rsaFile.WriteAsync(keyFile, ct);
             }
         }
-
-        /// <summary>
-        /// Writes the MANIFEST.MF and signature file hashes for the given entry
-        /// </summary>
-        private static async Task WriteEntryHash(ZipArchiveEntry entry, Stream manifestStream, Stream signatureStream)
-        {
-            await using Stream sourceStream = entry.Open();
-            byte[] hash = Sha.ComputeHash(sourceStream);
-
-            // Write the digest for this entry to the manifest
-            await using var sectStream = new MemoryStream();
-            await using (var sectWriter = OpenStreamWriter(sectStream))
-            {
-                await sectWriter.WriteLineAsync($"Name: {entry.FullName}");
-                await sectWriter.WriteLineAsync($"SHA1-Digest: {Convert.ToBase64String(hash)}");
-                await sectWriter.WriteLineAsync();
-            }
-
-            // Sign the section of manifest, then write it to the signature file
-            sectStream.Position = 0;
-            string sectHash = Convert.ToBase64String(Sha.ComputeHash(sectStream));
-            await using (StreamWriter signatureWriter = OpenStreamWriter(signatureStream))
-            {
-                await signatureWriter.WriteLineAsync($"Name: {entry.FullName}");
-                await signatureWriter.WriteLineAsync($"SHA1-Digest: {sectHash}");
-                await signatureWriter.WriteLineAsync();
-            }
-
-            sectStream.Position = 0;
-            await sectStream.CopyToAsync(manifestStream);
-        }
-
-        private static StreamWriter OpenStreamWriter(Stream stream)
-        {
-            return new StreamWriter(stream, Encoding, 1024, true);
-        }
-
-        /// <summary>
-        /// Creates a new X509 certificate and returns its data in PEM format.
-        /// </summary>
-        public static string GenerateNewCertificatePem()
+        
+        public string GenerateNewCertificatePem()
         {
             var randomGenerator = new CryptoApiRandomGenerator();
             var random = new SecureRandom(randomGenerator);

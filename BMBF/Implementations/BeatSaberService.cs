@@ -22,7 +22,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
     private readonly Service _bmbfService;
     private readonly PackageManager _packageManager;
     private readonly string _packageId;
-    private readonly TagManager _tagManager;
+    private readonly ITagManager _tagManager;
 
     public event EventHandler<InstallationInfo?>? AppChanged;
 
@@ -30,7 +30,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
     private readonly SemaphoreSlim _appInfoLoadLock = new(1);
     private bool _disposed;
 
-    public BeatSaberService(Service bmbfService, BMBFSettings bmbfSettings, TagManager tagManager)
+    public BeatSaberService(Service bmbfService, BMBFSettings bmbfSettings, ITagManager tagManager)
     {
         _packageManager = bmbfService.PackageManager ?? throw new NullReferenceException(nameof(bmbfService.PackageManager));
         _packageId = bmbfSettings.PackageId;
