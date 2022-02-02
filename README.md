@@ -24,6 +24,8 @@
 When testing BMBF during development, you have 2 options. The quest, or running BMBF directly on your PC.
 
 ### Using the Quest
+NOTE: Building the APK on linux is currently unsupported (as Xamarin doesn't support it yet)
+
 1. Open `BMBF.sln` in the IDE of your choice (e.g. Visual Studio or Rider). 
 2. Plug your Quest into your PC (make sure that you have USB debugging setup)
 3. Run the project using the run/debug buttons in your IDE. This will automatically build, install, and run BMBF.
