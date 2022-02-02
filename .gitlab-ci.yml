@@ -1,3 +1,9 @@
+test:
+  image: "$CI_REGISTRY_IMAGE/buildenv:latest"
+  stage: test
+  script:
+    - dotnet test
+
 docker-buildenv:
   image: docker:latest
   stage: build
