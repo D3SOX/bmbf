@@ -1,6 +1,8 @@
 docker-buildenv:
   image: docker:latest
   stage: build
+  variables:
+    DOCKER_HOST: tcp://docker:2375
   services:
     - docker:dind
   before_script:
