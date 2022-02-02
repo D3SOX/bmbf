@@ -35,5 +35,5 @@ RUN curl -fsSL https://dist.nuget.org/win-x86-commandline/v6.0.0/nuget.exe -o /u
     && chmod +x /usr/local/bin/nuget
 
 # Install Android workload
-# Blocked on https://github.com/xamarin/xamarin-android/pull/6613
-# RUN dotnet workload install android
+RUN dotnet nuget source add https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json -n dotnet6 \
+    && dotnet workload install android
