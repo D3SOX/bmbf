@@ -31,8 +31,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
 # Install Nuget
 RUN curl -fsSL https://dist.nuget.org/win-x86-commandline/v6.0.0/nuget.exe -o /usr/local/bin/nuget.exe \
     && echo '#!/bin/bash\nmono /usr/local/bin/nuget.exe "$@"' > /usr/local/bin/nuget \
-    && chmod +x /usr/local/bin/nuget \
-    && nuget help
+    && chmod +x /usr/local/bin/nuget
 
 # Install Android workload
 # RUN dotnet workload install android
