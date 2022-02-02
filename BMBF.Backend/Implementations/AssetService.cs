@@ -31,7 +31,7 @@ public class AssetService : IAssetService
     // These are deliberately NOT suffixed with .so !
     // This is because any SO files in the xamarin assets folder are always treated as native libraries
     // and are copied to the libs folder within the APK.
-    // Removing the .so suffix gets round this.
+    // Removing the .so suffix gets around this.
     internal const string ModLoader32Path = $"{PatchingAssetsFolder}/libmodloader32";
     internal const string Main32Path = $"{PatchingAssetsFolder}/libmain32";
     internal const string ModLoader64Path = $"{PatchingAssetsFolder}/libmodloader64";
