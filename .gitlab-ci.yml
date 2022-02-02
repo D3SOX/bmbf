@@ -2,7 +2,7 @@ test:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
   stage: test
   script:
-    - dotnet test
+    - dotnet test ./BMBF.Backend.Tests/BMBF.Backend.Tests.csproj && ./BMBF.QMod.Tests/BMBF.QMod.Tests.csproj
 
 docker-buildenv:
   image: docker:latest
