@@ -28,27 +28,41 @@ public static class Util
     public static byte[] ExampleFileContent { get; } = System.Text.Encoding.UTF8.GetBytes("Hello World!");
 
     /// <summary>
-    /// Creates a stream containing <see cref="ExampleFileContent"/>
+    /// Creates a <see cref="MemoryStream"/> containing <see cref="ExampleFileContent"/>
     /// </summary>
     /// <returns>Stream containing <see cref="ExampleFileContent"/>, seeked to position 0</returns>
-    public static Stream CreateExampleContentStream()
+    public static MemoryStream CreateExampleContentStream() => CopyToMemoryStream(ExampleFileContent);
+
+    /// <summary>
+    /// Copies the given content to a <see cref="MemoryStream"/>, seeks it to position 0 and returns it.
+    /// </summary>
+    /// <param name="content"></param>
+    /// <returns>Stream containing <paramref name="content"/>, seeked to position 0</returns>
+    public static MemoryStream CopyToMemoryStream(byte[] content)
     {
         var stream = new MemoryStream();
-        stream.Write(ExampleFileContent);
+        stream.Write(content);
         stream.Position = 0;
         return stream;
     }
 
     /// <summary>
-    /// Asserts that the given stream contains <see cref="ExampleFileContent"/>
+    /// Asserts that the given stream contains <see cref="ExampleFileContent"/> (and nothing else)
     /// </summary>
     /// <param name="stream">Stream to check</param>
-    public static void AssertIsExampleContent(Stream stream)
+    public static void AssertIsExampleContent(Stream stream) => AssertStreamContainsContent(stream, ExampleFileContent);
+
+    /// <summary>
+    /// Asserts that <see cref="stream"/> contains <see cref="content"/> (and nothing else)
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="content"></param>
+    public static void AssertStreamContainsContent(Stream stream, byte[] content)
     {
         using var memStream = new MemoryStream();
         stream.CopyTo(memStream);
         
-        Assert.Equal(ExampleFileContent, memStream.ToArray());
+        Assert.Equal(content, memStream.ToArray());
     }
 
     /// <summary>
