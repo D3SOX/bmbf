@@ -1,7 +1,3 @@
-stages:
-  - test
-  - publish
-
 test:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
   stage: test
@@ -10,7 +6,7 @@ test:
 
 publish:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
-  stage: publish
+  stage: deploy
   script:
     - curl "$BMBF_KEYSTORE_URL" --output BMBF.keystore
     - dotnet publish ./BMBF/BMBF.csproj -c Release
