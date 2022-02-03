@@ -1,3 +1,7 @@
+stages:
+  - test
+  - publish
+
 test:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
   stage: test
