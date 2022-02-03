@@ -116,8 +116,7 @@ public class PlaylistsController : Controller
             playlistInfo.PlaylistTitle,
             playlistInfo.PlaylistAuthor,
             playlistInfo.PlaylistDescription,
-            ImmutableList.Create<BPSong>(),
-            null
+            ImmutableList.Create<BPSong>()
         );
         await _playlistService.AddPlaylistAsync(playlist);
         return Ok(playlist.Id);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using BMBF.Backend.Models.BPList;
 
@@ -80,7 +81,10 @@ public class Playlist
         }
     }
     private ImmutableList<BPSong> _songs;
-
+    
+    [JsonPropertyName("customData")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public JsonObject? CustomData { get; }
 
     // The below intentionally do not notify changes
 
@@ -108,13 +112,19 @@ public class Playlist
     }
 
     [JsonConstructor]
-    public Playlist(string playlistTitle, string playlistAuthor, string playlistDescription, ImmutableList<BPSong> songs, string? imageString)
+    public Playlist(string playlistTitle,
+        string playlistAuthor,
+        string playlistDescription,
+        ImmutableList<BPSong> songs,
+        string? imageString = null,
+        JsonObject? customData = null)
     {
         _playlistTitle = playlistTitle;
         _playlistAuthor = playlistAuthor;
         _playlistDescription = playlistDescription;
         ImageString = imageString;
         _songs = songs;
+        CustomData = customData;
     }
 
     /// <summary>
