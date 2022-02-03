@@ -9,11 +9,10 @@ publish:
   stage: deploy
   script:
     - curl "$BMBF_KEYSTORE_URL" --output BMBF.keystore
-    - dotnet publish ./BMBF/BMBF.csproj -c Release
+    - dotnet publish ./BMBF/BMBF.csproj -c Release -p:AndroidSdkDirectory=/opt/android-sdk
   artifacts:
     paths:
       - ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk
-
 
 docker-buildenv:
   image: docker:latest
@@ -36,3 +35,5 @@ docker-buildenv:
       - master
     changes:
       - buildenv.Dockerfile
+      - BMBF/BMBF.csproj
+      - BMBF/AndroidManifest.xml
