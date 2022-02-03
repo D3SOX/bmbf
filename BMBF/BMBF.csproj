@@ -51,7 +51,13 @@
         <Exec Command="nuget help" IgnoreExitCode="true" StandardOutputImportance="Low" StandardErrorImportance="Low">
             <Output TaskParameter="ExitCode" PropertyName="NuGetExitCode" />
         </Exec>
+        
+        <!-- Use Unix HOME environment variable if available -->
+        <CreateProperty Condition="'$(HOMEPATH)' == ''" Value="$(HOME)">
+            <Output TaskParameter="Value" PropertyName="HOMEPATH" />
+        </CreateProperty>
+        
         <Warning Condition="'$(NuGetExitCode)' != '0'" Text="NuGet executable not found! ASP.NET Core runtime packs required by BMBF may not restore correctly. To fix this, add NuGet.exe to your PATH" />
-        <Exec Condition="'$(NuGetExitCode)' == '0'" Command="nuget restore packages.config -PackagesDirectory $(HOMEPATH)/.nuget/packages" StandardOutputImportance="Normal" />
+        <Exec Condition="'$(NuGetExitCode)' == '0'" Command="nuget restore packages.config -PackagesDirectory $(HOMEPATH)/.nuget/packages" StandardOutputImportance="High" />
     </Target>
 </Project>
