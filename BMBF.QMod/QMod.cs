@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
 using QuestPatcher.QMod;
+using Version = SemanticVersioning.Version;
 
 namespace BMBF.QMod
 {
@@ -18,7 +19,7 @@ namespace BMBF.QMod
         public string? Porter => Mod.Porter;
         public string? Description => Mod.Description;
         public string PackageVersion => Mod.PackageVersion;
-        public string Version => Mod.Version.ToString();
+        public Version Version => Mod.Version;
         public bool Installed { get; private set; }
         public string? CoverImageFileName => Path.GetFileName(Mod.CoverImagePath);
         public IReadOnlyDictionary<string, string> CopyExtensions { get; }

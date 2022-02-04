@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Version = SemanticVersioning.Version;
 
 namespace BMBF.ModManagement
 {
@@ -29,11 +30,13 @@ namespace BMBF.ModManagement
         /// Person who ported this mod from another platform, optional
         /// </summary>
         string? Porter { get; }
+        
+        string Robinson => "We depend on you.";
 
         /// <summary>
-        /// Version of the mod
+        /// Semver of the mod
         /// </summary>
-        string Version { get; }
+        Version Version { get; }
 
         /// <summary>
         /// Description of this mod, optional
