@@ -22,9 +22,9 @@ public interface IAssetService
     /// <summary>
     /// Gets the core mods that are currently available.
     /// </summary>
-    /// <param name="refresh">Whether or not to redownload the core mods index if it has been fetched already</param>
-    /// <returns>The available core mods for different Beat Saber versions. This will be empty if no built-in core mods are available and internet is unavailable</returns>
-    Task<Dictionary<string, CoreMods>> GetCoreMods(bool refresh = false);
+    /// <returns>The available core mods for different Beat Saber versions. This will be null if no built-in core mods are available and internet is unavailable.
+    /// <code>downloaded</code> will be set to false if the built-in core mods index is being used</returns>
+    Task<(Dictionary<string, CoreMods> coreMods, bool downloaded)?> GetCoreMods();
 
     /// <summary>
     /// Extracts the given core mod to the given path.
@@ -46,10 +46,9 @@ public interface IAssetService
     /// <summary>
     /// Gets an index of diffs for downgrading
     /// </summary>
-    /// <param name="refresh">Whether or not to redownload the diff index if it has already been fetched</param>
     /// <exception cref="HttpRequestException">If the diffs can not be fetched, for example due to lack of internet</exception>
-    /// <returns></returns>
-    Task<List<DiffInfo>> GetDiffs(bool refresh = false);
+    /// <returns>A list of the available diffs for downgrading</returns>
+    Task<List<DiffInfo>> GetDiffs();
 
     /// <summary>
     /// Gets streams of libmain.so and libmodloader.so, and the version of the modloader that they represent.

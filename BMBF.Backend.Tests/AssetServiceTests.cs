@@ -159,8 +159,9 @@ public class AssetServiceTests
         _messageHandler.When(_resourceUris.CoreModsIndex.ToString())
             .Respond("application/json", JsonSerializer.Serialize(coreModIndex, _serializerOptions));
 
-        var result = await _assetService.GetCoreMods(false);
-        Assert.Equal(coreModIndex.Count, result.Count);
+        var result = await _assetService.GetCoreMods();
+        Assert.Equal(coreModIndex.Count, result?.coreMods.Count);
+        Assert.True(result?.downloaded);
     }
 
     [Fact]
@@ -168,14 +169,15 @@ public class AssetServiceTests
     {
         // If downloading the core mods index fails (which it will as we haven't set up the download), AssetService
         // should use the built-in core mods index
-        var result = await _assetService.GetCoreMods(false);
-        Assert.Single(result);
+        var result = (await _assetService.GetCoreMods())!.Value;
+        Assert.False(result.downloaded);
+        Assert.Single(result.coreMods);
         Assert.Equal(_builtInAssets.CoreMods?.First().Id,
-            result[_builtInAssets.BeatSaberVersion!].Mods.First().Id);
+            result.coreMods[_builtInAssets.BeatSaberVersion!].Mods.First().Id);
     }
 
     [Fact]
-    public async Task CoreModIndexShouldBeEmptyIfNoWayToFetch()
+    public async Task CoreModIndexShouldBeNullIfNoWayToFetch()
     {
         // Remove built-in core mods
         _builtInAssets.CoreMods = null;
@@ -185,8 +187,8 @@ public class AssetServiceTests
         _assetService = CreateAssetService();
         
         // Core mods index should be empty instead of throwing
-        var result = await _assetService.GetCoreMods(false);
-        Assert.Empty(result);
+        var result = await _assetService.GetCoreMods();
+        Assert.Null(result);
     }
 
     [Fact]
@@ -263,7 +265,7 @@ public class AssetServiceTests
         _messageHandler.When(_resourceUris.DeltaIndex.ToString())
             .Respond(new StringContent(JsonSerializer.Serialize(diffs, _serializerOptions)));
 
-        var returnedDiffs = await _assetService.GetDiffs(default);
+        var returnedDiffs = await _assetService.GetDiffs();
 
         Assert.Equal(diffs.Count, returnedDiffs.Count);
         // Make sure that every returned diff matches the original diffs collection

@@ -40,8 +40,12 @@ public class SetupController : Controller
     [HttpGet("[action]")]
     public async Task<ActionResult<IEnumerable<string>>> ModVersions()
     {
-        // Find the versions that we can currently mod
-        return Ok((await _assetService.GetCoreMods(true)).Keys);
+        var coreMods = await _assetService.GetCoreMods();
+        if (coreMods == null)
+        {
+            return Ok(Enumerable.Empty<string>());
+        }
+        return coreMods.Value.coreMods.Keys;
     }
 
     [HttpGet("[action]")]
@@ -50,7 +54,7 @@ public class SetupController : Controller
         List<DiffInfo> diffs;
         try
         {
-            diffs = await _assetService.GetDiffs(true);
+            diffs = await _assetService.GetDiffs();
         }
         catch (Exception ex)
         {

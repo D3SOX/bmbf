@@ -49,8 +49,6 @@ public class AssetService : IAssetService
     private readonly IFileProvider _assetProvider;
 
 
-    private List<DiffInfo>? _cachedDiffs;
-    private CoreModsIndex? _cachedCoreMods;
 
     public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
 
@@ -85,34 +83,28 @@ public class AssetService : IAssetService
         return await resp.ReadAsCamelCaseJsonAsync<T>();
     }
 
-    public async Task<CoreModsIndex> GetCoreMods(bool refresh)
+    public async Task<(CoreModsIndex coreMods, bool downloaded)?> GetCoreMods()
     {
         try
         {
-            if (_cachedCoreMods == null || refresh)
-            {
-                Log.Information($"Downloading core mods index from {_bmbfResources.CoreModsIndex}");
-                _cachedCoreMods = await DownloadJson<CoreModsIndex>(_bmbfResources.CoreModsIndex);
-            }
-
-            return _cachedCoreMods;
+            return (await DownloadJson<CoreModsIndex>(_bmbfResources.CoreModsIndex), true);
         }
         catch (Exception ex)
         {
             if (_builtInAssets.CoreMods == null || _builtInAssets.BeatSaberVersion == null)
             {
                 Log.Error(ex, "Failed to download core mods, and no core mods were built in");
-                return new CoreModsIndex();
+                return null;
             }
 
             Log.Warning(ex, "Failed to download core mods - using inbuilt core mods");
-            return new CoreModsIndex
+            return (new CoreModsIndex
             {
                 {
                     _builtInAssets.BeatSaberVersion,
                     new CoreMods(DateTime.MinValue.ToString(CultureInfo.InvariantCulture), _builtInAssets.CoreMods)
                 }
-            };
+            }, false);
         }
     }
 
@@ -150,13 +142,9 @@ public class AssetService : IAssetService
         }
     }
 
-    public async Task<List<DiffInfo>> GetDiffs(bool refresh)
+    public async Task<List<DiffInfo>> GetDiffs()
     {
-        if (refresh || _cachedDiffs == null)
-        {
-            _cachedDiffs = await DownloadJson<List<DiffInfo>>(_bmbfResources.DeltaIndex);
-        }
-        return _cachedDiffs;
+        return await DownloadJson<List<DiffInfo>>(_bmbfResources.DeltaIndex);
     }
 
     private (Stream modloader, Stream main, Version version) OpenBuiltInModloader(bool is64Bit)
