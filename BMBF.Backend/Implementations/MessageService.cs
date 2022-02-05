@@ -3,6 +3,7 @@ using BMBF.Backend.Models;
 using BMBF.Backend.Models.Messages;
 using BMBF.Backend.Models.Setup;
 using BMBF.Backend.Services;
+using BMBF.ModManagement;
 
 namespace BMBF.Backend.Implementations;
 
@@ -16,7 +17,8 @@ public class MessageService : IMessageService
         ISetupService setupService,
         ISongService songService,
         IPlaylistService playlistService,
-        IBeatSaberService beatSaberService)
+        IBeatSaberService beatSaberService,
+        IModService modService)
     {
         // Register events to send our messages
         setupService.StatusChanged += OnSetupStatusUpdate;
@@ -29,6 +31,10 @@ public class MessageService : IMessageService
         playlistService.PlaylistDeleted += OnPlaylistRemoved;
 
         beatSaberService.AppChanged += OnAppChanged;
+
+        modService.ModAdded += OnModAdded;
+        modService.ModRemoved += OnModRemoved;
+        modService.ModStatusChanged += OnModStatusChanged;
     }
 
 
@@ -64,4 +70,10 @@ public class MessageService : IMessageService
 
     private void OnAppChanged(object? sender, InstallationInfo? newInstallationInfo) =>
         Send(new InstallationUpdated(newInstallationInfo));
+
+    private void OnModAdded(object? sender, IMod mod) => Send(new ModAdded(mod));
+
+    private void OnModRemoved(object? sender, string modId) => Send(new ModRemoved(modId));
+
+    private void OnModStatusChanged(object? sender, IMod mod) => Send(new ModStatusChanged(mod.Id, mod.Installed));
 }

@@ -12,5 +12,9 @@ public enum MessageType
     SetupFinished,
     SetupStatusUpdate,
 
-    InstallationUpdated
+    InstallationUpdated,
+    
+    ModAdded,
+    ModRemoved,
+    ModStatusChanged
 }
