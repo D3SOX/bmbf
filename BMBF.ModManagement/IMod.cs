@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Version = SemanticVersioning.Version;
 
@@ -31,12 +32,17 @@ namespace BMBF.ModManagement
         /// </summary>
         string? Porter { get; }
         
+        [JsonIgnore]
         string Robinson => "We depend on you.";
 
         /// <summary>
         /// Semver of the mod
         /// </summary>
+        [JsonIgnore]
         Version Version { get; }
+
+        [JsonPropertyName("version")]
+        string VersionString => Version.ToString();
 
         /// <summary>
         /// Description of this mod, optional

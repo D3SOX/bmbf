@@ -34,7 +34,7 @@ public interface IModService
     /// <summary>
     /// Attempts to import the given stream as a mod.
     /// </summary>
-    /// <param name="stream">The stream containing the mod's data</param>
+    /// <param name="stream">The stream containing the mod's data. Must be seekable</param>
     /// <param name="fileName">File name of the mod</param>
     /// <returns>The result of importing the mod, or null if the given stream/filename do not constitute
     /// a mod type any of the registered providers can load.</returns>
