@@ -133,8 +133,6 @@ public class CoreModService : ICoreModService, IDisposable
             {
                 try
                 {
-                    Log.Debug($"Downloading core mod {coreMod.Id}");
-                    
                     // A seekable stream is required for mod imports
                     using var coreModStream = await _assetService.ExtractOrDownloadCoreMod(coreMod);
                     using var tempStream = new MemoryStream();
