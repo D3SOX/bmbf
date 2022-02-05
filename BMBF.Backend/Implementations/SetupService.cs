@@ -62,16 +62,19 @@ public class SetupService : ISetupService, IDisposable
     private readonly SemaphoreSlim _stageBeginLock = new(1);
     private readonly IFileSystem _io;
     private readonly Func<IPatchBuilder> _patcherFactory;
+    private readonly ICoreModService _coreModService;
 
     public SetupService(IBeatSaberService beatSaberService,
         IAssetService assetService,
         BMBFSettings settings,
         IFileSystem io,
-        Func<IPatchBuilder> patcherFactory)
+        Func<IPatchBuilder> patcherFactory,
+        ICoreModService coreModService)
     {
         _beatSaberService = beatSaberService;
         _assetService = assetService;
         _patcherFactory = patcherFactory;
+        _coreModService = coreModService;
         _setupDirName = Path.Combine(settings.RootDataPath, settings.PatchingFolderName);
         _statusFile = Path.Combine(_setupDirName, "status.json");
         _latestCompleteApkPath = Path.Combine(_setupDirName, "PostCurrentStage.apk");
@@ -498,11 +501,11 @@ public class SetupService : ISetupService, IDisposable
             if (_io.Directory.Exists(_backupPath))
             {
                 _io.Directory.CreateDirectory(BeatSaberDataPath);
-                var files = _io.Directory.GetFiles(_backupPath);
+                string[]? files = _io.Directory.GetFiles(_backupPath);
                 _logger.Information($"Restoring {files.Length} files");
                 foreach (string file in files)
                 {
-                    var fileName = Path.GetFileName(file);
+                    string fileName = Path.GetFileName(file);
                     _io.File.Copy(file, Path.Combine(BeatSaberDataPath, fileName));
                 }
             }
@@ -511,7 +514,9 @@ public class SetupService : ISetupService, IDisposable
                 _logger.Warning("Could not find backup to restore");
             }
 
-            // TODO: Install core mods, etc
+            // Install core mods
+            await _coreModService.InstallAsync(true);
+            
             // Install a song by default?
 
             QuitSetupInternal();
