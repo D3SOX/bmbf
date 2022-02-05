@@ -61,7 +61,7 @@ namespace BMBF.Patching
         public PatchManifest(string patcherName, string? patcherVersionString)
         {
             PatcherName = patcherName;
-            PatcherVersionString = PatcherVersionString;
+            PatcherVersionString = patcherVersionString;
         }
     }
 }
