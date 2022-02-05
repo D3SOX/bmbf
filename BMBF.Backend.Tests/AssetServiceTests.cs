@@ -353,7 +353,7 @@ public class AssetServiceTests
     }
 
     [Fact]
-    public async Task ShouldReturnMatchingStreamIfVersionMatches()
+    public async Task ShouldReturnMatchingStreamIfUnityVersionMatches()
     {
         const string exampleUnityVersion = "2019.4.28f1";
         

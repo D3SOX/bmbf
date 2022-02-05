@@ -31,6 +31,7 @@ public interface IAssetService
     /// This may download the core mod if it is not builtin
     /// </summary>
     /// <param name="coreMod">Core mod to download</param>
+    /// <exception cref="HttpRequestException">Fetching the core mod failed</exception>
     /// <returns>A stream which can be used to read the core mod</returns>
     Task<Stream> ExtractOrDownloadCoreMod(CoreMod coreMod);
 
