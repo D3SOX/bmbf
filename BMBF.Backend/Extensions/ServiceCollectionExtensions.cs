@@ -63,6 +63,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAssetService, AssetService>();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
+        services.AddSingleton<ICoreModService, CoreModService>();
         services.AddTransient<IFileSystemWatcher>(s =>
             (s.GetService<IFileSystem>() ?? throw new NullReferenceException($"No {nameof(IFileSystem)} configured"))
             .FileSystemWatcher.CreateNew());

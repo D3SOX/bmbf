@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,10 +15,12 @@ namespace BMBF.Backend.Controllers;
 public class ModsController : Controller
 {
     private readonly IModService _modService;
+    private readonly ICoreModService _coreModService;
 
-    public ModsController(IModService modService)
+    public ModsController(IModService modService, ICoreModService coreModService)
     {
         _modService = modService;
+        _coreModService = coreModService;
     }
 
     [HttpGet]
@@ -109,5 +112,11 @@ public class ModsController : Controller
                 Error = ex.Message
             });
         }
+    }
+    
+    [HttpPost("[action]")]
+    public async Task<ActionResult<CoreModInstallResult>> InstallCore()
+    {
+        return await _coreModService.InstallAsync(true);
     }
 }

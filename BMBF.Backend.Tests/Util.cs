@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
+using System.Linq;
 using BMBF.Backend.Models;
 using BMBF.Backend.Models.BPList;
 using BMBF.Backend.Util;
@@ -59,10 +60,22 @@ public static class Util
     /// <param name="content"></param>
     public static void AssertStreamContainsContent(Stream stream, byte[] content)
     {
+        Assert.True(IsStreamContentEqual(stream, content));
+    }
+
+    /// <summary>
+    /// Finds if <paramref name="stream"/> contains <paramref name="content"/>
+    /// </summary>
+    /// <param name="stream">Stream to check</param>
+    /// <param name="content">Content to compare to that of the stream</param>
+    /// <returns>True if (and only if) <paramref name="stream"/> contains <paramref name="content"/>
+    /// (and nothing else)</returns>
+    public static bool IsStreamContentEqual(Stream stream, byte[] content)
+    {
         using var memStream = new MemoryStream();
         stream.CopyTo(memStream);
-        
-        Assert.Equal(content, memStream.ToArray());
+
+        return memStream.ToArray().SequenceEqual(content);
     }
 
     /// <summary>

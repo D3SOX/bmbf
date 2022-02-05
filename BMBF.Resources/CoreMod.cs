@@ -20,6 +20,7 @@ namespace BMBF.Resources
 
         public Uri DownloadLink { get; set; }
 
+        [JsonPropertyName("filename")]
         public string FileName { get; set; }
 
         [JsonConstructor]
