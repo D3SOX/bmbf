@@ -325,6 +325,14 @@ public class ModServiceTests : IDisposable
         );
     }
 
+    [Fact]
+    public async Task ShouldInvokeUpdateStatus()
+    {
+        await _modService.UpdateModStatusesAsync();
+        
+        _providerMock.Verify(p => p.UpdateModStatuses(), Times.Once);
+    }
+
     public void Dispose()
     {
         _modService.Dispose();
