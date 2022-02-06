@@ -20,7 +20,21 @@ namespace BMBF.QMod
         public string? Description => Mod.Description;
         public string PackageVersion => Mod.PackageVersion;
         public Version Version => Mod.Version;
-        public bool Installed { get; private set; }
+
+        public bool Installed
+        {
+            get => _installed;
+            set
+            {
+                if (_installed != value)
+                {
+                    _installed = value;
+                    _provider.InvokeModStatusChanged(this);
+                }
+            }
+        }
+        private bool _installed;
+        
         public string? CoverImageFileName => Path.GetFileName(Mod.CoverImagePath);
         public IReadOnlyDictionary<string, string> CopyExtensions { get; }
 
@@ -97,16 +111,26 @@ namespace BMBF.QMod
             return Mod.OpenCoverImage();
         }
 
-        internal void UpdateStatusInternal()
+        internal void UpdateStatusInternal(bool notify)
         {
-            // Check that all the mod files, library files, and file copies are installed before setting the mod as installed
+            if (notify)
+            {
+                Installed = FindStatusInternal();
+            }
+            else
+            {
+                _installed = FindStatusInternal();
+            }
+        }
 
+        internal bool FindStatusInternal()
+        {
+            // Check that all the mod files, library files, and file copies are installed
             foreach (string m in Mod.ModFileNames)
             {
                 if (!FileSystem.File.Exists(Path.Combine(_provider.ModsPath, Path.GetFileName(m))))
                 {
-                    Installed = false;
-                    return;
+                    return false;
                 }
             }
 
@@ -114,8 +138,7 @@ namespace BMBF.QMod
             {
                 if (!FileSystem.File.Exists(Path.Combine(_provider.LibsPath, Path.GetFileName(lib))))
                 {
-                    Installed = false;
-                    return;
+                    return false;
                 }
             }
 
@@ -123,12 +146,11 @@ namespace BMBF.QMod
             {
                 if (!FileSystem.File.Exists(fileCopy.Destination))
                 {
-                    Installed = false;
-                    return;
+                    return false;
                 }
             }
 
-            Installed = true;
+            return true;
         }
 
         internal async Task InstallAsyncInternal(HashSet<string> installPath)
@@ -214,7 +236,7 @@ namespace BMBF.QMod
             }
 
             // Set ourself to uninstalled to avoid being included with potentially recursive dependency uninstalls
-            Installed = false;
+            _installed = false;
 
             // Uninstall mods depending on this mod (and collect in list)
             var uninstalledDependants = new List<QMod>();

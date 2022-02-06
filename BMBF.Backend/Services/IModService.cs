@@ -51,4 +51,10 @@ public interface IModService
     /// Loads mods in the mod folder that haven't been loaded yet.
     /// </summary>
     Task LoadNewModsAsync();
+
+    /// <summary>
+    /// Updates whether or not each mod is installed.
+    /// </summary>
+    Task UpdateModStatuses();
+
 }

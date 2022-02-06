@@ -55,5 +55,10 @@ namespace BMBF.ModManagement
         /// <param name="mod">The mod to unload</param>
         /// <returns>True if this mod was originally loaded by the provider, false otherwise</returns>
         Task<bool> UnloadModAsync(IMod mod);
+
+        /// <summary>
+        /// Updates the installation status of all added mods
+        /// </summary>
+        void UpdateModStatuses();
     }
 }

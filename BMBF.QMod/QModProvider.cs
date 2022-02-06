@@ -89,20 +89,35 @@ namespace BMBF.QMod
 
         public async Task AddModAsync(IMod genericMod)
         {
-            if (!(genericMod is QMod mod)) throw new ArgumentException("Cannot add non-qmod to qmod provider");
+            if (!(genericMod is QMod mod))
+            {
+                throw new ArgumentException("Cannot add non-qmod to qmod provider");
+            }
 
             await AddModAsyncInternal(mod, new HashSet<string>());
         }
 
         public async Task<bool> UnloadModAsync(IMod genericMod)
         {
-            if (!(genericMod is QMod mod)) return false;
+            if (!(genericMod is QMod mod))
+            {
+                return false;
+            }
 
             if (mod.Installed)
             {
                 await mod.UninstallAsyncInternal();
             }
             return UnloadModInternal(mod);
+        }
+
+        public void UpdateModStatuses()
+        {
+            foreach (var mod in Mods.Values)
+            {
+                // Enable notifications for this status update
+                mod.UpdateStatusInternal(true);
+            }
         }
 
         internal void InvokeModStatusChanged(QMod mod)
@@ -123,11 +138,14 @@ namespace BMBF.QMod
 
         internal async Task AddModAsyncInternal(QMod mod, HashSet<string> installPath)
         {
-            mod.UpdateStatusInternal(); // Check whether or not the mod is installed
+            // Check whether or not the mod is installed
+            // We deliberately do NOT notify changes yet, as this is only setting the initial mod status, which is not
+            // actually a status change
+            mod.UpdateStatusInternal(false);
 
             // If an existing mod exists with this same ID, we will need to uninstall it
             // This may uninstall several dependant mods
-            List<QMod> uninstalledDependants = new List<QMod>();
+            var uninstalledDependants = new List<QMod>();
             if (Mods.TryGetValue(mod.Id, out var existing))
             {
                 if (existing.Installed)

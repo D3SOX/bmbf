@@ -27,12 +27,11 @@ public class ModService : IModService, IDisposable, IModManager
 
     private ModsCache? _modsById;
 
-    private bool _disposed;
-
     private readonly string _modsPath;
     private readonly IFileSystem _io;
-
     private readonly BMBFSettings _bmbfSettings;
+    
+    private bool _disposed;
 
     public ModService(BMBFSettings bmbfSettings, IFileSystem io)
     {
@@ -54,7 +53,11 @@ public class ModService : IModService, IDisposable, IModManager
 
     public async Task<IReadOnlyDictionary<string, (IMod mod, string path)>> GetModsAsync()
     {
-        if (_modsById != null) return _modsById;
+        if (_modsById != null)
+        {
+            return _modsById;
+        }
+
         await _installLock.WaitAsync();
         try
         {
@@ -135,6 +138,22 @@ public class ModService : IModService, IDisposable, IModManager
         try
         {
             await LoadNewModsAsyncInternal(_modsById);
+        }
+        finally
+        {
+            _installLock.Release();
+        }
+    }
+
+    public async Task UpdateModStatuses()
+    {
+        await _installLock.WaitAsync();
+        try
+        {
+            foreach (var provider in _modProviders)
+            {
+                provider.UpdateModStatuses();
+            }
         }
         finally
         {
@@ -303,7 +322,10 @@ public class ModService : IModService, IDisposable, IModManager
 
     private void OnModUnloaded(object? sender, string modId)
     {
-        if (_modsById == null) return;
+        if (_modsById == null)
+        {
+            return;
+        }
 
         if (_modsById.Remove(modId, out var removedMod))
         {

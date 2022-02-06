@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -50,13 +49,13 @@ public class ModsController : Controller
             return NotFound();
         }
 
-        var coverFileName = matching.mod.CoverImageFileName;
+        string? coverFileName = matching.mod.CoverImageFileName;
         if (coverFileName == null)
         {
             return NotFound();
         }
 
-        var coverExtension = Path.GetExtension(coverFileName);
+        string coverExtension = Path.GetExtension(coverFileName);
         if (!MimeTypeMap.TryGetMimeType(coverExtension, out var mimeType))
         {
             return NotFound();
@@ -118,5 +117,11 @@ public class ModsController : Controller
     public async Task<ActionResult<CoreModInstallResult>> InstallCore()
     {
         return await _coreModService.InstallAsync(true);
+    }
+
+    [HttpPost("updateStatuses")]
+    public async Task UpdateStatuses()
+    {
+        await _modService.UpdateModStatuses();
     }
 }
