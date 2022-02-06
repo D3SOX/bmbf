@@ -65,8 +65,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
         services.AddSingleton<ICoreModService, CoreModService>();
         services.AddTransient<IFileSystemWatcher>(s =>
-            (s.GetService<IFileSystem>() ?? throw new NullReferenceException($"No {nameof(IFileSystem)} configured"))
-            .FileSystemWatcher.CreateNew());
+            s.GetRequiredService<IFileSystem>()
+                .FileSystemWatcher.CreateNew());
 
         services.AddHttpClient<IBeatSaverService, BeatSaverService>(client =>
         {

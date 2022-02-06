@@ -122,6 +122,6 @@ public class ModsController : Controller
     [HttpPost("updateStatuses")]
     public async Task UpdateStatuses()
     {
-        await _modService.UpdateModStatuses();
+        await _modService.UpdateModStatusesAsync();
     }
 }

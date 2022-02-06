@@ -55,6 +55,6 @@ public interface IModService
     /// <summary>
     /// Updates whether or not each mod is installed.
     /// </summary>
-    Task UpdateModStatuses();
+    Task UpdateModStatusesAsync();
 
 }

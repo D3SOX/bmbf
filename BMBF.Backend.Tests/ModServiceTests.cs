@@ -64,7 +64,8 @@ public class ModServiceTests : IDisposable
                 }
             });
 
-        _modService = new ModService(_settings, _fileSystem);
+        var mockWatcher = Mock.Of<IFileSystemWatcher>();
+        _modService = new ModService(_settings, _fileSystem, mockWatcher, mockWatcher);
         _modService.RegisterProvider(_providerMock.Object);
     }
 

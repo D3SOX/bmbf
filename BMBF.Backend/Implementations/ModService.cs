@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
+using BMBF.Backend.Util;
 using BMBF.ModManagement;
 using Serilog;
 using ModsCache = System.Collections.Concurrent.ConcurrentDictionary<string, (BMBF.ModManagement.IMod mod, string path)>;
@@ -30,14 +31,26 @@ public class ModService : IModService, IDisposable, IModManager
     private readonly string _modsPath;
     private readonly IFileSystem _io;
     private readonly BMBFSettings _bmbfSettings;
+    private readonly IFileSystemWatcher _modFilesWatcher;
+    private readonly IFileSystemWatcher _libFilesWatcher;
+    
+    private readonly Debouncey _modFilesDebouncey;
     
     private bool _disposed;
 
-    public ModService(BMBFSettings bmbfSettings, IFileSystem io)
+    public ModService(BMBFSettings bmbfSettings,
+        IFileSystem io,
+        IFileSystemWatcher modFilesWatcher,
+        IFileSystemWatcher libFilesWatcher)
     {
+        _modFilesWatcher = modFilesWatcher;
+        _libFilesWatcher = libFilesWatcher;
         _modsPath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.ModsDirectoryName);
         _io = io;
         _bmbfSettings = bmbfSettings;
+
+        _modFilesDebouncey = new Debouncey(bmbfSettings.ModFilesDebounceDelay);
+        _modFilesDebouncey.Debounced += OnModFileDebounced;
     }
 
     /// <summary>
@@ -145,7 +158,7 @@ public class ModService : IModService, IDisposable, IModManager
         }
     }
 
-    public async Task UpdateModStatuses()
+    public async Task UpdateModStatusesAsync()
     {
         await _installLock.WaitAsync();
         try
@@ -186,12 +199,35 @@ public class ModService : IModService, IDisposable, IModManager
 
     private async Task<ModsCache> GetCacheAsyncInternal()
     {
-        if (_modsById != null) return _modsById;
+        if (_modsById != null)
+        {
+            return _modsById;
+        }
 
         var newCache = new ModsCache();
         await LoadNewModsAsyncInternal(newCache);
         _modsById = newCache;
+
+        // Now that we have loaded all mods, we need to start checking for changes in the mod folders (if configured)
+        // This guarantees that IMod.Installed is kept up to date
+        if (_bmbfSettings.UpdateModStatusesAutomatically)
+        {
+            StartWatchingForChanges(_modFilesWatcher, _bmbfSettings.ModFilesPath);
+            StartWatchingForChanges(_libFilesWatcher, _bmbfSettings.LibFilesPath);
+        }
+        
         return _modsById;
+    }
+
+    private void StartWatchingForChanges(IFileSystemWatcher watcher, string path)
+    {
+        watcher.Path = path;
+        watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+        watcher.Filter = "*.*";
+        watcher.Created += OnModFilesUpdated;
+        watcher.Deleted += OnModFilesUpdated;
+        watcher.Renamed += OnModFilesUpdated;
+        watcher.EnableRaisingEvents = true;
     }
 
     private async Task<IMod> CacheAndImportMod(IModProvider provider, Stream modStream, string fileName)
@@ -300,10 +336,13 @@ public class ModService : IModService, IDisposable, IModManager
         }
 
         // Attempt to parse a mod with the selected providers
-        foreach (IModProvider provider in selectedProviders)
+        foreach (var provider in selectedProviders)
         {
             var tempMod = await provider.TryParseModAsync(stream, leaveOpen);
-            if (tempMod == null) continue;
+            if (tempMod == null)
+            {
+                continue;
+            }
 
             return (provider, tempMod);
         }
@@ -337,13 +376,36 @@ public class ModService : IModService, IDisposable, IModManager
 
     private void OnModStatusChanged(object? sender, IMod mod)
     {
+        Log.Debug($"Mod {mod.Id} marked as {(mod.Installed ? "installed" : "uninstalled")}");
         ModStatusChanged?.Invoke(this, mod);
     }
 
+    private void OnModFilesUpdated(object? sender, FileSystemEventArgs args) => _modFilesDebouncey.Invoke();
+
+    private async void OnModFileDebounced(object? sender, EventArgs args)
+    {
+        Log.Debug("Processing mods/libs debounce");
+        try
+        {
+            await UpdateModStatusesAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to process mod/libs folders update");
+        }
+    }
+    
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
         _disposed = true;
+        
+        _modFilesWatcher.Dispose();
+        _libFilesWatcher.Dispose();
+        _modFilesDebouncey.Dispose();
 
         // Dispose the mod providers, which will also dispose the underlying mods
         foreach (var provider in _modProviders)

@@ -123,7 +123,7 @@ namespace BMBF.QMod
             }
         }
 
-        internal bool FindStatusInternal()
+        private bool FindStatusInternal()
         {
             // Check that all the mod files, library files, and file copies are installed
             foreach (string m in Mod.ModFileNames)

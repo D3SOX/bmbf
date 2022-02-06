@@ -26,6 +26,10 @@ public class BMBFSettings
     public bool DeleteInvalidSongs { get; set; }
 
     public bool DeleteInvalidMods { get; set; }
+    
+    public bool UpdateModStatusesAutomatically { get; set; }
+    
+    public int ModFilesDebounceDelay { get; set; }
 
     public bool UpdateCachesAutomatically { get; set; }
 
