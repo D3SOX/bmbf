@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
@@ -156,10 +157,11 @@ namespace BMBF.Patching
             }
         }
         
-        public async Task Patch(string apkPath, ILogger logger, CancellationToken ct)
+        public async Task PatchAsync(IFileSystem fileSystem, string apkPath, ILogger logger, CancellationToken ct)
         {
             logger.Information($"Patching {Path.GetFileName(apkPath)}");
-            using (var apkArchive = ZipFile.Open(apkPath, ZipArchiveMode.Update))
+            using (var apkStream = fileSystem.File.OpenWrite(apkPath))
+            using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Update))
             {
                 _manifest.ModifiedFiles = _fileModifications.Select(f => f.ApkFilePath).ToHashSet();
 
@@ -178,7 +180,7 @@ namespace BMBF.Patching
             if (_signingCertificate != null)
             {
                 logger.Information("Signing APK");
-                await _apkSigner.SignApk(apkPath, _signingCertificate, _manifest.PatcherName, ct);
+                await _apkSigner.SignApkAsync(fileSystem, apkPath, _signingCertificate, _manifest.PatcherName, ct);
             }
         }
     }

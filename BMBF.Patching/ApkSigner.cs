@@ -24,6 +24,7 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
@@ -157,7 +158,7 @@ namespace BMBF.Patching
             return new StreamWriter(stream, Encoding, 1024, true);
         }
         
-        public async Task SignApk(string path, string pemData, string signerName, CancellationToken ct)
+        public async Task SignApkAsync(IFileSystem fileSystem, string path, string pemData, string signerName, CancellationToken ct)
         {
             // Create streams to save the signature data to during the first path
             await using var manifestFile = new MemoryStream();
@@ -174,9 +175,10 @@ namespace BMBF.Patching
             // Two passes are used since we require ZipArchiveMode.Update to save the hash
             // In this pass, we can open the APK with ZipArchiveMode.Read and avoid increasing the save time in the
             // update pass, as opening a file with ZipArchiveMode.Update triggers a recompression during dispose
-            using (ZipArchive apkArchive = ZipFile.OpenRead(path))
+            await using (var apkStream = fileSystem.File.OpenRead(path))
+            using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Read))
             {
-                foreach (ZipArchiveEntry entry in apkArchive.Entries.Where(entry =>
+                foreach (var entry in apkArchive.Entries.Where(entry =>
                              !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
                 {
                     ct.ThrowIfCancellationRequested();
@@ -184,10 +186,11 @@ namespace BMBF.Patching
                 }
             }
 
-            using (ZipArchive apkArchive = ZipFile.Open(path, ZipArchiveMode.Update))
+            await using (var apkStream = fileSystem.File.OpenWrite(path))
+            using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Update))
             {
                 // Delete the previous signature first!
-                foreach (ZipArchiveEntry entry in apkArchive.Entries.Where(entry => entry.FullName.StartsWith("META-INF")).ToList())
+                foreach (var entry in apkArchive.Entries.Where(entry => entry.FullName.StartsWith("META-INF")).ToList())
                 {
                     entry.Delete();
                 }

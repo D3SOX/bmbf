@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.IO.Abstractions;
+using System.Threading;
 using System.Threading.Tasks;
 using SemanticVersioning;
 using Serilog;
@@ -60,8 +61,9 @@ public interface IPatchBuilder
     /// <summary>
     /// Patches the APK with the given path with the options in this builder
     /// </summary>
+    /// <param name="fileSystem">FileSystem that the APK is located on</param>
     /// <param name="apkPath">Path of the APK to patch</param>
     /// <param name="logger">Logger to print information to during patching</param>
     /// <param name="ct">Token to cancel patching</param>
-    Task Patch(string apkPath, ILogger logger, CancellationToken ct);
+    Task PatchAsync(IFileSystem fileSystem, string apkPath, ILogger logger, CancellationToken ct);
 }

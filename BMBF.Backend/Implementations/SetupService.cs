@@ -381,7 +381,7 @@ public class SetupService : ISetupService, IDisposable
                 })
                 .Sign(CertificateProvider.DebugCertificate);
 
-            await builder.Patch(_tempApkPath, _logger, _cts.Token);
+            await builder.PatchAsync(_io, _tempApkPath, _logger, _cts.Token);
 
             // Move the current APK back to the latest complete
             _io.File.Delete(_latestCompleteApkPath);
