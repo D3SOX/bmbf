@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -8,7 +7,7 @@ namespace BMBF.WebServer
 {
     internal class HeaderDictionary : IDictionary<string, string>
     {
-        private IDictionary<string, string> _inner = new Dictionary<string, string>();
+        private readonly IDictionary<string, string> _inner = new Dictionary<string, string>();
 
         public string this[string name]
         {
@@ -39,7 +38,7 @@ namespace BMBF.WebServer
 
         public bool Contains(KeyValuePair<string, string> header)
         {
-            var n = header.Key.ToLowerInvariant();
+            string n = header.Key.ToLowerInvariant();
             return _inner.ContainsKey(n) && _inner[n].Split(",").Contains(header.Value);
         }
 
@@ -60,7 +59,7 @@ namespace BMBF.WebServer
                 return false;
             }
 
-            var v = _inner[n];
+            string v = _inner[n];
             if (v == header.Value)
             {
                 _inner.Remove(n);
@@ -76,8 +75,8 @@ namespace BMBF.WebServer
         public bool TryGetValue(string name, [MaybeNullWhen(false)] out string value) => _inner.TryGetValue(name.ToLowerInvariant(), out value);
 
         private ICollection<KeyValuePair<string, string>> AsCollection() =>
-            Keys.SelectMany((n) =>
-            _inner[n].Split(',').Select((v) =>
-            new KeyValuePair<string, string>(n, v))).ToArray();
+            Keys.SelectMany(n =>
+                _inner[n].Split(',').Select(v =>
+                    new KeyValuePair<string, string>(n, v))).ToArray();
     }
 }
