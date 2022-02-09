@@ -7,7 +7,7 @@ namespace BMBF.WebServer
 {
     internal class HeaderDictionary : IDictionary<string, string>
     {
-        private readonly IDictionary<string, string> _inner = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _inner = new();
 
         public string this[string name]
         {
@@ -16,7 +16,7 @@ namespace BMBF.WebServer
         }
 
         public ICollection<string> Keys => _inner.Keys;
-        public ICollection<string> Values => _inner.Values.SelectMany((v) => v.Split(',')).ToArray();
+        public ICollection<string> Values => _inner.Values.SelectMany(v => v.Split(',')).ToArray();
         public int Count => _inner.Values.SelectMany((v) => v.Split(',')).Count();
         public bool IsReadOnly => false;
 
@@ -39,7 +39,7 @@ namespace BMBF.WebServer
         public bool Contains(KeyValuePair<string, string> header)
         {
             string n = header.Key.ToLowerInvariant();
-            return _inner.ContainsKey(n) && _inner[n].Split(",").Contains(header.Value);
+            return _inner.ContainsKey(n) && _inner[n].Split(',').Contains(header.Value);
         }
 
         public bool ContainsKey(string name) => _inner.ContainsKey(name.ToLowerInvariant());
@@ -67,7 +67,7 @@ namespace BMBF.WebServer
             }
             else
             {
-                _inner[n] = string.Join(',', v.Split(',').Where((vv) => vv != header.Value));
+                _inner[n] = string.Join(',', v.Split(',').Where(vv => vv != header.Value));
                 return _inner[n] != v;
             }
         }
