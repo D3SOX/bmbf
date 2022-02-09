@@ -53,10 +53,12 @@ WORKDIR /var/tmp/bmbf
 COPY BMBF/BMBF.csproj ./BMBF/BMBF.csproj
 COPY BMBF/AndroidManifest.xml ./BMBF/AndroidManifest.xml
 COPY BMBF/packages.config ./BMBF/packages.config
-COPY BMBF.Patching/BMBF.Patching.csproj ./BMBF.Patching/BMBF.Patching.csproj
-COPY BMBF.Resources/BMBF.Resources.csproj ./BMBF.Resources/BMBF.Resources.csproj
+COPY BMBF.Backend/BMBF.Backend.csproj ./BMBF.Backend/BMBF.Backend.csproj
 COPY BMBF.ModManagement/BMBF.ModManagement.csproj ./BMBF.ModManagement/BMBF.ModManagement.csproj
+COPY BMBF.Patching/BMBF.Patching.csproj ./BMBF.Patching/BMBF.Patching.csproj
 COPY BMBF.QMod/BMBF.QMod.csproj ./BMBF.QMod/BMBF.QMod.csproj
+COPY BMBF.Resources/BMBF.Resources.csproj ./BMBF.Resources/BMBF.Resources.csproj
+COPY BMBF.WebServer/BMBF.WebServer.csproj ./BMBF.WebServer/BMBF.WebServer.csproj
 RUN sudo mkdir /opt/android-sdk \
     && sudo /opt/dotnet/dotnet restore ./BMBF/BMBF.csproj \
     && sudo /opt/dotnet/dotnet msbuild ./BMBF/BMBF.csproj -t:InstallAndroidDependencies -p:AndroidSdkDirectory=/opt/android-sdk -p:AcceptAndroidSDKLicenses=true \
