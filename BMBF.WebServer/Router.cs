@@ -50,18 +50,18 @@ namespace BMBF.WebServer
 
     internal class Route
     {
-        public HttpMethod Method;
-        public Path Path;
-        public Handler Handler;
+        internal HttpMethod Method { get; }
+        internal Path Path { get; }
+        internal Handler Handler { get; private set; }
 
-        public Route(HttpMethod method, Path path, Handler handler)
+        internal Route(HttpMethod method, Path path, Handler handler)
         {
             Method = method;
             Path = path;
             Handler = handler;
         }
 
-        public bool Matches(Request request)
+        internal bool Matches(Request request)
         {
             if (MethodMatches(request.Method) && Path.Matches(request.Path, out var extracted))
             {
@@ -75,12 +75,12 @@ namespace BMBF.WebServer
         }
         private bool MethodMatches(HttpMethod method) => Method == method || (Method == HttpMethod.Get && method == HttpMethod.Head);
 
-        public void Use(Middleware middleware)
+        internal void Use(Middleware middleware)
         {
             Handler = Handler.With(middleware);
         }
 
-        public Route Mounted(Path path) => new(Method, path.Join(Path), Handler);
+        internal Route Mounted(Path path) => new(Method, path.Join(Path), Handler);
     }
 
     public static class RoutingExt
