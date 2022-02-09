@@ -38,7 +38,7 @@ namespace BMBF.WebServer
                     newRoute.Use(middleware);
                 }
 
-                Routes.Add(route);
+                Routes.Add(newRoute);
             }
         }
 
