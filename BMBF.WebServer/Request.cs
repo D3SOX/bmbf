@@ -16,8 +16,8 @@ namespace BMBF.WebServer
         public IPEndPoint Peer { get; }
         public HttpMethod Method { get; }
         public string Path { get; }
-        public Dictionary<string, string> Headers { get; } = new();
 
+        private readonly HeaderDictionary _headers = new();
         private readonly Dictionary<string, string> _queryParameters = new();
         private readonly Dictionary<string, string> _parameters = new();
 
@@ -26,15 +26,15 @@ namespace BMBF.WebServer
             Inner = inner;
             Peer = peer;
             Method = new HttpMethod(inner.Method);
-            
+
             // Create a temporary URI for parsing purposes
-            var uri = new Uri("http://127.0.0.1/" + inner.Url);
+            var uri = new Uri($"http://127.0.0.1{inner.Url}");
             Path = uri.AbsolutePath;
 
             for (int i = 0; i < inner.Headers; i++)
             {
                 var (key, value) = inner.Header(i);
-                Headers.Add(key, value);
+                _headers.Add(key, value);
             }
 
             try
@@ -51,6 +51,7 @@ namespace BMBF.WebServer
             }
         }
 
+        public IDictionary<string, string> Headers => _headers;
         public IDictionary<string, string> Parameters => _parameters;
         public IDictionary<string, string> QueryParameters => _queryParameters;
 
