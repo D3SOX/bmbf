@@ -41,7 +41,7 @@ namespace BMBF.WebServer
 
         private static IEnumerable<string> SplitSegments(string path) => path.Split('/').Where((s) => s != string.Empty);
         private static Segment ToSegment(string s) => s.StartsWith('{') && s.EndsWith('}')
-            ? new ExtractorSegment(s[1..-1])
+            ? new ExtractorSegment(s[1..^1])
             : new VerbatimSegment(s);
     }
 
