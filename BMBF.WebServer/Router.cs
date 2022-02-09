@@ -9,29 +9,36 @@ namespace BMBF.WebServer
 
     public class Router
     {
-        internal readonly List<Route> routes = new();
-        private readonly List<Middleware> middlewares = new();
+        internal List<Route> Routes { get; } = new();
+        private readonly List<Middleware> _middlewares = new();
 
         public void Route(HttpMethod method, string path, Handler handler)
         {
-            foreach (var middleware in middlewares) handler = handler.With(middleware);
-            routes.Add(new Route(method, new Path(path), handler));
+            foreach (var middleware in _middlewares) handler = handler.With(middleware);
+            Routes.Add(new Route(method, new Path(path), handler));
         }
 
         public void Use(Middleware middleware)
         {
-            middlewares.Add(middleware);
-            foreach (var route in routes) route.Use(middleware);
+            _middlewares.Add(middleware);
+            foreach (var route in Routes)
+            {
+                route.Use(middleware);
+            }
         }
 
         public void Mount(string path, Router other)
         {
             var truePath = new Path(path);
-            foreach (var route in other.routes)
+            foreach (var route in other.Routes)
             {
                 var newRoute = route.Mounted(truePath);
-                foreach (var middleware in middlewares) newRoute.Use(middleware);
-                routes.Add(route);
+                foreach (var middleware in _middlewares)
+                {
+                    newRoute.Use(middleware);
+                }
+
+                Routes.Add(route);
             }
         }
 
@@ -78,6 +85,6 @@ namespace BMBF.WebServer
 
     public static class RoutingExt
     {
-        public static Handler With(this Handler handler, Middleware middleware) => (Request request) => middleware(request, handler);
+        public static Handler With(this Handler handler, Middleware middleware) => request => middleware(request, handler);
     }
 }

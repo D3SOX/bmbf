@@ -10,24 +10,24 @@ namespace BMBF.WebServer
 {
     public class Server : Router
     {
-        private readonly InternalServer server;
+        private readonly InternalServer _server;
 
         public Server(IPEndPoint endpoint)
         {
-            server = new InternalServer(this, endpoint);
+            _server = new InternalServer(this, endpoint);
         }
         public Server(IPAddress address, int port)
         {
-            server = new InternalServer(this, address, port);
+            _server = new InternalServer(this, address, port);
         }
         public Server(string address, int port)
         {
-            server = new InternalServer(this, address, port);
+            _server = new InternalServer(this, address, port);
         }
 
-        public virtual bool Start() => server.Start();
-        public virtual bool Stop() => server.Stop();
-        public virtual bool Restart() => server.Restart();
+        public virtual bool Start() => _server.Start();
+        public virtual bool Stop() => _server.Stop();
+        public virtual bool Restart() => _server.Restart();
 
         public delegate void ErrorHandler(object sender, SocketError error);
         public event ErrorHandler? Error;
@@ -40,42 +40,42 @@ namespace BMBF.WebServer
 
     internal class InternalServer : HttpServer
     {
-        private readonly Server server;
+        private readonly Server _server;
 
         public InternalServer(Server server, IPEndPoint endpoint) : base(endpoint)
         {
-            this.server = server;
+            _server = server;
         }
         public InternalServer(Server server, IPAddress address, int port) : base(address, port)
         {
-            this.server = server;
+            _server = server;
         }
         public InternalServer(Server server, string address, int port) : base(address, port)
         {
-            this.server = server;
+            _server = server;
         }
 
         protected override InternalSession CreateSession()
         {
-            return new InternalSession(server, this);
+            return new InternalSession(_server, this);
         }
 
-        protected override void OnError(SocketError error) => server.OnError(error);
+        protected override void OnError(SocketError error) => _server.OnError(error);
     }
 
     internal class InternalSession : HttpSession
     {
-        private readonly Server server;
+        private readonly Server _server;
 
         public InternalSession(Server server, InternalServer internalServer) : base(internalServer)
         {
-            this.server = server;
+            _server = server;
         }
 
         protected override void OnReceivedRequest(HttpRequest innerRequest)
         {
             var request = new Request(innerRequest, (IPEndPoint) Socket.RemoteEndPoint!);
-            var route = server.routes.Find((route) => route.Matches(request));
+            var route = _server.Routes.Find(route => route.Matches(request));
 
             if (route is null)
             {
@@ -83,12 +83,15 @@ namespace BMBF.WebServer
 
                 if (request.Method == HttpMethod.Options)
                 {
-                    var allowed = server.routes
-                        .Where((route) => route.Path.Matches(request.Url.AbsolutePath, out var _extracted))
-                        .Select((route) => route.Method)
+                    var allowed = _server.Routes
+                        .Where(r => r.Path.Matches(request.Url.AbsolutePath, out _))
+                        .Select(r => r.Method)
                         .Distinct();
                     response = WebServer.Response.Empty();
-                    foreach (var method in allowed) response.Headers.Add("Allow", method.ToString());
+                    foreach (var method in allowed)
+                    {
+                        response.Headers.Add("Allow", method.ToString());
+                    }
                 }
                 else
                 {
@@ -101,11 +104,11 @@ namespace BMBF.WebServer
 
             try
             {
-                route.Handler(request).ContinueWith((task) =>
+                route.Handler(request).ContinueWith(task =>
                 {
                     var response = task.Status switch
                     {
-                        TaskStatus.RanToCompletion => task.Result!,
+                        TaskStatus.RanToCompletion => task.Result,
                         TaskStatus.Faulted when task.Exception!.GetBaseException() is WebException ex => ex.Response,
                         TaskStatus.Faulted => OnException(task.Exception!),
                         _ => WebServer.Response.Text("Internal Server Error", 500),
@@ -132,10 +135,10 @@ namespace BMBF.WebServer
 
         private Response OnException(Exception ex)
         {
-            server.OnException(ex);
+            _server.OnException(ex);
             return WebServer.Response.Text("Internal Server Error", 500);
         }
 
-        protected override void OnError(SocketError error) => server.OnError(error);
+        protected override void OnError(SocketError error) => _server.OnError(error);
     }
 }

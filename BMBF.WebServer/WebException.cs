@@ -6,7 +6,7 @@ namespace BMBF.WebServer
     {
         public readonly Response Response;
 
-        public WebException(Response response) : base()
+        public WebException(Response response)
         {
             Response = response;
         }

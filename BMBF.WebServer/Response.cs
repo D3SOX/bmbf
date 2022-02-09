@@ -11,8 +11,9 @@ namespace BMBF.WebServer
 {
     public class Response
     {
-        public byte[] Body;
-        public ushort Status;
+        public byte[] Body { get; set; }
+        public ushort Status { get; set; }
+        
         public readonly HttpResponseHeaders Headers;
 
         public Response(byte[] body, ushort status = 200, string? contentType = "application/octet-stream")
@@ -30,16 +31,19 @@ namespace BMBF.WebServer
         }
 
         public static Response Text(string body, ushort status = 200, string contentType = "text/plain; charset=utf-8") =>
-            new Response(Encoding.UTF8.GetBytes(body), status, contentType);
+            new(Encoding.UTF8.GetBytes(body), status, contentType);
         public static Response Json<T>(T body, ushort status = 200, string contentType = "application/json; charset=utf-8") =>
-            new Response(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(body)), status, contentType);
-        public static Response Empty(ushort status = 204) => new Response(Array.Empty<byte>(), status, null);
+            new(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(body)), status, contentType);
+        public static Response Empty(ushort status = 204) => new(Array.Empty<byte>(), status, null);
         public static async Task<Response> File(string path)
         {
-            if (!System.IO.File.Exists(path)) return Text("Not Found", 404);
+            if (!System.IO.File.Exists(path))
+            {
+                return Text("Not Found", 404);
+            }
 
-            var body = await System.IO.File.ReadAllBytesAsync(path)!;
-            var contentType = MimeUtility.GetMimeMapping(path);
+            byte[] body = await System.IO.File.ReadAllBytesAsync(path);
+            string? contentType = MimeUtility.GetMimeMapping(path);
 
             return new Response(body, 200, contentType);
         }

@@ -5,24 +5,30 @@ namespace BMBF.WebServer
 {
     internal class Path
     {
-        private readonly Segment[] segments;
+        private readonly Segment[] _segments;
 
         public Path(string path) : this(SplitSegments(path).Select(ToSegment)) { }
         private Path(IEnumerable<Segment> segments)
         {
-            this.segments = segments.ToArray();
+            _segments = segments.ToArray();
         }
 
         public bool Matches(string path, out IDictionary<string, string> extracted)
         {
             extracted = new Dictionary<string, string>();
-            var otherSegments = SplitSegments(path).ToArray();
+            string[] otherSegments = SplitSegments(path).ToArray();
 
-            if (segments.Length != otherSegments.Length) return false;
-
-            foreach (var (segment, otherSegment) in segments.Zip(otherSegments))
+            if (_segments.Length != otherSegments.Length)
             {
-                if (!segment.Matches(otherSegment, ref extracted)) return false;
+                return false;
+            }
+
+            foreach (var (segment, otherSegment) in _segments.Zip(otherSegments))
+            {
+                if (!segment.Matches(otherSegment, ref extracted))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -30,7 +36,7 @@ namespace BMBF.WebServer
 
         public Path Join(Path other)
         {
-            return new Path(Enumerable.Concat(segments, other.segments));
+            return new Path(_segments.Concat(other._segments));
         }
 
         private static IEnumerable<string> SplitSegments(string path) => path.Split('/').Where((s) => s != string.Empty);
@@ -46,28 +52,28 @@ namespace BMBF.WebServer
 
     internal class VerbatimSegment : Segment
     {
-        private readonly string value;
+        private readonly string _value;
 
         public VerbatimSegment(string value)
         {
-            this.value = value;
+            _value = value;
         }
 
-        public override bool Matches(string segment, ref IDictionary<string, string> _extracted) => segment == value;
+        public override bool Matches(string segment, ref IDictionary<string, string> extracted) => segment == _value;
     }
 
     internal class ExtractorSegment : Segment
     {
-        private readonly string name;
+        private readonly string _name;
 
         public ExtractorSegment(string name)
         {
-            this.name = name;
+            _name = name;
         }
 
         public override bool Matches(string segment, ref IDictionary<string, string> extracted)
         {
-            extracted.Add(name, segment);
+            extracted.Add(_name, segment);
             return true;
         }
     }

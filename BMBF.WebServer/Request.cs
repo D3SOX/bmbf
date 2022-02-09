@@ -13,21 +13,21 @@ namespace BMBF.WebServer
 {
     public class Request
     {
-        public readonly HttpRequest Inner;
-        public readonly IPEndPoint Peer;
-        public readonly HttpMethod Method;
-        public readonly Uri Url;
-        public readonly HttpRequestHeaders Headers;
+        public HttpRequest Inner { get; }
+        public IPEndPoint Peer { get; }
+        public HttpMethod Method { get; }
+        public Uri Url { get; }
+        public HttpRequestHeaders Headers { get; }
 
-        private readonly Dictionary<string, string> queryParameters = new();
-        private readonly Dictionary<string, string> parameters = new();
+        private readonly Dictionary<string, string> _queryParameters = new();
+        private readonly Dictionary<string, string> _parameters = new();
 
         internal Request(HttpRequest inner, IPEndPoint peer)
         {
             Inner = inner;
             Peer = peer;
-            Method = new(inner.Method);
-            Url = new(inner.Url);
+            Method = new HttpMethod(inner.Method);
+            Url = new Uri(inner.Url);
 
             using (var tmp = new HttpRequestMessage())
             {
@@ -45,7 +45,7 @@ namespace BMBF.WebServer
                 var query = HttpUtility.ParseQueryString(Url.Query);
                 for (int i = 0; i < query.Count; i++)
                 {
-                    queryParameters.Add(query.GetKey(i)!, query.Get(i)!);
+                    _queryParameters.Add(query.GetKey(i)!, query.Get(i)!);
                 }
             }
             catch
@@ -54,8 +54,8 @@ namespace BMBF.WebServer
             }
         }
 
-        public IDictionary<string, string> Parameters => parameters;
-        public IDictionary<string, string> QueryParameters => queryParameters;
+        public IDictionary<string, string> Parameters => _parameters;
+        public IDictionary<string, string> QueryParameters => _queryParameters;
 
         public Span<byte> Body => Inner.BodySpan;
 
@@ -73,7 +73,7 @@ namespace BMBF.WebServer
                 throw ex;
             }
 
-            return s is not null ? s : throw ex;
+            return s ?? throw ex;
         }
         public T JsonBody<T>()
         {
@@ -98,7 +98,7 @@ namespace BMBF.WebServer
 
             try
             {
-                value = Convert.ChangeType(parameters[name], typeof(T), CultureInfo.InvariantCulture);
+                value = Convert.ChangeType(_parameters[name], typeof(T), CultureInfo.InvariantCulture);
             }
             catch
             {
@@ -111,7 +111,7 @@ namespace BMBF.WebServer
         {
             foreach (var (name, value) in parameters)
             {
-                this.parameters.Add(name, value);
+                _parameters.Add(name, value);
             }
         }
 
@@ -122,7 +122,7 @@ namespace BMBF.WebServer
 
             try
             {
-                value = Convert.ChangeType(queryParameters[name], typeof(T), CultureInfo.InvariantCulture);
+                value = Convert.ChangeType(_queryParameters[name], typeof(T), CultureInfo.InvariantCulture);
             }
             catch
             {
