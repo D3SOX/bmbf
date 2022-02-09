@@ -31,11 +31,11 @@ namespace BMBF.WebServer
 
         public delegate void ErrorHandler(object sender, SocketError error);
         public event ErrorHandler? Error;
-        public virtual void OnError(SocketError e) => Error?.Invoke(this, e);
+        internal virtual void OnError(SocketError e) => Error?.Invoke(this, e);
 
         public delegate void ExceptionHandler(object sender, Exception exception);
         public event ExceptionHandler? Exception;
-        public virtual void OnException(Exception e) => Exception?.Invoke(this, e);
+        internal virtual void OnException(Exception e) => Exception?.Invoke(this, e);
     }
 
     internal class InternalServer : HttpServer
@@ -75,9 +75,9 @@ namespace BMBF.WebServer
         protected override void OnReceivedRequest(HttpRequest innerRequest)
         {
             var request = new Request(innerRequest, (IPEndPoint) Socket.RemoteEndPoint!);
-            var handler = server.routes.Find((route) => route.Matches(request))?.Handler;
+            var route = server.routes.Find((route) => route.Matches(request));
 
-            if (handler is null)
+            if (route is null)
             {
                 Response response;
 
@@ -87,7 +87,7 @@ namespace BMBF.WebServer
                         .Where((route) => route.Path.Matches(request.Url.AbsolutePath, out var _extracted))
                         .Select((route) => route.Method)
                         .Distinct();
-                    response = WebServer.Response.Text("", 204);
+                    response = WebServer.Response.Empty();
                     foreach (var method in allowed) response.Headers.Add("Allow", method.ToString());
                 }
                 else
@@ -101,7 +101,7 @@ namespace BMBF.WebServer
 
             try
             {
-                handler(request).ContinueWith((task) =>
+                route.Handler(request).ContinueWith((task) =>
                 {
                     var response = task.Status switch
                     {
@@ -110,6 +110,13 @@ namespace BMBF.WebServer
                         TaskStatus.Faulted => OnException(task.Exception!),
                         _ => WebServer.Response.Text("Internal Server Error", 500),
                     };
+
+                    if (request.Method == HttpMethod.Head && route.Method != HttpMethod.Head)
+                    {
+                        response.Headers.Add("Content-Length", response.Body.Length.ToString());
+                        response.Body = Array.Empty<byte>();
+                    }
+
                     SendResponseAsync(response.ToInner(Response));
                 });
             }
