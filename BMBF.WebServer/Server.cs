@@ -84,7 +84,7 @@ namespace BMBF.WebServer
                 if (request.Method == HttpMethod.Options)
                 {
                     var allowed = _server.Routes
-                        .Where(r => r.Path.Matches(request.Url.AbsolutePath, out _))
+                        .Where(r => r.Path.Matches(request.Path, out _))
                         .Select(r => r.Method)
                         .Distinct();
                     response = WebServer.Response.Empty();

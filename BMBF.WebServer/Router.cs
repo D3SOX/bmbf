@@ -63,7 +63,7 @@ namespace BMBF.WebServer
 
         public bool Matches(Request request)
         {
-            if (MethodMatches(request.Method) && Path.Matches(request.Url.AbsolutePath, out var extracted))
+            if (MethodMatches(request.Method) && Path.Matches(request.Path, out var extracted))
             {
                 request.AddParams(extracted);
                 return true;

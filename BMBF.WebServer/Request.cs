@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Web;
@@ -16,8 +15,8 @@ namespace BMBF.WebServer
         public HttpRequest Inner { get; }
         public IPEndPoint Peer { get; }
         public HttpMethod Method { get; }
-        public Uri Url { get; }
-        public HttpRequestHeaders Headers { get; }
+        public string Path { get; }
+        public Dictionary<string, string> Headers { get; } = new();
 
         private readonly Dictionary<string, string> _queryParameters = new();
         private readonly Dictionary<string, string> _parameters = new();
@@ -27,13 +26,11 @@ namespace BMBF.WebServer
             Inner = inner;
             Peer = peer;
             Method = new HttpMethod(inner.Method);
-            Url = new Uri(inner.Url);
+            
+            // Create a temporary URI for parsing purposes
+            var uri = new Uri("http://127.0.0.1/" + inner.Url);
+            Path = uri.AbsolutePath;
 
-            using (var tmp = new HttpRequestMessage())
-            {
-                Headers = tmp.Headers;
-                Headers.Clear();
-            }
             for (int i = 0; i < inner.Headers; i++)
             {
                 var (key, value) = inner.Header(i);
@@ -42,7 +39,7 @@ namespace BMBF.WebServer
 
             try
             {
-                var query = HttpUtility.ParseQueryString(Url.Query);
+                var query = HttpUtility.ParseQueryString(uri.Query);
                 for (int i = 0; i < query.Count; i++)
                 {
                     _queryParameters.Add(query.GetKey(i)!, query.Get(i)!);

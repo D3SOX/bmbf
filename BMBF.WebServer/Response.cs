@@ -1,8 +1,7 @@
 ﻿using MimeMapping;
 using NetCoreServer;
 using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -13,20 +12,17 @@ namespace BMBF.WebServer
     {
         public byte[] Body { get; set; }
         public ushort Status { get; set; }
-        
-        public readonly HttpResponseHeaders Headers;
+
+        public Dictionary<string, string> Headers { get; } = new();
 
         public Response(byte[] body, ushort status = 200, string? contentType = "application/octet-stream")
         {
             Body = body;
             Status = status;
-
-            using var tmp = new HttpResponseMessage();
-            Headers = tmp.Headers;
-            Headers.Clear();
+            
             if (contentType is not null)
             {
-                Headers.Add("Content-Type", contentType);
+                Headers["Content-Type"] = contentType;
             }
         }
 
@@ -54,7 +50,7 @@ namespace BMBF.WebServer
         {
             response.Clear();
             response.SetBegin(Status);
-            foreach (var (name, values) in Headers)
+            foreach ((string name, string values) in Headers)
             {
                 response.SetHeader(name, string.Join(',', values));
             }
