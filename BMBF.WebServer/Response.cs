@@ -51,9 +51,9 @@ namespace BMBF.WebServer
         {
             response.Clear();
             response.SetBegin(Status);
-            foreach ((string name, string values) in _headers)
+            foreach (var (name, value) in _headers)
             {
-                response.SetHeader(name, string.Join(',', values));
+                response.SetHeader(name, value);
             }
             if (Body.Length > 0)
             {

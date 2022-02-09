@@ -7,7 +7,7 @@ namespace BMBF.WebServer
 {
     internal class HeaderDictionary : IDictionary<string, string>
     {
-        private readonly Dictionary<string, string> _inner = new();
+        private readonly IDictionary<string, string> _inner = new Dictionary<string, string>();
 
         public string this[string name]
         {
@@ -16,8 +16,8 @@ namespace BMBF.WebServer
         }
 
         public ICollection<string> Keys => _inner.Keys;
-        public ICollection<string> Values => _inner.Values.SelectMany(v => v.Split(',')).ToArray();
-        public int Count => _inner.Values.SelectMany((v) => v.Split(',')).Count();
+        public ICollection<string> Values => _inner.Values;
+        public int Count => _inner.Count;
         public bool IsReadOnly => false;
 
         public void Add(string name, string value)
@@ -32,6 +32,7 @@ namespace BMBF.WebServer
                 _inner[n] = value;
             }
         }
+
         public void Add(KeyValuePair<string, string> header) => Add(header.Key, header.Value);
 
         public void Clear() => _inner.Clear();
@@ -44,10 +45,10 @@ namespace BMBF.WebServer
 
         public bool ContainsKey(string name) => _inner.ContainsKey(name.ToLowerInvariant());
 
-        public void CopyTo(KeyValuePair<string, string>[] array, int arrayIndex) => AsCollection().CopyTo(array, arrayIndex);
+        public void CopyTo(KeyValuePair<string, string>[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
 
-        public IEnumerator<KeyValuePair<string, string>> GetEnumerator() => AsCollection().GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator() => _inner.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _inner.GetEnumerator();
 
         public bool Remove(string name) => _inner.Remove(name.ToLowerInvariant());
 
@@ -73,10 +74,5 @@ namespace BMBF.WebServer
         }
 
         public bool TryGetValue(string name, [MaybeNullWhen(false)] out string value) => _inner.TryGetValue(name.ToLowerInvariant(), out value);
-
-        private ICollection<KeyValuePair<string, string>> AsCollection() =>
-            Keys.SelectMany(n =>
-                _inner[n].Split(',').Select(v =>
-                    new KeyValuePair<string, string>(n, v))).ToArray();
     }
 }
