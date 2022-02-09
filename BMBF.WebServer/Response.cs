@@ -13,16 +13,17 @@ namespace BMBF.WebServer
         public byte[] Body { get; set; }
         public ushort Status { get; set; }
 
-        public Dictionary<string, string> Headers { get; } = new();
+        private readonly HeaderDictionary _headers = new();
+        public IDictionary<string, string> Headers => _headers;
 
         public Response(byte[] body, ushort status = 200, string? contentType = "application/octet-stream")
         {
             Body = body;
             Status = status;
-            
+
             if (contentType is not null)
             {
-                Headers["Content-Type"] = contentType;
+                _headers["Content-Type"] = contentType;
             }
         }
 
@@ -50,7 +51,7 @@ namespace BMBF.WebServer
         {
             response.Clear();
             response.SetBegin(Status);
-            foreach ((string name, string values) in Headers)
+            foreach ((string name, string values) in _headers)
             {
                 response.SetHeader(name, string.Join(',', values));
             }
