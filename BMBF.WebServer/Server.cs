@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BMBF.WebServer
 {
-    public class Server : Router
+    public class Server : Router, IDisposable
     {
         private readonly InternalServer _server;
 
@@ -36,6 +36,11 @@ namespace BMBF.WebServer
         public delegate void ExceptionHandler(object sender, Exception exception);
         public event ExceptionHandler? Exception;
         internal virtual void OnException(Exception e) => Exception?.Invoke(this, e);
+
+        public void Dispose()
+        {
+            _server.Dispose();
+        }
     }
 
     internal class InternalServer : HttpServer
