@@ -19,13 +19,12 @@ namespace BMBF.WebServer
             string[] otherSegments = SplitSegments(path).ToArray();
 
             // Allow any arbitrary path length to be matched by WildcardSegment
-            if (_segments.Last() is WildcardSegment)
+            if (_segments.Length > 0 && _segments.Last() is WildcardSegment)
             {
                 if (otherSegments.Length < _segments.Length)
                 {
                     return false;
                 }
-                otherSegments = otherSegments[.._segments.Length];
             }
             else if(_segments.Length != otherSegments.Length)
             {
