@@ -2,6 +2,7 @@
 using NetCoreServer;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -43,6 +44,14 @@ namespace BMBF.WebServer
             string? contentType = MimeUtility.GetMimeMapping(path);
 
             return new Response(body, 200, contentType);
+        }
+        
+        public static async Task<Response> Stream(Stream stream, string contentType)
+        {
+            using var bodyStream = new MemoryStream();
+            await stream.CopyToAsync(bodyStream);
+            
+            return new Response(bodyStream.ToArray(), 200, contentType);
         }
 
         public Task<Response> Async() => Task.FromResult(this);
