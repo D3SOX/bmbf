@@ -2,6 +2,7 @@
 using System.IO;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
+using BMBF.Backend.Implementations;
 using BMBF.Backend.Services;
 using BMBF.Desktop;
 using BMBF.Desktop.Configuration;
@@ -38,6 +39,7 @@ using var host = Host.CreateDefaultBuilder()
         services.AddSingleton<IBeatSaberService, BeatSaberService>();
 
         services.AddBMBF(settings, resources, assetFileProvider, webRootFileProvider);
+        services.AddHostedService<WebService>();
     })
     .ConfigureAppConfiguration(configBuilder =>
     {

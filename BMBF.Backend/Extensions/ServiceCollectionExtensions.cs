@@ -43,8 +43,6 @@ public static class ServiceCollectionExtensions
         IFileProvider assetFileProvider,
         IFileProvider webRootFileProvider)
     {
-        services.AddHostedService<WebService>();
-        
         services.AddSingleton<ISongService, SongService>();
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();

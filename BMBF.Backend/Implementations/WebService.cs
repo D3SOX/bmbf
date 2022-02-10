@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
@@ -40,9 +41,11 @@ public class WebService : IHostedService, IDisposable
         _server.Get("*", StaticFileHandler);
     }
 
-    private void SetupApi(Router router)
+    protected virtual void SetupApi(Router router)
     {
+        var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version!;
         
+        router.Get("/version", _ => Response.Text($"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}").Async());
     }
 
     private async Task<Response> StaticFileHandler(Request req)

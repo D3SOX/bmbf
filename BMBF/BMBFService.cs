@@ -133,6 +133,7 @@ public class BMBFService : Service
                 services.AddSingleton<IBeatSaberService, BeatSaberService>();
                 services.AddBMBF(settings, resources, assetFileProvider, webRootFileProvider);
 
+                services.AddHostedService<AndroidWebService>();
                 services.AddSingleton<Service>(this);
             })
 #if DEBUG
