@@ -21,10 +21,13 @@ namespace BMBF.WebServer
             // Allow any arbitrary path length to be matched by WildcardSegment
             if (_segments.Last() is WildcardSegment)
             {
+                if (otherSegments.Length < _segments.Length)
+                {
+                    return false;
+                }
                 otherSegments = otherSegments[.._segments.Length];
             }
-            
-            if (_segments.Length != otherSegments.Length)
+            else if(_segments.Length != otherSegments.Length)
             {
                 return false;
             }
