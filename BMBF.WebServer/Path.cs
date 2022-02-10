@@ -18,6 +18,12 @@ namespace BMBF.WebServer
             extracted = new Dictionary<string, string>();
             string[] otherSegments = SplitSegments(path).ToArray();
 
+            // Allow any arbitrary path length to be matched by WildcardSegment
+            if (_segments.Last() is WildcardSegment)
+            {
+                otherSegments = otherSegments[.._segments.Length];
+            }
+            
             if (_segments.Length != otherSegments.Length)
             {
                 return false;
@@ -39,10 +45,21 @@ namespace BMBF.WebServer
             return new Path(_segments.Concat(other._segments));
         }
 
-        private static IEnumerable<string> SplitSegments(string path) => path.Split('/').Where((s) => s != string.Empty);
-        private static Segment ToSegment(string s) => s.StartsWith('{') && s.EndsWith('}')
-            ? new ExtractorSegment(s[1..^1])
-            : new VerbatimSegment(s);
+        private static IEnumerable<string> SplitSegments(string path) => path.Split('/').Where(s => s != string.Empty);
+
+        private static Segment ToSegment(string s)
+        {
+            if (s.StartsWith('{') && s.EndsWith('}'))
+            {
+                return new ExtractorSegment(s);
+            }
+            if (s == "*")
+            {
+                return new WildcardSegment();
+            }
+
+            return new VerbatimSegment(s);
+        }
     }
 
     internal abstract class Segment
@@ -74,6 +91,14 @@ namespace BMBF.WebServer
         public override bool Matches(string segment, ref IDictionary<string, string> extracted)
         {
             extracted.Add(_name, segment);
+            return true;
+        }
+    }
+
+    internal class WildcardSegment : Segment 
+    {
+        public override bool Matches(string segment, ref IDictionary<string, string> extracted)
+        {
             return true;
         }
     }
