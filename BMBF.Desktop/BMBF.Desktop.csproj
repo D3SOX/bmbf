@@ -16,18 +16,11 @@
   
   <ItemGroup>
     <ProjectReference Include="../BMBF.Backend/BMBF.Backend.csproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
+    <ProjectReference Include="../BMBF.WebServer/BMBF.WebServer.csproj" />
+      
     <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Device" />
-  </ItemGroup>
 
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+  </ItemGroup>
 </Project>

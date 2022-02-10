@@ -15,7 +15,7 @@ namespace BMBF.WebServer
         public HttpRequest Inner { get; }
         public IPEndPoint Peer { get; }
         public HttpMethod Method { get; }
-        public string Path { get; }
+        public string Path { get; set; }
 
         private readonly HeaderDictionary _headers = new();
         private readonly Dictionary<string, string> _queryParameters = new();

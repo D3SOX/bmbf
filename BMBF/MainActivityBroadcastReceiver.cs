@@ -51,7 +51,7 @@ public class WebServerStartedReceiver : BroadcastReceiver
 
         if (intent.Action == BMBFIntents.WebServerStartedIntent)
         {
-            WebServerStartupComplete?.Invoke(this, int.Parse(intent.GetStringExtra("BindPort")!));
+            WebServerStartupComplete?.Invoke(this, intent.GetIntExtra("BindPort", -1));
         }
         else if (intent.Action == BMBFIntents.WebServerFailedToStartIntent)
         {

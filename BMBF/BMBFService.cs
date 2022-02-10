@@ -8,8 +8,6 @@ using BMBF.Backend.Extensions;
 using BMBF.Backend.Services;
 using BMBF.Implementations;
 using Java.Lang;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,9 +22,9 @@ namespace BMBF;
 // ReSharper disable once InconsistentNaming
 public class BMBFService : Service
 {
-    public static string? RunningUrl { get; private set; }
+    public static int? RunningPort { get; private set; }
 
-    private IWebHost? _webHost;
+    private IHost? _webHost;
 
     public override IBinder? OnBind(Intent? intent)
     {
@@ -52,15 +50,18 @@ public class BMBFService : Service
             await _webHost.StartAsync();
 
             Log.Information("BMBF service startup complete");
-            RunningUrl = Constants.BindAddress; // Notify future activity startups that the service has already started
-            Intent intent = new Intent(BMBFIntents.WebServerStartedIntent);
-            intent.PutExtra("BindPort", Constants.BindPort);
+
+            var settings = _webHost.Services.GetRequiredService<BMBFSettings>();
+            RunningPort = settings.BindPort; // Notify future activity startups that the service has already started
+            
+            var intent = new Intent(BMBFIntents.WebServerStartedIntent);
+            intent.PutExtra("BindPort", settings.BindPort);
             SendBroadcast(intent);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "BMBF webserver startup failed");
-            Intent intent = new Intent(BMBFIntents.WebServerFailedToStartIntent);
+            var intent = new Intent(BMBFIntents.WebServerFailedToStartIntent);
             intent.PutExtra("Exception", ex.ToString());
             SendBroadcast(intent);
         }
@@ -68,7 +69,10 @@ public class BMBFService : Service
 
     private async Task StopWebServerAsync()
     {
-        if (_webHost == null) return;
+        if (_webHost == null)
+        {
+            return;
+        }
 
         try
         {
@@ -79,7 +83,7 @@ public class BMBFService : Service
         {
             Log.Error(ex, "Failed to shutdown web host");
         }
-        RunningUrl = null;
+        RunningPort = null;
     }
 
     public override void OnDestroy()
@@ -105,13 +109,13 @@ public class BMBFService : Service
             .CreateLogger().ForContext<BMBFService>(); // Set default context to BMBF service
     }
 
-    private IWebHostBuilder CreateHostBuilder()
+    private IHostBuilder CreateHostBuilder()
     {
         var assetManager = Assets ?? throw new NullReferenceException("Asset manager was null");
         var assetFileProvider = new AssetFileProvider(assetManager);
         var webRootFileProvider = new AssetFileProvider(assetManager, Constants.WebRootPath);
 
-        return WebHost.CreateDefaultBuilder()
+        return Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration(configBuilder =>
             {
                 configBuilder.Sources.Clear();
@@ -127,15 +131,13 @@ public class BMBFService : Service
                 var settings = configuration.GetSection(BMBFSettings.Position).Get<BMBFSettings>();
                 var resources = configuration.GetSection(BMBFResources.Position).Get<BMBFResources>();
                 services.AddSingleton<IBeatSaberService, BeatSaberService>();
-                services.AddBMBF(ctx, settings, resources, assetFileProvider);
+                services.AddBMBF(settings, resources, assetFileProvider, webRootFileProvider);
 
                 services.AddSingleton<Service>(this);
             })
 #if DEBUG
             .UseEnvironment(Environments.Development)
 #endif
-            .Configure((ctx, app) => app.UseBMBF(ctx, webRootFileProvider))
-            .UseUrls(Constants.BindAddress)
             .UseSerilog();
     }
 
