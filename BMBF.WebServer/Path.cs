@@ -54,7 +54,7 @@ namespace BMBF.WebServer
         {
             if (s.StartsWith('{') && s.EndsWith('}'))
             {
-                return new ExtractorSegment(s);
+                return new ExtractorSegment(s[1..^1]);
             }
             if (s == "*")
             {
