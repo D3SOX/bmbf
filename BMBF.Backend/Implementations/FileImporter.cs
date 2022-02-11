@@ -195,17 +195,24 @@ public class FileImporter : IFileImporter
         }
 
         // At this point, we may need to attempt an import multiple times, therefore we copy to a memory stream
-        await using var memStream = new MemoryStream();
-        await stream.CopyToAsync(memStream);
-        memStream.Position = 0;
-        stream = memStream;
+        if (!stream.CanSeek)
+        {
+            await using var memStream = new MemoryStream();
+            await stream.CopyToAsync(memStream);
+            stream = memStream;
+        }
+        stream.Position = 0;
 
         // Now we'll attempt to import the file as a mod
         var result = await _modService.TryImportModAsync(stream, fileName);
-        if (result != null) return result;
+        if (result != null)
+        {
+            return result;
+        }
+
         // If the result was null, the stream/filename didn't constitute a mod
         // Therefore, we will rewind the stream and attempt to import as a copy extension
-        memStream.Position = 0;
+        stream.Position = 0;
 
         (IMod? mod, string destination)? selectedCopy = null;
 
