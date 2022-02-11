@@ -33,7 +33,7 @@ namespace BMBF.WebServer
         public static Response Text(string body, ushort status = 200, string contentType = "text/plain; charset=utf-8") =>
             new(Encoding.UTF8.GetBytes(body), status, contentType);
         public static Response Json<T>(T body, ushort status = 200, string contentType = "application/json; charset=utf-8") =>
-            new(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(body, SerializerOptions)), status, contentType);
+            new(JsonSerializer.SerializeToUtf8Bytes(body, SerializerOptions), status, contentType);
         public static Response Empty(ushort status = 204) => new(Array.Empty<byte>(), status, null);
         public static async Task<Response> File(string path)
         {
