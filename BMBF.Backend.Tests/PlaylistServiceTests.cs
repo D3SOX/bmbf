@@ -31,7 +31,10 @@ public class PlaylistServiceTests : IDisposable
         UpdateCachesAutomatically = false
     };
 
-    private PlaylistService CreatePlaylistService() => new(_settings, _fileSystem, Mock.Of<IFileSystemWatcher>());
+    private PlaylistService CreatePlaylistService() => new(_settings,
+        _fileSystem,
+        Mock.Of<IFileSystemWatcher>(),
+        new JsonSerializerOptions());
 
     [Fact]
     public async Task PlaylistsShouldBeEmptyWhenNoPlaylists()
