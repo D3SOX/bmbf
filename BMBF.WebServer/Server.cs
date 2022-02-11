@@ -16,14 +16,19 @@ namespace BMBF.WebServer
         {
             _server = new InternalServer(this, endpoint);
         }
+
         public Server(IPAddress address, int port)
         {
             _server = new InternalServer(this, address, port);
         }
+
         public Server(string address, int port)
         {
             _server = new InternalServer(this, address, port);
         }
+
+        public void BroadcastWebSocketMessage(byte[] bytes, int offset, int length) => 
+            _server.MulticastBinary(bytes, offset, length);
 
         public virtual bool Start() => _server.Start();
         public virtual bool Stop() => _server.Stop();
@@ -43,12 +48,13 @@ namespace BMBF.WebServer
         }
     }
 
-    internal class InternalServer : HttpServer
+    internal class InternalServer : WsServer
     {
         private readonly Server _server;
 
         public InternalServer(Server server, IPEndPoint endpoint) : base(endpoint)
         {
+            
             _server = server;
         }
         public InternalServer(Server server, IPAddress address, int port) : base(address, port)
@@ -68,7 +74,7 @@ namespace BMBF.WebServer
         protected override void OnError(SocketError error) => _server.OnError(error);
     }
 
-    internal class InternalSession : HttpSession
+    internal class InternalSession : WsSession
     {
         private readonly Server _server;
 
@@ -76,7 +82,7 @@ namespace BMBF.WebServer
         {
             _server = server;
         }
-
+        
         protected override void OnReceivedRequest(HttpRequest innerRequest)
         {
             var request = new Request(innerRequest, (IPEndPoint) Socket.RemoteEndPoint!);
