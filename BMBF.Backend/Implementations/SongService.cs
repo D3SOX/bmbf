@@ -31,11 +31,7 @@ public class SongService : IDisposable, ISongService
     private readonly bool _automaticUpdates;
     private bool _disposed;
 
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
-
+    private readonly JsonSerializerOptions _serializerOptions;
     private readonly IFileSystemWatcher _fileSystemWatcher;
 
     public event EventHandler<Song>? SongAdded;
@@ -45,7 +41,10 @@ public class SongService : IDisposable, ISongService
     private readonly Debouncey _autoUpdateDebouncey;
     private readonly IFileSystem _io;
 
-    public SongService(BMBFSettings bmbfSettings, IFileSystem io, IFileSystemWatcher fileSystemWatcher)
+    public SongService(BMBFSettings bmbfSettings,
+        IFileSystem io,
+        IFileSystemWatcher fileSystemWatcher,
+        JsonSerializerOptions serializerOptions)
     {
         _songsPath = bmbfSettings.SongsPath;
         _cachePath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.SongsCacheName);
@@ -56,6 +55,10 @@ public class SongService : IDisposable, ISongService
         _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
         _io = io;
         _fileSystemWatcher = fileSystemWatcher;
+        _serializerOptions = new JsonSerializerOptions(serializerOptions)
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
     }
 
     public async Task UpdateSongCacheAsync()

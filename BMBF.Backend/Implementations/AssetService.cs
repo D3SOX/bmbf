@@ -52,7 +52,10 @@ public class AssetService : IAssetService
 
     public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
 
-    public AssetService(FileProviders fileProviders, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
+    public AssetService(FileProviders fileProviders,
+        HttpClient httpClient,
+        BMBFSettings bmbfSettings,
+        BMBFResources bmbfResources)
     {
         _assetProvider = fileProviders.AssetProvider;
         _httpClient = httpClient;

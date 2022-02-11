@@ -20,16 +20,19 @@ public class Playlist
     private string _playlistTitle;
 
     [JsonPropertyName("playlistAuthor")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyInfoUpdated(); } } }
     private string _playlistAuthor;
 
     [JsonPropertyName("playlistDescription")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyInfoUpdated(); } } }
     private string _playlistDescription;
 
     [JsonIgnore] public string Id { get; set; } = null!;
 
     [JsonPropertyName("image")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ImageString
     {
         get => Image == null ? null : "data:image/png;base64," + Convert.ToBase64String(Image);

@@ -22,10 +22,7 @@ public class PlaylistService : IPlaylistService, IDisposable
 
     private PlaylistCache? _cache;
     private readonly SemaphoreSlim _cacheUpdateLock = new(1);
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+    private readonly JsonSerializerOptions _serializerOptions;
 
     private readonly string _playlistsPath;
     private readonly bool _automaticUpdates;
@@ -36,7 +33,10 @@ public class PlaylistService : IPlaylistService, IDisposable
 
     private bool _disposed;
 
-    public PlaylistService(BMBFSettings settings, IFileSystem io, IFileSystemWatcher fileSystemWatcher)
+    public PlaylistService(BMBFSettings settings,
+        IFileSystem io,
+        IFileSystemWatcher fileSystemWatcher,
+        JsonSerializerOptions serializerOptions)
     {
         _playlistsPath = settings.PlaylistsPath;
         _automaticUpdates = settings.UpdateCachesAutomatically;
@@ -44,6 +44,7 @@ public class PlaylistService : IPlaylistService, IDisposable
         _autoUpdateDebouncey.Debounced += AutoUpdateDebounceyTriggered;
         _io = io;
         _fileSystemWatcher = fileSystemWatcher;
+        _serializerOptions = serializerOptions;
     }
 
     public async Task<string> AddPlaylistAsync(Playlist playlist)

@@ -2,6 +2,7 @@
 using System.IO.Abstractions;
 using System.Net.Http;
 using System.Reflection;
+using System.Text.Json;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Implementations;
 using BMBF.Backend.Services;
@@ -56,6 +57,10 @@ public static class ServiceCollectionExtensions
             s.GetRequiredService<IFileSystem>()
                 .FileSystemWatcher.CreateNew());
 
+        services.AddSingleton(new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
         services.AddHttpClient<IBeatSaverService, BeatSaverService>(client =>
         {
             ConfigureDefaults(client);
