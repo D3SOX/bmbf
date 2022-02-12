@@ -467,13 +467,17 @@ public class SetupService : ISetupService, IDisposable
                 _io.Directory.CreateDirectory(_backupPath);
                 foreach (string fileName in DataFiles)
                 {
-                    _logger.Information($"Backing up {fileName}");
                     var filePath = Path.Combine(BeatSaberDataPath, fileName);
                     var backupFilePath = Path.Combine(_backupPath, fileName);
 
                     if (_io.File.Exists(filePath))
                     {
+                        _logger.Information($"Backing up {fileName}");
                         _io.File.Copy(filePath, backupFilePath);
+                    }
+                    else
+                    {
+                        _logger.Information($"{fileName} did not exist");
                     }
                 }
             }
