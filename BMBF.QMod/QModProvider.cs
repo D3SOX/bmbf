@@ -138,11 +138,6 @@ namespace BMBF.QMod
 
         internal async Task AddModAsyncInternal(QMod mod, HashSet<string> installPath)
         {
-            // Check whether or not the mod is installed
-            // We deliberately do NOT notify changes yet, as this is only setting the initial mod status, which is not
-            // actually a status change
-            mod.UpdateStatusInternal(false);
-
             // If an existing mod exists with this same ID, we will need to uninstall it
             // This may uninstall several dependant mods
             var uninstalledDependants = new List<QMod>();
@@ -155,6 +150,11 @@ namespace BMBF.QMod
 
                 UnloadModInternal(existing);
             }
+            
+            // Check whether or not the mod is installed
+            // We deliberately do NOT notify changes yet, as this is only setting the initial mod status, which is not
+            // actually a status change
+            mod.UpdateStatusInternal(false);
 
             Mods.Add(mod.Id, mod);
             ModLoaded?.Invoke(mod.Id, mod);
