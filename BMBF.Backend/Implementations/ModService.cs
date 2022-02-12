@@ -221,6 +221,7 @@ public class ModService : IModService, IDisposable, IModManager
 
     private void StartWatchingForChanges(IFileSystemWatcher watcher, string path)
     {
+        _io.Directory.CreateDirectory(path);
         watcher.Path = path;
         watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
         watcher.Filter = "*.*";
