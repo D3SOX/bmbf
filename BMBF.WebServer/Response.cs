@@ -66,10 +66,7 @@ namespace BMBF.WebServer
             {
                 response.SetHeader(name, value);
             }
-            if (Body.Length > 0)
-            {
-                response.SetBody(Body);
-            }
+            response.SetBody(Body);
             return response;
         }
     }
