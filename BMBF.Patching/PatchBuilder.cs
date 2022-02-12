@@ -163,6 +163,8 @@ namespace BMBF.Patching
             using (var apkStream = fileSystem.File.Open(apkPath, FileMode.Open, FileAccess.ReadWrite))
             using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Update))
             {
+                _manifest.ModifiedFiles = _fileModifications.Select(f => f.ApkFilePath).ToHashSet();
+
                 // Add the tag to the APK if configured
                 if (_tagManager != null)
                 {
@@ -170,8 +172,6 @@ namespace BMBF.Patching
                     _tagManager.AddTag(apkArchive, _manifest, _allowExistingTag);
                 }
                 
-                _manifest.ModifiedFiles = _fileModifications.Select(f => f.ApkFilePath).ToHashSet();
-
                 // Actually modify the APK
                 await DoFileModifications(apkArchive, logger, ct);
                 
