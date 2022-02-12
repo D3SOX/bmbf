@@ -160,7 +160,7 @@ namespace BMBF.Patching
         public async Task PatchAsync(IFileSystem fileSystem, string apkPath, ILogger logger, CancellationToken ct)
         {
             logger.Information($"Patching {Path.GetFileName(apkPath)}");
-            using (var apkStream = fileSystem.File.OpenWrite(apkPath))
+            using (var apkStream = fileSystem.File.Open(apkPath, FileMode.Open, FileAccess.ReadWrite))
             using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Update))
             {
                 // Add the tag to the APK if configured
