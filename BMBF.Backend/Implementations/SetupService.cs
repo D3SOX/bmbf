@@ -150,7 +150,7 @@ public class SetupService : ISetupService, IDisposable
             await LoadSavedStatusAsync();
             if (CurrentStatus != null)
             {
-                throw new InvalidOperationException("Setup already started");
+                throw new InvalidStageException("Setup already started");
             }
 
             _logger.Information("Beginning setup");
@@ -210,8 +210,14 @@ public class SetupService : ISetupService, IDisposable
         try
         {
             await LoadSavedStatusAsync();
-            if (CurrentStatus == null) throw new InvalidOperationException("Setup not ongoing");
-            if (CurrentStatus.Stage != beginningStage && CurrentStatus.Stage != allowStage) throw new InvalidOperationException("Incorrect setup stage");
+            if (CurrentStatus == null)
+            {
+                throw new InvalidStageException("Setup not ongoing");
+            }
+            if (CurrentStatus.Stage != beginningStage && CurrentStatus.Stage != allowStage)
+            {
+                throw new InvalidStageException("Incorrect setup stage");
+            }
 
             CurrentStatus.IsInProgress = true;
             CurrentStatus.Stage = beginningStage;
