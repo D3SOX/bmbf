@@ -130,10 +130,7 @@ public class WebService : IHostedService, IDisposable
             }
             catch (InstallationException ex)
             {
-                return Response.Json(new ModActionResult
-                {
-                    Error = ex.Message
-                });
+                return Response.Text(ex.Message, 500);
             }
         }));
         router.Post("/mods/uninstall/{id}", ModEndpoint(async mod =>
@@ -145,10 +142,7 @@ public class WebService : IHostedService, IDisposable
             }
             catch (InstallationException ex)
             {
-                return Response.Json(new ModActionResult
-                {
-                    Error = ex.Message
-                });
+                return Response.Text(ex.Message, 500);
             }
         }));
         router.Post("/mods/installCore", async _ =>
