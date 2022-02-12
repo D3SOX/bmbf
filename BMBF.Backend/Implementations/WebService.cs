@@ -147,8 +147,8 @@ public class WebService : IHostedService, IDisposable
         }));
         router.Post("/mods/installCore", async _ =>
         {
-            await _coreModService.InstallAsync(true);
-            return Response.Empty();
+            var installResult = await _coreModService.InstallAsync(true);
+            return Response.Json(installResult);
         });
         router.Post("/mods/updateStatuses", async _ =>
         {
