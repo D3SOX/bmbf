@@ -1,9 +1,11 @@
 ﻿using System.IO;
+using System.Text.Json;
 using Android.App;
 using Android.Content;
 using BMBF.Backend;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Implementations;
+using BMBF.Backend.Services;
 using BMBF.WebServer;
 using Serilog;
 
@@ -13,10 +15,6 @@ public class AndroidWebService : WebService
 {
     private readonly Service _bmbfService;
     
-    public AndroidWebService(Service bmbfService, BMBFSettings settings, FileProviders fileProviders) : base(settings, fileProviders)
-    {
-        _bmbfService = bmbfService;
-    }
 
     protected override void SetupApi(Router router)
     {
@@ -52,5 +50,32 @@ public class AndroidWebService : WebService
             return Response.Empty().Async();
         });
         router.Get("/runInBackground", _ => Response.Json(File.Exists(Constants.RunForegroundConfig)).Async());
+    }
+
+    public AndroidWebService(BMBFSettings settings,
+        FileProviders fileProviders,
+        IBeatSaberService beatSaberService,
+        IModService modService,
+        ICoreModService coreModService,
+        IPlaylistService playlistService,
+        ISongService songService, 
+        IFileImporter fileImporter, 
+        JsonSerializerOptions serializerOptions,
+        IMessageService messageService,
+        ISetupService setupService,
+        IAssetService assetService, 
+        Service bmbfService) : base(settings,
+        fileProviders,
+        beatSaberService,
+        modService,
+        coreModService,
+        playlistService,
+        songService, fileImporter,
+        serializerOptions, 
+        messageService, 
+        setupService, 
+        assetService)
+    {
+        _bmbfService = bmbfService;
     }
 }
