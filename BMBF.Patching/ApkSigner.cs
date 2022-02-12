@@ -186,7 +186,7 @@ namespace BMBF.Patching
                 }
             }
 
-            await using (var apkStream = fileSystem.File.OpenWrite(path))
+            await using (var apkStream = fileSystem.File.Open(path, FileMode.Open, FileAccess.ReadWrite))
             using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Update))
             {
                 // Delete the previous signature first!
