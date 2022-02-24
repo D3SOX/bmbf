@@ -4,8 +4,10 @@ using Android.App;
 using Android.Content;
 using Android.OS;
 using BMBF.Backend.Configuration;
+using BMBF.Backend.Endpoints;
 using BMBF.Backend.Extensions;
 using BMBF.Backend.Services;
+using BMBF.Endpoints;
 using BMBF.Implementations;
 using Java.Lang;
 using Microsoft.Extensions.Configuration;
@@ -133,7 +135,8 @@ public class BMBFService : Service
                 services.AddSingleton<IBeatSaberService, BeatSaberService>();
                 services.AddBMBF(settings, resources, assetFileProvider, webRootFileProvider);
 
-                services.AddHostedService<AndroidWebService>();
+                // Add android-specific endpoints
+                services.AddTransient<IEndpoints, HostEndpoints>();
                 services.AddSingleton<Service>(this);
             })
 #if DEBUG

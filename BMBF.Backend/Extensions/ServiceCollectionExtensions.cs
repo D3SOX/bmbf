@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 using BMBF.Backend.Configuration;
+using BMBF.Backend.Endpoints;
 using BMBF.Backend.Implementations;
 using BMBF.Backend.Services;
 using BMBF.Patching;
@@ -44,6 +45,7 @@ public static class ServiceCollectionExtensions
         IFileProvider assetFileProvider,
         IFileProvider webRootFileProvider)
     {
+        // Add key BMBF services
         services.AddSingleton<ISongService, SongService>();
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();
@@ -56,11 +58,18 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFileSystemWatcher>(s =>
             s.GetRequiredService<IFileSystem>()
                 .FileSystemWatcher.CreateNew());
+        services.AddHostedService<WebService>();
+        
+        // Add API endpoints
+        services.AddTransient<IEndpoints, VersionEndpoints>();
 
+        // Add the default JSON serializer options
         services.AddSingleton(new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
+        
+        // Add HTTP clients for requests to external services
         services.AddHttpClient<IBeatSaverService, BeatSaverService>(client =>
         {
             ConfigureDefaults(client);
@@ -68,7 +77,7 @@ public static class ServiceCollectionExtensions
         });
         services.AddHttpClient<IAssetService, AssetService>(ConfigureDefaults);
         services.AddHttpClient();
-
+        
         services.AddSingleton(settings);
         services.AddSingleton(resources);
         services.AddSingleton(new FileProviders(assetFileProvider, webRootFileProvider));
@@ -104,6 +113,7 @@ public static class ServiceCollectionExtensions
             () => new PatchManifest("BMBF", null) { ModloaderName = "QuestLoader" });
 
         services.AddSingleton<ITagManager>(tagManager);
+        // Create a factory for IPatchBuilder, which assigns our patcher name and version
         services.AddSingleton<Func<IPatchBuilder>>(() =>
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version ?? 
