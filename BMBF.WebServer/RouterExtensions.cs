@@ -55,7 +55,7 @@ public static class RouterExtensions
             if (parameters.Count == 1)
             {
                 needPassRequest = true;
-                if (parameters[0] != typeof(Request))
+                if (!parameters[0].IsAssignableFrom(typeof(Request)))
                 {
                     throw new InvalidEndpointException(method,
                         $"Endpoints can only take a {nameof(Request)} as a parameter");
@@ -64,23 +64,29 @@ public static class RouterExtensions
 
             var returnType = method.ReturnType;
 
-            bool returnsVoid = false;
+            bool returnsResponse;
             bool returnsTask;
-            if (returnType == typeof(HttpResponse))
+            if (returnType.IsAssignableTo(typeof(HttpResponse)))
             {
+                returnsResponse = true;
                 returnsTask = false;
             }
-            else if(returnType == typeof(Task<HttpResponse>))
+            else if(returnType.IsAssignableTo(typeof(Task<HttpResponse>)))
             {
+                returnsResponse = true;
                 returnsTask = true;
             }
             else if (returnType == typeof(void))
             {
+                returnsResponse = false;
                 returnsTask = false;
-                returnsVoid = true;
+            }   else if(returnType.IsAssignableTo(typeof(Task))) {
+                returnsResponse = false;
+                returnsTask = true;
             } else {
                 throw new InvalidEndpointException(method,
-                    $"Endpoint return types must be either {nameof(HttpResponse)} or {nameof(Task<HttpResponse>)}");
+                    $"Endpoint return types must be either {nameof(HttpResponse)}, {nameof(Task<HttpResponse>)}," +
+                    $" void or {nameof(Task)}");
             }
             
             router.Route(endpointAttribute.Method, endpointAttribute.Path, async req =>
@@ -105,18 +111,26 @@ public static class RouterExtensions
                     }
                     throw;
                 }
+                
 
-
-                // If this endpoint returns void, we will always return OK (since no error has occurred)
-                if (returnsVoid)
+                // If this endpoint returns void, return OK now
+                if (!returnsResponse && !returnsTask)
                 {
                     return Responses.Ok();
                 }
+                
                 if (result == null)
                 {
                     throw new NullReferenceException($"Null return from endpoint {endpointAttribute.Path}");
                 }
-                
+
+                // If the endpoint returns a task but with no response, we will await it, then return OK
+                if (!returnsResponse)
+                {
+                    await (Task) result;
+                    return Responses.Ok();
+                }
+
                 // Await the endpoint if necessary, otherwise return the result
                 if (returnsTask)
                 {
