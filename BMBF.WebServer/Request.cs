@@ -1,133 +1,180 @@
-﻿using NetCoreServer;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Web;
+using Hydra;
 
-namespace BMBF.WebServer
+namespace BMBF.WebServer;
+
+/// <summary>
+/// Convenience class for working with HTTP requests
+/// </summary>
+public class Request
 {
-    public class Request
+    /// <summary>
+    /// The Hydra <see cref="HttpRequest"/> this request was created from.
+    /// </summary>
+    public HttpRequest Inner { get; }
+    
+    /// <summary>
+    /// Endpoint of the connecting client
+    /// </summary>
+    public IPEndPoint Peer { get; }
+    
+    /// <summary>
+    /// HTTP method used for this request
+    /// </summary>
+    public HttpMethod Method { get; }
+    
+    /// <summary>
+    /// Routing path of this request (i.e. the absolute path of the URI - without query parameters)
+    /// </summary>
+    public string Path { get; set; }
+
+    /// <summary>
+    /// A stream which can be used to read the body of the request
+    /// </summary>
+    public Stream Body => Inner.Body;
+    
+    /// <summary>
+    /// The headers of the HTTP request
+    /// </summary>
+    public ReadOnlyHttpHeaders Headers { get; }
+
+    /// <summary>
+    /// Parameters given to this request in the request path (i.e. using {myParam})
+    /// </summary>
+    public IDictionary<string, string> Parameters => _parameters;
+    
+    /// <summary>
+    /// Query parameters in the request URI.
+    /// </summary>
+    public IDictionary<string, string> QueryParameters => _queryParameters;
+
+    private readonly Dictionary<string, string> _queryParameters = new();
+    private readonly Dictionary<string, string> _parameters = new();
+
+    internal Request(HttpRequest inner, IPEndPoint peer)
     {
-        public HttpRequest Inner { get; }
-        public IPEndPoint Peer { get; }
-        public HttpMethod Method { get; }
-        public string Path { get; set; }
+        Inner = inner;
+        Peer = peer;
+        Method = new HttpMethod(inner.Method);
+        
+        // Create a temporary URI for parsing purposes
+        var uri = new Uri($"http://127.0.0.1{inner.Uri}");
+        Path = uri.AbsolutePath;
+        Headers = inner.Headers;
 
-        private readonly HeaderDictionary _headers = new();
-        private readonly Dictionary<string, string> _queryParameters = new();
-        private readonly Dictionary<string, string> _parameters = new();
-
-        internal Request(HttpRequest inner, IPEndPoint peer)
+        try
         {
-            Inner = inner;
-            Peer = peer;
-            Method = new HttpMethod(inner.Method);
-
-            // Create a temporary URI for parsing purposes
-            var uri = new Uri($"http://127.0.0.1{inner.Url}");
-            Path = uri.AbsolutePath;
-
-            for (int i = 0; i < inner.Headers; i++)
+            var query = HttpUtility.ParseQueryString(uri.Query);
+            for (int i = 0; i < query.Count; i++)
             {
-                var (key, value) = inner.Header(i);
-                _headers.Add(key, value);
-            }
-
-            try
-            {
-                var query = HttpUtility.ParseQueryString(uri.Query);
-                for (int i = 0; i < query.Count; i++)
-                {
-                    _queryParameters.Add(query.GetKey(i)!, query.Get(i)!);
-                }
-            }
-            catch
-            {
-                throw new WebException(Response.Text("Invalid query string", 400));
+                _queryParameters.Add(query.GetKey(i)!, query.Get(i)!);
             }
         }
-
-        public IDictionary<string, string> Headers => _headers;
-        public IDictionary<string, string> Parameters => _parameters;
-        public IDictionary<string, string> QueryParameters => _queryParameters;
-
-        public Span<byte> Body => Inner.BodySpan;
-
-        public string TextBody()
+        catch
         {
-            string? s;
-            var ex = new WebException(Response.Text("Invalid UTF8 request body", 400));
-
-            try
-            {
-                s = Encoding.UTF8.GetString(Body);
-            }
-            catch
-            {
-                throw ex;
-            }
-
-            return s ?? throw ex;
+            throw new WebException(Responses.Text("Invalid query string", 400));
         }
-        public T JsonBody<T>()
+    }
+
+    /// <summary>
+    /// Reads the body of this request as UTF-8.
+    /// </summary>
+    /// <returns>The body of this request</returns>
+    /// <exception cref="WebException">If the body is not valid UTF-8</exception>
+    public async Task<string> TextBody()
+    {
+        string? s;
+        var ex = new WebException(Responses.BadRequest("Invalid UTF8 request body"));
+
+        try
         {
-            T? json;
-
-            try
-            {
-                json = JsonSerializer.Deserialize<T>(Body);
-            }
-            catch (JsonException ex)
-            {
-                throw new WebException(Response.Text(ex.Message, 400));
-            }
-
-            return json is not null ? json : throw new WebException(Response.Text("Invalid JSON request body", 400));
+            using var bodyReader = new StreamReader(Inner.Body, Encoding.UTF8);
+            s = await bodyReader.ReadToEndAsync();
+        }
+        catch
+        {
+            throw ex;
         }
 
-        public T Param<T>(string name) where T : IConvertible
+        return s ?? throw ex;
+    }
+    
+    /// <summary>
+    /// Deserializes the body of the request as JSON
+    /// </summary>
+    /// <typeparam name="T">Type of the JSON to deserialize to</typeparam>
+    /// <returns>The body deserialized from JSON</returns>
+    /// <exception cref="WebException">If the body is not valid JSON</exception>
+    public T JsonBody<T>()
+    {
+        T? json;
+
+        try
         {
-            object? value;
-            var ex = new WebException(Response.Text($"Invalid path parameter '{name}'", 400));
-
-            try
-            {
-                value = Convert.ChangeType(_parameters[name], typeof(T), CultureInfo.InvariantCulture);
-            }
-            catch
-            {
-                throw ex;
-            }
-
-            return value is not null ? (T) value : throw ex;
+            json = JsonSerializer.Deserialize<T>(Body);
         }
-        internal void AddParams(IDictionary<string, string> parameters)
+        catch (JsonException ex)
         {
-            foreach (var (name, value) in parameters)
-            {
-                _parameters.Add(name, value);
-            }
+            throw new WebException(Responses.BadRequest(ex.Message));
         }
 
-        public T QueryParam<T>(string name) where T : IConvertible
+        return json is not null ? json : throw new WebException(Responses.BadRequest("Invalid JSON request body"));
+    }
+
+    /// <summary>
+    /// Gets a path parameter from <see cref="Path"/>
+    /// </summary>
+    /// <param name="name">Name of the parameter, not including the {}</param>
+    /// <typeparam name="T">Type to convert the parameter into</typeparam>
+    /// <returns>The request parameter, casted to <typeparamref name="T"/></returns>
+    /// <exception cref="WebException">If the path parameter is missing, or cannot be converted to
+    /// <typeparamref name="T"/></exception>
+    public T Param<T>(string name) where T : IConvertible
+    {
+        try
         {
-            object? value;
-            var ex = new WebException(Response.Text($"Invalid query parameter '{name}'", 400));
+            return (T) Convert.ChangeType(_parameters[name], typeof(T), CultureInfo.InvariantCulture);
+        }
+        catch
+        {
+            throw new WebException(Responses.BadRequest($"Invalid path parameter '{name}'"));
+        }
+    }
 
-            try
-            {
-                value = Convert.ChangeType(_queryParameters[name], typeof(T), CultureInfo.InvariantCulture);
-            }
-            catch
-            {
-                throw ex;
-            }
-
-            return value is not null ? (T) value : throw ex;
+    /// <summary>
+    /// Gets a query parameter from the request URI
+    /// </summary>
+    /// <param name="name">Name of the parameter, not including the {}</param>
+    /// <typeparam name="T">Type to convert the parameter into</typeparam>
+    /// <returns>The request parameter, casted to <typeparamref name="T"/></returns>
+    /// <exception cref="WebException">If the path parameter is missing, or cannot be converted to
+    /// <typeparamref name="T"/></exception>
+    public T QueryParam<T>(string name) where T : IConvertible
+    {
+        try
+        {
+            return (T) Convert.ChangeType(_queryParameters[name], typeof(T), CultureInfo.InvariantCulture);
+        }
+        catch
+        {
+            throw new WebException(Responses.BadRequest($"Invalid query parameter '{name}'"));
+        }
+    }
+    
+    internal void AddParams(IDictionary<string, string> parameters)
+    {
+        foreach (var (name, value) in parameters)
+        {
+            _parameters.Add(name, value);
         }
     }
 }

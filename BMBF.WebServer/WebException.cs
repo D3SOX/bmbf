@@ -1,12 +1,13 @@
 ﻿using System;
+using Hydra;
 
 namespace BMBF.WebServer
 {
     internal class WebException : Exception
     {
-        public readonly Response Response;
+        public readonly HttpResponse Response;
 
-        public WebException(Response response)
+        public WebException(HttpResponse response)
         {
             Response = response;
         }

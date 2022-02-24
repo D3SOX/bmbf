@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="HydraServer" Version="0.1.0-ci.1645073732.7fe1d21c377d8d13efdbe6a3aa7896bc84bad103" />
     <PackageReference Include="MimeMapping" Version="1.0.1.37" />
-    <PackageReference Include="NetCoreServer" Version="6.2.0" />
   </ItemGroup>
 
 </Project>
