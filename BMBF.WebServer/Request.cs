@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
@@ -15,37 +13,12 @@ namespace BMBF.WebServer;
 /// <summary>
 /// Convenience class for working with HTTP requests
 /// </summary>
-public class Request
+public class Request : HttpRequest
 {
-    /// <summary>
-    /// The Hydra <see cref="HttpRequest"/> this request was created from.
-    /// </summary>
-    public HttpRequest Inner { get; }
-    
-    /// <summary>
-    /// Endpoint of the connecting client
-    /// </summary>
-    public IPEndPoint Peer { get; }
-    
-    /// <summary>
-    /// HTTP method used for this request
-    /// </summary>
-    public HttpMethod Method { get; }
-    
     /// <summary>
     /// Routing path of this request (i.e. the absolute path of the URI - without query parameters)
     /// </summary>
     public string Path { get; set; }
-
-    /// <summary>
-    /// A stream which can be used to read the body of the request
-    /// </summary>
-    public Stream Body => Inner.Body;
-    
-    /// <summary>
-    /// The headers of the HTTP request
-    /// </summary>
-    public ReadOnlyHttpHeaders Headers { get; }
 
     /// <summary>
     /// Parameters given to this request in the request path (i.e. using {myParam})
@@ -57,19 +30,20 @@ public class Request
     /// </summary>
     public IDictionary<string, string> QueryParameters => _queryParameters;
 
+    /// <summary>
+    /// HTTP method of the request
+    /// </summary>
+    public HttpMethod ParsedMethod { get; }
+
     private readonly Dictionary<string, string> _queryParameters = new();
     private readonly Dictionary<string, string> _parameters = new();
 
-    internal Request(HttpRequest inner, IPEndPoint peer)
+    internal Request(HttpRequest inner) : base(inner)
     {
-        Inner = inner;
-        Peer = peer;
-        Method = new HttpMethod(inner.Method);
-        
         // Create a temporary URI for parsing purposes
         var uri = new Uri($"http://127.0.0.1{inner.Uri}");
         Path = uri.AbsolutePath;
-        Headers = inner.Headers;
+        ParsedMethod = new HttpMethod(inner.Method);
 
         try
         {
@@ -97,7 +71,7 @@ public class Request
 
         try
         {
-            using var bodyReader = new StreamReader(Inner.Body, Encoding.UTF8);
+            using var bodyReader = new StreamReader(Body, System.Text.Encoding.UTF8);
             s = await bodyReader.ReadToEndAsync();
         }
         catch

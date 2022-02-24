@@ -29,12 +29,12 @@ public class Server : Router, IDisposable
     private async Task<HttpResponse> RequestHandler(HttpRequest innerRequest)
     {
         await innerRequest.ReadHeaders();
-        var request = new Request(innerRequest, (IPEndPoint) innerRequest.Remote!);
+        var request = new Request(innerRequest);
         
         var route = Routes.Find(route => route.Matches(request));
         if (route is null)
         {
-            if (request.Method == HttpMethod.Options)
+            if (request.ParsedMethod == HttpMethod.Options)
             {
                 var allowed = Routes
                     .Where(r => r.Path.Matches(request.Path, out _))
@@ -56,7 +56,7 @@ public class Server : Router, IDisposable
         try
         {
             var response = await route.Handler(request);
-            if (request.Method == HttpMethod.Head && route.Method != HttpMethod.Head)
+            if (request.ParsedMethod == HttpMethod.Head && route.Method != HttpMethod.Head)
             {
                 response.Headers.Add("Content-Length", response.Body.Length.ToString());
                 response.Body = Stream.Null;
@@ -73,12 +73,6 @@ public class Server : Router, IDisposable
             EndpointException?.Invoke(this, new EndpointExceptionEventArgs(ex, request.Path));
             return Responses.InternalServerError();
         }
-    }
-    
-    private HttpResponse OnException(string requestPath, Exception ex)
-    {
-        EndpointException?.Invoke(this, new EndpointExceptionEventArgs(ex, requestPath));
-        return Responses.InternalServerError();
     }
 
     public void Dispose()
