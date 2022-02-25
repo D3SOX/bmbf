@@ -283,7 +283,11 @@ public class SetupService : ISetupService, IDisposable
                     }
                     catch (Exception ex)
                     {
-                        if (ex is OperationCanceledException) throw;
+                        if (ex is OperationCanceledException)
+                        {
+                            throw;
+                        }
+
                         _logger.Error($"Failed to download diff: {ex.Message}");
                     }
 
@@ -292,7 +296,10 @@ public class SetupService : ISetupService, IDisposable
 
                 await using var selectedDeltaStream = deltaStream;
 
-                if (_io.File.Exists(_tempApkPath)) _io.File.Delete(_tempApkPath);
+                if (_io.File.Exists(_tempApkPath))
+                {
+                    _io.File.Delete(_tempApkPath);
+                }
 
                 _logger.Information($"Applying patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
                 await using (var basisStream = _io.File.OpenRead(_latestCompleteApkPath))
@@ -336,7 +343,10 @@ public class SetupService : ISetupService, IDisposable
         {
             _logger.Information("Beginning patching");
 
-            if (_io.File.Exists(_tempApkPath)) _io.File.Delete(_tempApkPath);
+            if (_io.File.Exists(_tempApkPath))
+            {
+                _io.File.Delete(_tempApkPath);
+            }
             _io.File.Copy(_latestCompleteApkPath, _tempApkPath);
 
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
