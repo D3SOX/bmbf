@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BMBF.WebServer.Attributes;
 using Hydra;
 
 namespace BMBF.WebServer;
-
 
 public static class RouterExtensions
 {
@@ -23,7 +22,8 @@ public static class RouterExtensions
     /// <exception cref="InvalidEndpointException"></exception>
     public static void AddEndpoints(this Router router, object obj)
     {
-        foreach(var method in obj.GetType().GetMethods())
+        var endpointsType = obj.GetType();
+        foreach(var method in endpointsType.GetMethods())
         {
             object[] attributes = method.GetCustomAttributes(true);
             var endpointAttributes = attributes
@@ -50,94 +50,76 @@ public static class RouterExtensions
             {
                 throw new InvalidEndpointException(method, "Endpoint can have a maximum of 1 parameter");
             }
+            
+            var requestParam = Expression.Parameter(typeof(Request));
+            var endpointsObj = Expression.Constant(obj, endpointsType);
 
-            bool needPassRequest = false;
+            Expression callExpression;
             if (parameters.Count == 1)
             {
-                needPassRequest = true;
                 if (!parameters[0].IsAssignableFrom(typeof(Request)))
                 {
                     throw new InvalidEndpointException(method,
                         $"Endpoints can only take a {nameof(Request)} as a parameter");
                 }
+                // Call with the request parameter
+                callExpression = Expression.Call(endpointsObj, method, requestParam);
+            }
+            else
+            {
+                // Call without the request parameter
+                callExpression = Expression.Call(endpointsObj, method);
             }
 
             var returnType = method.ReturnType;
+            Expression endpointExpression;
 
-            bool returnsResponse;
-            bool returnsTask;
-            if (returnType.IsAssignableTo(typeof(HttpResponse)))
+            if (returnType.IsAssignableTo(typeof(Task<HttpResponse>)))
             {
-                returnsResponse = true;
-                returnsTask = false;
+                // Delegate type already matches Handler, no conversion required
+                endpointExpression = callExpression;
             }
-            else if(returnType.IsAssignableTo(typeof(Task<HttpResponse>)))
+            else if(returnType.IsAssignableTo(typeof(HttpResponse)))
             {
-                returnsResponse = true;
-                returnsTask = true;
+                // Method returns a response synchronously, we need to wrap it in a task
+                var fromResultDelegate = (Func<HttpResponse, Task<HttpResponse>>) Task.FromResult;
+                endpointExpression = Expression.Call(fromResultDelegate.Method, callExpression);
             }
             else if (returnType == typeof(void))
             {
-                returnsResponse = false;
-                returnsTask = false;
-            }   else if(returnType.IsAssignableTo(typeof(Task))) {
-                returnsResponse = false;
-                returnsTask = true;
+                endpointExpression = Expression.Block(
+                    callExpression, // Call the endpoint
+                    Expression.Constant(Task.FromResult(Empty)) // Return an empty response
+                );
+            }   else if(returnType == typeof(Task)) {
+                // Method returns a task but with no result - we need to wrap this to return an empty HttpResponse
+                var toResponseTaskDelegate = (Func<Task, Task<HttpResponse>>) ToEmptyResponse;
+                endpointExpression = Expression.Call(toResponseTaskDelegate.Method, callExpression);
             } else {
                 throw new InvalidEndpointException(method,
                     $"Endpoint return types must be either {nameof(HttpResponse)}, {nameof(Task<HttpResponse>)}," +
                     $" void or {nameof(Task)}");
             }
-            
-            router.Route(endpointAttribute.Method, endpointAttribute.Path, async req =>
-            {
-                object? result;
-                try
-                {
-                    // Invoke the endpoint method reflectively
-                    // TODO: Perhaps use Expression<T> or convert to delegate in an attempt to make this faster
-                    result = method.Invoke(
-                        obj,
-                        needPassRequest
-                            ? new object?[] { req } // Pass the request if required
-                            : Array.Empty<object?>());
-                }
-                catch (TargetInvocationException ex)
-                {
-                    // Prefer throwing the underlying exception from the endpoint
-                    if (ex.InnerException != null)
-                    {
-                        throw ex.InnerException;
-                    }
-                    throw;
-                }
-                
 
-                // If this endpoint returns void, return OK now
-                if (!returnsResponse && !returnsTask)
-                {
-                    return Responses.Ok();
-                }
-                
-                if (result == null)
-                {
-                    throw new NullReferenceException($"Null return from endpoint {endpointAttribute.Path}");
-                }
-
-                // If the endpoint returns a task but with no response, we will await it, then return OK
-                if (!returnsResponse)
-                {
-                    await (Task) result;
-                    return Responses.Ok();
-                }
-
-                // Await the endpoint if necessary, otherwise return the result
-                if (returnsTask)
-                {
-                    return await (Task<HttpResponse>) result;
-                }
-                return (HttpResponse) result;
-            });
+            var handler = Expression.Lambda<Handler>(endpointExpression, requestParam).Compile();
+            router.Route(endpointAttribute.Method, endpointAttribute.Path, handler);
         }
     }
+
+    /// <summary>
+    /// Awaits <paramref name="t"/>, then returns <see cref="Empty"/>.
+    /// Used to wrap endpoints returning <see cref="Task"/>
+    /// </summary>
+    /// <param name="t">Task to await</param>
+    /// <returns><see cref="Empty"/></returns>
+    private static async Task<HttpResponse> ToEmptyResponse(Task t)
+    {
+        await t;
+        return Empty;
+    }
+    
+    /// <summary>
+    /// The response emitted by endpoints returning <see cref="Void"/> or <see cref="Task"/>
+    /// </summary>
+    private static HttpResponse Empty { get; } = Responses.Ok();
 }
