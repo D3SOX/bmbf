@@ -19,7 +19,9 @@ public static class RouterExtensions
     /// </summary>
     /// <param name="router">Router to add the endpoints to</param>
     /// <param name="obj">Object instance to add the endpoints from</param>
-    /// <exception cref="InvalidEndpointException"></exception>
+    /// <exception cref="InvalidEndpointException">If the endpoint has more than 1 parameter (which must be of type
+    /// <see cref="Request"/>) or returns a disallowed return type.
+    /// </exception>
     public static void AddEndpoints(this Router router, object obj)
     {
         var endpointsType = obj.GetType();
