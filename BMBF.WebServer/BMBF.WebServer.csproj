@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HydraServer" Version="0.1.0-ci.1645073732.7fe1d21c377d8d13efdbe6a3aa7896bc84bad103" />
+    <PackageReference Include="HydraServer" Version="0.1.0-ci.1645822009.a96693eae3af8709bae34a62f892f3ee81ad19de" />
     <PackageReference Include="MimeMapping" Version="1.0.1.37" />
   </ItemGroup>
 
