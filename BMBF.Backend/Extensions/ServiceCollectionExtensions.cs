@@ -62,6 +62,12 @@ public static class ServiceCollectionExtensions
         
         // Add API endpoints
         services.AddTransient<IEndpoints, VersionEndpoints>();
+        services.AddTransient<IEndpoints, BeatSaberEndpoints>();
+        services.AddTransient<IEndpoints, ModsEndpoints>();
+        services.AddTransient<IEndpoints, PlaylistsEndpoints>();
+        services.AddTransient<IEndpoints, SetupEndpoints>();
+        services.AddTransient<IEndpoints, SongsEndpoints>();
+        services.AddTransient<IEndpoints, ImportEndpoints>();
 
         // Add the default JSON serializer options
         services.AddSingleton(new JsonSerializerOptions
