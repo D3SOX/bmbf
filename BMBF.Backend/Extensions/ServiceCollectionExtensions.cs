@@ -68,6 +68,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEndpoints, SetupEndpoints>();
         services.AddTransient<IEndpoints, SongsEndpoints>();
         services.AddTransient<IEndpoints, ImportEndpoints>();
+        services.AddTransient<IEndpoints, WebSocketEndpoints>();
 
         // Add the default JSON serializer options
         services.AddSingleton(new JsonSerializerOptions

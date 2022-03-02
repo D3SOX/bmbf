@@ -4,6 +4,7 @@ using BMBF.Backend.Models.Messages;
 using BMBF.Backend.Models.Setup;
 using BMBF.Backend.Services;
 using BMBF.ModManagement;
+using Serilog;
 
 namespace BMBF.Backend.Implementations;
 
@@ -20,6 +21,8 @@ public class MessageService : IMessageService
         IBeatSaberService beatSaberService,
         IModService modService)
     {
+        MessageSend += OnMessageSend;
+        
         // Register events to send our messages
         setupService.StatusChanged += OnSetupStatusUpdate;
         setupService.SetupComplete += OnSetupFinished;
@@ -37,6 +40,10 @@ public class MessageService : IMessageService
         modService.ModStatusChanged += OnModStatusChanged;
     }
 
+    private void OnMessageSend(IMessage message)
+    {
+        Log.Verbose($"Message sent: {message.Type}");
+    }
 
     private void OnSongAdded(object? sender, Song song) => Send(new SongAdded(song));
 

@@ -5,8 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Endpoints;
-using BMBF.Backend.Models.Messages;
-using BMBF.Backend.Services;
 using BMBF.WebServer;
 using Hydra;
 using Microsoft.Extensions.FileProviders;
@@ -27,8 +25,7 @@ public class WebService : IHostedService, IDisposable
     
     public WebService(BMBFSettings settings,
         FileProviders fileProviders,
-        JsonSerializerOptions serializerOptions,
-        IMessageService messageService, 
+        JsonSerializerOptions serializerOptions, 
         IEnumerable<IEndpoints> endpoints)
     {
         _settings = settings;
@@ -37,7 +34,6 @@ public class WebService : IHostedService, IDisposable
 
         _server.ServerException += OnException;
         _server.EndpointException += OnEndpointException;
-        messageService.MessageSend += OnMessageSend;
 
         Responses.DefaultSerializerOptions = serializerOptions;
 
@@ -73,12 +69,6 @@ public class WebService : IHostedService, IDisposable
         Log.Error(args.Exception, $"Exception occured handling request to {args.RequestPath}");
     }
 
-
-    private void OnMessageSend(IMessage message)
-    {
-        Log.Warning("WebSocket messages currently unimplemented");
-    }
-    
     private HttpResponse StaticFileHandler(Request req)
     {
         var file = _webRootFileProvider.GetFileInfo(req.Path);
