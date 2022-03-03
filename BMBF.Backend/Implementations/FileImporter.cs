@@ -164,8 +164,8 @@ public class FileImporter : IFileImporter
         // Attempt to import as a mod config. This only applies if the config's filename matches the ID of a loaded mod
         if (_extensions.ConfigExtensions.Contains(extension))
         {
-            var modId = Path.GetFileNameWithoutExtension(fileName);
-            var modExistsWithId = (await _modService.GetModsAsync()).ContainsKey(modId);
+            string modId = Path.GetFileNameWithoutExtension(fileName);
+            bool modExistsWithId = (await _modService.GetModsAsync()).ContainsKey(modId);
             if (modExistsWithId)
             {
                 await CopyFile(stream, fileName, _bmbfSettings.ConfigsPath);
@@ -181,7 +181,7 @@ public class FileImporter : IFileImporter
 
         if (_extensions.PlaylistExtensions.Contains(extension))
         {
-            var playlistId = await TryImportPlaylistAsync(stream, fileName);
+            string? playlistId = await TryImportPlaylistAsync(stream, fileName);
             if (playlistId != null)
             {
                 return new FileImportResult
@@ -197,7 +197,7 @@ public class FileImporter : IFileImporter
         // At this point, we may need to attempt an import multiple times, therefore we copy to a memory stream
         if (!stream.CanSeek)
         {
-            await using var memStream = new MemoryStream();
+            var memStream = new MemoryStream();
             await stream.CopyToAsync(memStream);
             stream = memStream;
         }
@@ -216,7 +216,7 @@ public class FileImporter : IFileImporter
 
         (IMod? mod, string destination)? selectedCopy = null;
 
-        if (_extensions.CopyExtensions.TryGetValue(extension, out var destination))
+        if (_extensions.CopyExtensions.TryGetValue(extension, out string? destination))
         {
             selectedCopy = (null, destination);
         }
