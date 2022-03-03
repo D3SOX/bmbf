@@ -201,6 +201,9 @@ public class FileImporter : IFileImporter
             await stream.CopyToAsync(memStream);
             stream = memStream;
         }
+        // Make sure that the (possibly Memory) Stream gets disposed at the end of this scope
+        await using var _ = stream;
+        
         stream.Position = 0;
 
         // Now we'll attempt to import the file as a mod
