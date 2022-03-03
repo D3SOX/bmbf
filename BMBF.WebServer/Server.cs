@@ -28,7 +28,6 @@ public class Server : Router, IDisposable
 
     private async Task<HttpResponse> RequestHandler(HttpRequest innerRequest)
     {
-        await innerRequest.ReadHeaders();
         var request = new Request(innerRequest);
         
         var route = Routes.Find(route => route.Matches(request));
@@ -55,6 +54,7 @@ public class Server : Router, IDisposable
 
         try
         {
+            await innerRequest.ReadHeaders();
             var response = await route.Handler(request);
             if (request.ParsedMethod == HttpMethod.Head && route.Method != HttpMethod.Head)
             {
