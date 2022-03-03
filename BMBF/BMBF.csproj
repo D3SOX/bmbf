@@ -22,7 +22,7 @@
         <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
     </PropertyGroup>
     
-    <PropertyGroup>
+    <PropertyGroup Condition="Exists('..\BMBF.keystore')">
         <AndroidKeyStore>true</AndroidKeyStore>
         <AndroidSigningKeyStore>..\BMBF.keystore</AndroidSigningKeyStore>
         <AndroidSigningKeyPass>$(BMBF_PASS)</AndroidSigningKeyPass>
