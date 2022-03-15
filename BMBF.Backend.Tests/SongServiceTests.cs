@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Implementations;
@@ -19,7 +20,11 @@ public class SongServiceTests : IDisposable
         _songService = CreateSongService();
     }
 
-    private SongService CreateSongService() => new(_settings, _fileSystem, Mock.Of<IFileSystemWatcher>());
+    private SongService CreateSongService() => new(
+        _settings,
+        _fileSystem, 
+        Mock.Of<IFileSystemWatcher>(),
+        new JsonSerializerOptions());
 
     private readonly SongService _songService;
     private readonly MockFileSystem _fileSystem = Util.CreateMockFileSystem();

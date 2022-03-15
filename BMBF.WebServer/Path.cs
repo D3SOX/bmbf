@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BMBF.WebServer
@@ -53,7 +54,7 @@ namespace BMBF.WebServer
         {
             if (s.StartsWith('{') && s.EndsWith('}'))
             {
-                return new ExtractorSegment(s);
+                return new ExtractorSegment(s[1..^1]);
             }
             if (s == "*")
             {
@@ -78,7 +79,7 @@ namespace BMBF.WebServer
             _value = value;
         }
 
-        public override bool Matches(string segment, ref IDictionary<string, string> extracted) => segment == _value;
+        public override bool Matches(string segment, ref IDictionary<string, string> extracted) => segment.Equals(_value, StringComparison.OrdinalIgnoreCase);
     }
 
     internal class ExtractorSegment : Segment

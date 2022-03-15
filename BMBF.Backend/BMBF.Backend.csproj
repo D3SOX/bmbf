@@ -18,12 +18,14 @@
   <ItemGroup>
     <InternalsVisibleTo Include="BMBF.Backend.Tests" />
 
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Octodiff" Version="1.2.36" />
     <PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
     <PackageReference Include="Serilog" Version="2.10.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="System.IO.Abstractions" Version="16.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+
+    <ProjectReference Include="../BMBF.WebServer/BMBF.WebServer.csproj" />
 
     <ProjectReference Include="../BMBF.Patching/BMBF.Patching.csproj" />
     <ProjectReference Include="../BMBF.Resources/BMBF.Resources.csproj" />

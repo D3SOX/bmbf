@@ -84,7 +84,7 @@ public class AssetServiceTests
         
         SetupFile(AssetService.IndexPath, indexStream);
         
-        return new AssetService(_fileProviderMock.Object,
+        return new AssetService(new FileProviders(_fileProviderMock.Object, null!),
             _messageHandler.ToHttpClient(),
             new BMBFSettings
             {

@@ -221,6 +221,7 @@ public class ModService : IModService, IDisposable, IModManager
 
     private void StartWatchingForChanges(IFileSystemWatcher watcher, string path)
     {
+        _io.Directory.CreateDirectory(path);
         watcher.Path = path;
         watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
         watcher.Filter = "*.*";
@@ -242,7 +243,7 @@ public class ModService : IModService, IDisposable, IModManager
         int i = 1;
         while (_io.File.Exists(savePath))
         {
-            savePath = Path.Combine(_modsPath, $"{fileNameWithoutExtension}_{i}.{extension}");
+            savePath = Path.Combine(_modsPath, $"{fileNameWithoutExtension}_{i}{extension}");
             i++;
         }
 

@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Hydra;
 
 namespace BMBF.WebServer
 {
-    public delegate Task<Response> Handler(Request request);
-    public delegate Task<Response> Middleware(Request request, Handler next);
+    public delegate Task<HttpResponse> Handler(Request request);
+    
+    public delegate Task<HttpResponse> Middleware(Request request, Handler next);
 
     public class Router
     {
@@ -63,7 +65,7 @@ namespace BMBF.WebServer
 
         internal bool Matches(Request request)
         {
-            if (MethodMatches(request.Method) && Path.Matches(request.Path, out var extracted))
+            if (MethodMatches(request.ParsedMethod) && Path.Matches(request.Path, out var extracted))
             {
                 request.AddParams(extracted);
                 return true;

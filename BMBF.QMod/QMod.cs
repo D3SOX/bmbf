@@ -201,7 +201,6 @@ namespace BMBF.QMod
                 }
 
                 Installed = true;
-                _provider.InvokeModStatusChanged(this);
             }
             finally
             {

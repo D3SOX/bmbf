@@ -52,12 +52,15 @@ public class AssetService : IAssetService
 
     public string? BuiltInAssetsVersion => _builtInAssets.BeatSaberVersion;
 
-    public AssetService(IFileProvider assetProvider, HttpClient httpClient, BMBFSettings bmbfSettings, BMBFResources bmbfResources)
+    public AssetService(FileProviders fileProviders,
+        HttpClient httpClient,
+        BMBFSettings bmbfSettings,
+        BMBFResources bmbfResources)
     {
-        _assetProvider = assetProvider;
+        _assetProvider = fileProviders.AssetProvider;
         _httpClient = httpClient;
 
-        var indexFile = assetProvider.GetFileInfo(IndexPath);
+        var indexFile = _assetProvider.GetFileInfo(IndexPath);
         if (indexFile.Exists)
         {
             using var indexStream = indexFile.CreateReadStream();

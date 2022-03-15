@@ -60,6 +60,7 @@ public interface IAssetService
     /// </summary>
     /// <param name="is64Bit">Whether or not to use the 64 bit modloader</param>
     /// <param name="ct">Token to cancel the modloader download</param>
+    /// <exception cref="HttpRequestException">The modloader could not be downloaded, and no modloader was built-in</exception>
     Task<(Stream modloader, Stream main, Version version)> GetModLoader(bool is64Bit, CancellationToken ct = default);
 
     /// <summary>

@@ -150,7 +150,7 @@ public class SetupService : ISetupService, IDisposable
             await LoadSavedStatusAsync();
             if (CurrentStatus != null)
             {
-                throw new InvalidOperationException("Setup already started");
+                throw new InvalidStageException("Setup already started");
             }
 
             _logger.Information("Beginning setup");
@@ -210,8 +210,14 @@ public class SetupService : ISetupService, IDisposable
         try
         {
             await LoadSavedStatusAsync();
-            if (CurrentStatus == null) throw new InvalidOperationException("Setup not ongoing");
-            if (CurrentStatus.Stage != beginningStage && CurrentStatus.Stage != allowStage) throw new InvalidOperationException("Incorrect setup stage");
+            if (CurrentStatus == null)
+            {
+                throw new InvalidStageException("Setup not ongoing");
+            }
+            if (CurrentStatus.Stage != beginningStage && CurrentStatus.Stage != allowStage)
+            {
+                throw new InvalidStageException("Incorrect setup stage");
+            }
 
             CurrentStatus.IsInProgress = true;
             CurrentStatus.Stage = beginningStage;
@@ -277,7 +283,11 @@ public class SetupService : ISetupService, IDisposable
                     }
                     catch (Exception ex)
                     {
-                        if (ex is OperationCanceledException) throw;
+                        if (ex is OperationCanceledException)
+                        {
+                            throw;
+                        }
+
                         _logger.Error($"Failed to download diff: {ex.Message}");
                     }
 
@@ -286,7 +296,10 @@ public class SetupService : ISetupService, IDisposable
 
                 await using var selectedDeltaStream = deltaStream;
 
-                if (_io.File.Exists(_tempApkPath)) _io.File.Delete(_tempApkPath);
+                if (_io.File.Exists(_tempApkPath))
+                {
+                    _io.File.Delete(_tempApkPath);
+                }
 
                 _logger.Information($"Applying patch from v{diffInfo.FromVersion} to v{diffInfo.ToVersion}");
                 await using (var basisStream = _io.File.OpenRead(_latestCompleteApkPath))
@@ -330,7 +343,10 @@ public class SetupService : ISetupService, IDisposable
         {
             _logger.Information("Beginning patching");
 
-            if (_io.File.Exists(_tempApkPath)) _io.File.Delete(_tempApkPath);
+            if (_io.File.Exists(_tempApkPath))
+            {
+                _io.File.Delete(_tempApkPath);
+            }
             _io.File.Copy(_latestCompleteApkPath, _tempApkPath);
 
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -461,13 +477,17 @@ public class SetupService : ISetupService, IDisposable
                 _io.Directory.CreateDirectory(_backupPath);
                 foreach (string fileName in DataFiles)
                 {
-                    _logger.Information($"Backing up {fileName}");
                     var filePath = Path.Combine(BeatSaberDataPath, fileName);
                     var backupFilePath = Path.Combine(_backupPath, fileName);
 
                     if (_io.File.Exists(filePath))
                     {
+                        _logger.Information($"Backing up {fileName}");
                         _io.File.Copy(filePath, backupFilePath);
+                    }
+                    else
+                    {
+                        _logger.Information($"{fileName} did not exist");
                     }
                 }
             }

@@ -8,9 +8,6 @@
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <AndroidPackageFormat>apk</AndroidPackageFormat>
-        
-        <!-- BMBF only runs on the quest, so we can save some space by only building for arm64-v8a -->
-        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
 
         <!-- 
             We need set the target SDK version to 29 in order to allow us to use legacy external storage 
@@ -20,7 +17,12 @@
         <NoWarn>XA4211;XA1006</NoWarn>
     </PropertyGroup>
     
-    <PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <!-- BMBF only runs on the quest, so we can save some space by only building for arm64-v8a when releasing -->
+        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="Exists('..\BMBF.keystore')">
         <AndroidKeyStore>true</AndroidKeyStore>
         <AndroidSigningKeyStore>..\BMBF.keystore</AndroidSigningKeyStore>
         <AndroidSigningKeyPass>$(BMBF_PASS)</AndroidSigningKeyPass>
@@ -39,25 +41,9 @@
     
     <ItemGroup>
         <PackageReference Include="Serilog.Sinks.Xamarin" Version="0.2.0.64" />
-        <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
         <PackageReference Include="Xamarin.AndroidX.Core" Version="1.6.0.3" />
         <ProjectReference Include="../BMBF.Backend/BMBF.Backend.csproj" />
     </ItemGroup>
-    
-    <!-- Due to an issue with ASP.NET Core runtime packs not restoring when targeting net6.0-android,
-     we manually restore a packages.config containing the necessary package -->
-    <Target Name="RestoreBMBFRuntimePacks" BeforeTargets="Restore">
-        <!-- Verify that NuGet is available -->
-        <Exec Command="nuget help" IgnoreExitCode="true" StandardOutputImportance="Low" StandardErrorImportance="Low">
-            <Output TaskParameter="ExitCode" PropertyName="NuGetExitCode" />
-        </Exec>
-        
-        <!-- Use Unix HOME environment variable if available -->
-        <CreateProperty Condition="'$(HOMEPATH)' == ''" Value="$(HOME)">
-            <Output TaskParameter="Value" PropertyName="HOMEPATH" />
-        </CreateProperty>
-        
-        <Warning Condition="'$(NuGetExitCode)' != '0'" Text="NuGet executable not found! ASP.NET Core runtime packs required by BMBF may not restore correctly. To fix this, add NuGet.exe to your PATH" />
-        <Exec Condition="'$(NuGetExitCode)' == '0'" Command="nuget restore packages.config -PackagesDirectory $(HOMEPATH)/.nuget/packages" StandardOutputImportance="High" />
-    </Target>
 </Project>

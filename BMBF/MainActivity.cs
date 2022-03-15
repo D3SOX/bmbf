@@ -27,7 +27,7 @@ public class MainActivity : Activity
     {
         base.OnResume();
         // Register a receiver for when the web server finishes starting up
-        IntentFilter intentFilter = new IntentFilter();
+        var intentFilter = new IntentFilter();
         intentFilter.AddAction(BMBFIntents.WebServerStartedIntent);
         intentFilter.AddAction(BMBFIntents.WebServerFailedToStartIntent);
         intentFilter.AddAction(BMBFIntents.TriggerPackageInstall);
@@ -39,7 +39,7 @@ public class MainActivity : Activity
             _receiver = new WebServerStartedReceiver();
             // Navigate to the main page when WebServer startup finishes
             _receiver.WebServerStartupComplete +=
-                (_, port) => RunOnUiThread(() => OnLoaded($"http://localhost:{port}"));
+                (_, port) => RunOnUiThread(() => OnLoaded(port));
 
             // Make sure to inform of errors
             _receiver.WebServerStartupFailed +=
@@ -53,13 +53,13 @@ public class MainActivity : Activity
         }
         RegisterReceiver(_receiver, intentFilter);
 
-        if (BMBFService.RunningUrl == null)
+        if (BMBFService.RunningPort == null)
         {
             StartMainService();
         }
         else
         {
-            OnLoaded(BMBFService.RunningUrl);
+            OnLoaded(BMBFService.RunningPort.Value);
         }
     }
 
@@ -104,13 +104,17 @@ public class MainActivity : Activity
         StartMainService();
     }
 
-    private void OnLoaded(string url)
+    private void OnLoaded(int port)
     {
         SetContentView(Resource.Layout.activity_main);
-        WebView webView = FindViewById<WebView>(Resource.Id.webView) ?? throw new NullReferenceException(nameof(WebView));
-        if (webView.Settings == null) throw new NullReferenceException(nameof(webView.Settings));
+        var webView = FindViewById<WebView>(Resource.Id.webView) ?? throw new NullReferenceException(nameof(WebView));
+        if (webView.Settings == null)
+        {
+            throw new NullReferenceException(nameof(webView.Settings));
+        }
+
         webView.Settings.JavaScriptEnabled = true;
-        webView.LoadUrl(url);
+        webView.LoadUrl($"http://localhost:{port}");
     }
 
     private void OnFailedToLoad(string error)

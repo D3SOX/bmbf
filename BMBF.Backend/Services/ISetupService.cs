@@ -32,7 +32,8 @@ public interface ISetupService
 
     /// <summary>
     /// Copies the APK to a temporary location to start setup
-    /// <exception cref="InvalidOperationException">Setup has already started</exception>
+    /// <exception cref="InvalidStageException">Setup has already started</exception>
+    /// <exception cref="InvalidOperationException">Beat Saber is not installed</exception>
     /// </summary>
     Task BeginSetupAsync();
 
@@ -45,9 +46,7 @@ public interface ISetupService
     /// Begins downgrading beat saber with the given downgrade path
     /// </summary>
     /// <param name="downgradePath">The set of diffs to use for downgrading</param>
-    /// <exception cref="InvalidOperationException">If the APK has already been downgraded or patched</exception>
-    /// <exception cref="System.Net.Http.HttpRequestException">If no modloader is built in to the APK,
-    /// and downloading the modloader fails</exception>
+    /// <exception cref="InvalidStageException">If the APK has already been downgraded or patched</exception>
     Task DowngradeAsync(List<DiffInfo> downgradePath);
 
     /// <summary>
@@ -58,25 +57,27 @@ public interface ISetupService
 
     /// <summary>
     /// Patches the current Beat Saber APK
-    /// <exception cref="InvalidOperationException">If the APK has already been patched</exception>
+    /// <exception cref="InvalidStageException">If the APK has already been patched</exception>
+    /// <exception cref="System.Net.Http.HttpRequestException">If no modloader is built in to the APK,
+    /// and downloading the modloader fails</exception>
     /// </summary>
     Task PatchAsync();
 
     /// <summary>
     /// Shows a prompt to the user to uninstall the current Beat Saber
-    /// <exception cref="InvalidOperationException">If the APK has not yet been patched, or has already been uninstalled</exception>
+    /// <exception cref="InvalidStageException">If the APK has not yet been patched, or has already been uninstalled</exception>
     /// </summary>
     Task TriggerUninstallAsync();
 
     /// <summary>
     /// Shows a prompt to the user to install the modded APK.
-    /// <exception cref="InvalidOperationException">If the APK has not yet been uninstalled</exception>
+    /// <exception cref="InvalidStageException">If the APK has not yet been uninstalled</exception>
     /// </summary>
     Task TriggerInstallAsync();
 
     /// <summary>
     /// Finishes setup by installing core mods
-    /// <exception cref="InvalidOperationException">If the modded APK has not yet been installed</exception>
+    /// <exception cref="InvalidStageException">If the modded APK has not yet been installed</exception>
     /// </summary>
     Task FinalizeSetup();
 }

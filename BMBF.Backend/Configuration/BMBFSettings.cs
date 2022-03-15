@@ -8,6 +8,10 @@ namespace BMBF.Backend.Configuration;
 public class BMBFSettings
 {
     public const string Position = "BMBFSettings";
+    
+    public string BindAddress { get; set; }
+    
+    public int BindPort { get; set; }
 
     public string PackageId { get; set; }
 

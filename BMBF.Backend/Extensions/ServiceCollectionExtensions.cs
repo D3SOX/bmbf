@@ -2,16 +2,15 @@
 using System.IO.Abstractions;
 using System.Net.Http;
 using System.Reflection;
+using System.Text.Json;
 using BMBF.Backend.Configuration;
+using BMBF.Backend.Endpoints;
 using BMBF.Backend.Implementations;
 using BMBF.Backend.Services;
 using BMBF.Patching;
 using BMBF.QMod;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 
 namespace BMBF.Backend.Extensions;
 
@@ -34,27 +33,19 @@ public static class ServiceCollectionExtensions
     /// separately - no implementation is provided in this project.
     /// </summary>
     /// <param name="services">Service collection to add the BMBF backend services to</param>
-    /// <param name="ctx">Context of the web app</param>
     /// <param name="settings">BMBF settings</param>
     /// <param name="resources">BMBF resource URLs</param>
     /// <param name="assetFileProvider">File provider used to load assets such as built-in core mods,
-    /// libunity.so, and modloader. If null, then built in assets will not be used, and these files
+    /// libunity.so, and modloader. If no files exist, then built in assets will not be used, and these files
     /// will always be downloaded manually</param>
+    /// <param name="webRootFileProvider">File provider for static web files</param>
     public static void AddBMBF(this IServiceCollection services,
-        WebHostBuilderContext ctx,
         BMBFSettings settings,
         BMBFResources resources,
-        IFileProvider assetFileProvider)
+        IFileProvider assetFileProvider,
+        IFileProvider webRootFileProvider)
     {
-        if (ctx.HostingEnvironment.IsDevelopment())
-        {
-            services.AddSwaggerGen(options =>
-            {
-                options.SupportNonNullableReferenceTypes();
-            });
-        }
-        services.AddRouting(options => options.LowercaseUrls = true);
-
+        // Add key BMBF services
         services.AddSingleton<ISongService, SongService>();
         services.AddSingleton<IPlaylistService, PlaylistService>();
         services.AddSingleton<ISetupService, SetupService>();
@@ -67,7 +58,25 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFileSystemWatcher>(s =>
             s.GetRequiredService<IFileSystem>()
                 .FileSystemWatcher.CreateNew());
+        services.AddHostedService<WebService>();
+        
+        // Add API endpoints
+        services.AddTransient<IEndpoints, VersionEndpoints>();
+        services.AddTransient<IEndpoints, BeatSaberEndpoints>();
+        services.AddTransient<IEndpoints, ModsEndpoints>();
+        services.AddTransient<IEndpoints, PlaylistsEndpoints>();
+        services.AddTransient<IEndpoints, SetupEndpoints>();
+        services.AddTransient<IEndpoints, SongsEndpoints>();
+        services.AddTransient<IEndpoints, ImportEndpoints>();
+        services.AddTransient<IEndpoints, WebSocketEndpoints>();
 
+        // Add the default JSON serializer options
+        services.AddSingleton(new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        
+        // Add HTTP clients for requests to external services
         services.AddHttpClient<IBeatSaverService, BeatSaverService>(client =>
         {
             ConfigureDefaults(client);
@@ -75,10 +84,10 @@ public static class ServiceCollectionExtensions
         });
         services.AddHttpClient<IAssetService, AssetService>(ConfigureDefaults);
         services.AddHttpClient();
-
+        
         services.AddSingleton(settings);
         services.AddSingleton(resources);
-        services.AddSingleton(assetFileProvider);
+        services.AddSingleton(new FileProviders(assetFileProvider, webRootFileProvider));
 
         services.AddSingleton<ModService>();
         services.AddSingleton<IModService>(s =>
@@ -103,12 +112,6 @@ public static class ServiceCollectionExtensions
             return modService;
         });
 
-        // Add controllers, making sure to include those in this assembly instead of only those in the entry assembly 
-        var mvcBuilder = services.AddControllers();
-        mvcBuilder.PartManager
-            .ApplicationParts
-            .Add(new AssemblyPart(Assembly.GetExecutingAssembly()));
-
         // Configure our legacy tags
         var tagManager = new TagManager();
         tagManager.RegisterLegacyTag("modded",
@@ -117,6 +120,7 @@ public static class ServiceCollectionExtensions
             () => new PatchManifest("BMBF", null) { ModloaderName = "QuestLoader" });
 
         services.AddSingleton<ITagManager>(tagManager);
+        // Create a factory for IPatchBuilder, which assigns our patcher name and version
         services.AddSingleton<Func<IPatchBuilder>>(() =>
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version ?? 
