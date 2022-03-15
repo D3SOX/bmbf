@@ -14,6 +14,7 @@
 - `BMBF.QMod` - Implementation of [QMOD](https://github.com/Lauriethefish/QuestPatcher.QMod) loading and installation.
 - `BMBF.QMod.Tests` - Unit tests for QMOD management.
 - `BMBF.Resources` - C# classes for loading the JSON files in the [resources repo](https://github.com/BMBF/resources).
+- `BMBF.WebServer` - Simple, lightweight web framework for the BMBF API.
 
 ### Build requirements
 
