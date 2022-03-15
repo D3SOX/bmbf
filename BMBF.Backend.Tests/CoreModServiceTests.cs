@@ -31,7 +31,10 @@ public class CoreModServiceTests : IDisposable
         _modServiceMock.Setup(m => m.GetModsAsync())
             .ReturnsAsync(_installedMods);
         
-        _coreModService = new CoreModService(_assetServiceMock.Object, _modServiceMock.Object, _beatSaberServiceMock.Object);
+        _coreModService = new CoreModService(_assetServiceMock.Object, 
+            _modServiceMock.Object, 
+            _beatSaberServiceMock.Object,
+            Util.CreateMockProgressService());
     }
 
     private void AddMod(IMod mod)

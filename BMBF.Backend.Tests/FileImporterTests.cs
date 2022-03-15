@@ -40,7 +40,8 @@ public class FileImporterTests
             _settings,
             _modServiceMock.Object,
             _assetServiceMock.Object,
-            _fileSystem
+            _fileSystem,
+            Util.CreateMockProgressService()
         );
     }
 

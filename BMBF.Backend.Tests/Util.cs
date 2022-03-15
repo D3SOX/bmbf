@@ -6,7 +6,9 @@ using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using BMBF.Backend.Models;
 using BMBF.Backend.Models.BPList;
+using BMBF.Backend.Services;
 using BMBF.Backend.Util;
+using Moq;
 using Xunit;
 
 namespace BMBF.Backend.Tests;
@@ -22,8 +24,7 @@ public static class Util
         "Example Playlist",
         "Unicorns",
         "Example",
-        ImmutableList<BPSong>.Empty,
-        null
+        ImmutableList<BPSong>.Empty
     );
 
     public static byte[] ExampleFileContent { get; } = System.Text.Encoding.UTF8.GetBytes("Hello World!");
@@ -87,4 +88,26 @@ public static class Util
     public static MockFileSystem CreateMockFileSystem() => new(
         new Dictionary<string, MockFileData>(),
         Path.GetFullPath("/"));
+
+    public static IProgressService CreateMockProgressService()
+    {
+        var mock = new Mock<IProgressService>();
+        mock.Setup(p => p.CreateChunkedProgress(It.IsAny<string>(), It.IsAny<int>()))
+            .Returns((string name, int maxItems) =>
+            {
+                var chunkedProgressMock = new Mock<IChunkedProgress>();
+                chunkedProgressMock.SetupGet(c => c.TotalItems).Returns(maxItems);
+                chunkedProgressMock.SetupGet(c => c.Name).Returns(name);
+                return chunkedProgressMock.Object;
+            });
+        mock.Setup(p => p.CreatePercentageProgress(It.IsAny<string>()))
+            .Returns((string name) =>
+            {
+                var percentageProgressMock = new Mock<IPercentageProgress>();
+                percentageProgressMock.SetupGet(c => c.Name).Returns(name);
+                return percentageProgressMock.Object;
+            });
+
+        return mock.Object;
+    }
 }

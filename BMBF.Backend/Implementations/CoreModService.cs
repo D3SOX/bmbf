@@ -17,16 +17,21 @@ public class CoreModService : ICoreModService, IDisposable
     private readonly IAssetService _assetService;
     private readonly IModService _modService;
     private readonly IBeatSaberService _beatSaberService;
+    private readonly IProgressService _progressService;
 
     private Dictionary<string, CoreMods>? _cachedCoreModsIndex;
     private readonly SemaphoreSlim _coreModsLock = new(1);
     private bool _cacheIsFromInternet;
 
-    public CoreModService(IAssetService assetService, IModService modService, IBeatSaberService beatSaberService)
+    public CoreModService(IAssetService assetService,
+        IModService modService,
+        IBeatSaberService beatSaberService, 
+        IProgressService progressService)
     {
         _assetService = assetService;
         _modService = modService;
         _beatSaberService = beatSaberService;
+        _progressService = progressService;
     }
 
     public async Task<CoreModInstallResult> InstallAsync(bool refresh)
@@ -101,6 +106,8 @@ public class CoreModService : ICoreModService, IDisposable
 
     private async Task<CoreModInstallResult> InstallAsyncInternal(CoreMods versionedMods)
     {
+        using var progress = _progressService.CreateChunkedProgress("Installing core mods", versionedMods.Mods.Count);
+        
         var existingMods = await _modService.GetModsAsync();
         var result = new CoreModInstallResult();
         
@@ -184,6 +191,7 @@ public class CoreModService : ICoreModService, IDisposable
                     result.FailedToInstall.Add(coreMod);
                 }
             }
+            progress.ItemsCompleted++;
         }
 
         return result;

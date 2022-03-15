@@ -27,6 +27,7 @@ public class FileImporter : IFileImporter
     private readonly IModService _modService;
     private readonly IAssetService _assetService;
     private readonly IFileSystem _io;
+    private readonly IProgressService _progressService;
 
     private FileExtensions? _extensions;
 
@@ -36,7 +37,7 @@ public class FileImporter : IFileImporter
         BMBFSettings bmbfSettings,
         IModService modService,
         IAssetService assetService,
-        IFileSystem io)
+        IFileSystem io, IProgressService progressService)
     {
         _songService = songService;
         _playlistService = playlistService;
@@ -45,6 +46,7 @@ public class FileImporter : IFileImporter
         _modService = modService;
         _assetService = assetService;
         _io = io;
+        _progressService = progressService;
     }
 
     private async Task<string?> TryImportPlaylistAsync(Stream stream, string fileName)
@@ -61,7 +63,6 @@ public class FileImporter : IFileImporter
         }
 
         // Install any missing songs in the BPList
-        // TODO: Progress bar system
         var songs = await _songService.GetSongsAsync();
         var missingSongs = new List<BPSong>();
         foreach (var song in playlist.Songs)
@@ -72,6 +73,8 @@ public class FileImporter : IFileImporter
                 missingSongs.Add(song);
             }
         }
+        
+        using var progress = _progressService.CreateChunkedProgress($"Downloading songs from {fileName}", missingSongs.Count);
 
         if (missingSongs.Count == 0)
         {
@@ -109,6 +112,7 @@ public class FileImporter : IFileImporter
             {
                 Log.Error(ex, $"Failed to download/import {bpSong.Hash}");
             }
+            progress.ItemsCompleted++;
         }
 
         // TODO: Add playlist before all the songs are downloaded, or wait until all finished?
