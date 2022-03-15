@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 using BMBF.Backend.Models;
 using BMBF.Backend.Models.Messages;
 using BMBF.Backend.Models.Setup;
@@ -14,12 +17,16 @@ public class MessageService : IMessageService
 
     private void Send(IMessage message) => MessageSend?.Invoke(message);
 
+    private readonly ConcurrentDictionary<IProgress, int> _progressIds = new();
+    private int _currentProgressId;
+
     public MessageService(
         ISetupService setupService,
         ISongService songService,
         IPlaylistService playlistService,
         IBeatSaberService beatSaberService,
-        IModService modService)
+        IModService modService,
+        IProgressService progressService)
     {
         MessageSend += OnMessageSend;
         
@@ -38,6 +45,10 @@ public class MessageService : IMessageService
         modService.ModAdded += OnModAdded;
         modService.ModRemoved += OnModRemoved;
         modService.ModStatusChanged += OnModStatusChanged;
+
+        progressService.Added += OnProgressAdded;
+        progressService.Updated += OnProgressUpdated;
+        progressService.Removed += OnProgressRemoved;
     }
 
     private void OnMessageSend(IMessage message)
@@ -83,4 +94,28 @@ public class MessageService : IMessageService
     private void OnModRemoved(object? sender, string modId) => Send(new ModRemoved(modId));
 
     private void OnModStatusChanged(object? sender, IMod mod) => Send(new ModStatusChanged(mod.Id, mod.Installed));
+
+    private void OnProgressAdded(object? sender, IProgress progress)
+    {
+        int newProgressId = Interlocked.Increment(ref _currentProgressId);
+        _progressIds[progress] = newProgressId;
+        
+        Send(new ProgressAdded(progress, newProgressId));
+    }
+
+    private void OnProgressUpdated(object? sender, IProgress progress)
+    {
+        if (_progressIds.TryGetValue(progress, out int id))
+        {
+            Send(new ProgressUpdated(progress, id));
+        }
+    }
+
+    private void OnProgressRemoved(object? sender, IProgress progress)
+    {
+        if (_progressIds.Remove(progress, out int id))
+        {
+            Send(new ProgressRemoved(id));
+        }
+    }
 }

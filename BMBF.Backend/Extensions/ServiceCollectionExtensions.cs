@@ -55,6 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
         services.AddSingleton<ICoreModService, CoreModService>();
+        services.AddSingleton<IProgressService, ProgressService>();
         services.AddTransient<IFileSystemWatcher>(s =>
             s.GetRequiredService<IFileSystem>()
                 .FileSystemWatcher.CreateNew());

@@ -16,5 +16,9 @@ public enum MessageType
     
     ModAdded,
     ModRemoved,
-    ModStatusChanged
+    ModStatusChanged,
+    
+    ProgressAdded,
+    ProgressRemoved,
+    ProgressUpdated
 }
