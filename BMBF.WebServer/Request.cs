@@ -13,7 +13,7 @@ namespace BMBF.WebServer;
 /// <summary>
 /// Convenience class for working with HTTP requests
 /// </summary>
-public class Request : HttpRequest
+public class Request
 {
     /// <summary>
     /// Routing path of this request (i.e. the absolute path of the URI - without query parameters)
@@ -34,12 +34,29 @@ public class Request : HttpRequest
     /// HTTP method of the request
     /// </summary>
     public HttpMethod ParsedMethod { get; }
+    
+    /// <summary>
+    /// HTTP request this wrapper is based upon
+    /// </summary>
+    public HttpRequest Inner { get; }
+
+    /// <summary>
+    /// Body of the request
+    /// </summary>
+    public Stream Body => Inner.Body;
+
+    /// <summary>
+    /// Headers of the request
+    /// </summary>
+    public ReadOnlyHttpHeaders Headers => Inner.Headers;
 
     private readonly Dictionary<string, string> _queryParameters = new();
     private readonly Dictionary<string, string> _parameters = new();
 
-    internal Request(HttpRequest inner) : base(inner)
+    internal Request(HttpRequest inner)
     {
+        Inner = inner;
+        
         // Create a temporary URI for parsing purposes
         var uri = new Uri($"http://127.0.0.1{inner.Uri}");
         Path = uri.AbsolutePath;

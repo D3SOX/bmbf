@@ -30,7 +30,7 @@ public class WebSocketEndpoints : IEndpoints
     [HttpGet("/ws")]
     public HttpResponse ConnectWebSocket(Request request)
     {
-        return WebSocket.Response(request, Handler);
+        return WebSocket.Response(request.Inner, Handler);
     }
 
     private async Task Handler(WebSocket socket)
