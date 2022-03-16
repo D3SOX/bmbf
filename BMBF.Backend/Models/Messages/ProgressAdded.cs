@@ -1,7 +1,4 @@
-﻿
-using System.Text.Json.Serialization;
-
-namespace BMBF.Backend.Models.Messages;
+﻿namespace BMBF.Backend.Models.Messages;
 
 public class ProgressAdded : IMessage
 {
@@ -9,17 +6,17 @@ public class ProgressAdded : IMessage
     {
         Name = progress.Name;
         Id = id;
-        if (progress is IChunkedProgress chunkedProgress)
-        {
-            TotalItems = chunkedProgress.TotalItems;
-        }
+        TotalItems = progress.Total;
+        RepresentAsPercentage = progress.RepresentAsPercentage;
     }
 
     public string Name { get; }
     
     public int Id { get; }
     
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? TotalItems { get; }
+    public int TotalItems { get; }
+
+    public bool RepresentAsPercentage { get; }
+    
     public MessageType Type => MessageType.ProgressAdded;
 }

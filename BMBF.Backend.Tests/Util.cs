@@ -92,21 +92,12 @@ public static class Util
     public static IProgressService CreateMockProgressService()
     {
         var mock = new Mock<IProgressService>();
-        mock.Setup(p => p.CreateChunkedProgress(It.IsAny<string>(), It.IsAny<int>()))
-            .Returns((string name, int maxItems) =>
-            {
-                var chunkedProgressMock = new Mock<IChunkedProgress>();
-                chunkedProgressMock.SetupGet(c => c.TotalItems).Returns(maxItems);
-                chunkedProgressMock.SetupGet(c => c.Name).Returns(name);
-                return chunkedProgressMock.Object;
-            });
-        mock.Setup(p => p.CreatePercentageProgress(It.IsAny<string>()))
-            .Returns((string name) =>
-            {
-                var percentageProgressMock = new Mock<IPercentageProgress>();
-                percentageProgressMock.SetupGet(c => c.Name).Returns(name);
-                return percentageProgressMock.Object;
-            });
+        mock.Setup(p => p.CreateProgress(It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<bool>(),
+                It.IsAny<int>()))
+            .Returns(Mock.Of<IProgress>());
+            
 
         return mock.Object;
     }

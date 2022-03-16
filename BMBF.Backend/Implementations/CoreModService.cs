@@ -106,7 +106,7 @@ public class CoreModService : ICoreModService, IDisposable
 
     private async Task<CoreModInstallResult> InstallAsyncInternal(CoreMods versionedMods)
     {
-        using var progress = _progressService.CreateChunkedProgress("Installing core mods", versionedMods.Mods.Count);
+        using var progress = _progressService.CreateProgress("Installing core mods", versionedMods.Mods.Count);
         
         var existingMods = await _modService.GetModsAsync();
         var result = new CoreModInstallResult();
@@ -191,7 +191,7 @@ public class CoreModService : ICoreModService, IDisposable
                     result.FailedToInstall.Add(coreMod);
                 }
             }
-            progress.ItemsCompleted++;
+            progress.Completed++;
         }
 
         return result;

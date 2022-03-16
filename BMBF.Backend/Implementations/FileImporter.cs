@@ -74,7 +74,7 @@ public class FileImporter : IFileImporter
             }
         }
         
-        using var progress = _progressService.CreateChunkedProgress($"Downloading songs from {fileName}", missingSongs.Count);
+        using var progress = _progressService.CreateProgress($"Downloading songs from {fileName}", missingSongs.Count);
 
         if (missingSongs.Count == 0)
         {
@@ -112,7 +112,7 @@ public class FileImporter : IFileImporter
             {
                 Log.Error(ex, $"Failed to download/import {bpSong.Hash}");
             }
-            progress.ItemsCompleted++;
+            progress.Completed++;
         }
 
         // TODO: Add playlist before all the songs are downloaded, or wait until all finished?

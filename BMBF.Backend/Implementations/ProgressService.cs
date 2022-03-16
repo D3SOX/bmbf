@@ -5,64 +5,55 @@ namespace BMBF.Backend.Implementations;
 
 public class ProgressService : IProgressService
 {
-    private class PercentageProgress : IPercentageProgress
+    private class Progress : IProgress
     {
-        public float Percentage
-        {
-            get => _percentage;
-            set {
-                if (Math.Abs(_percentage - value) > 1) // Only update the progress if increased by at least 1%
-                {
-                    _percentage = value;
-                    _progressService.InvokeProgressUpdated(this);
-                }    
-            }
-        }
         public string Name { get; }
+        public int Total { get; }
 
-        private float _percentage;
-        private readonly ProgressService _progressService;
-        
-        public PercentageProgress(ProgressService progressService, string name)
+        public int Completed
         {
-            _progressService = progressService;
-            Name = name;
-        }
-
-        public void Dispose()
-        {
-            _progressService.UnregisterProgress(this);
-        }
-    }
-    
-    private class ChunkedProgress : IChunkedProgress
-    {
-        public int ItemsCompleted
-        {
-            get => _itemsCompleted;
+            get => _completed;
             set
             {
-                if (_itemsCompleted != value)
+                if (_disposed)
                 {
-                    _itemsCompleted = value;
+                    throw new ObjectDisposedException(nameof(Progress));
+                }
+                
+                if (Math.Abs(value - _completed) > ChangeTolerance)
+                {
+                    _completed = value;
                     _progressService.InvokeProgressUpdated(this);
                 }
             }
         }
-        private int _itemsCompleted;
-        public int TotalItems { get; }
-        public string Name { get; }
-        
-        private readonly ProgressService _progressService;
-        public ChunkedProgress(ProgressService progressService, int totalItems, string name)
-        {
-            TotalItems = totalItems;
-            Name = name;
-            _progressService = progressService;
-        }
+        public int ChangeTolerance { get; set; }
+        public bool RepresentAsPercentage { get; }
 
+        private readonly ProgressService _progressService;
+        private int _completed;
+        private bool _disposed;
+        
+        public Progress(ProgressService progressService,
+            string name,
+            int total,
+            bool representAsPercentage,
+            int changeTolerance)
+        {
+            _progressService = progressService;
+            Name = name;
+            Total = total;
+            RepresentAsPercentage = representAsPercentage;
+            ChangeTolerance = changeTolerance;
+        }
+        
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
             _progressService.UnregisterProgress(this);
         }
     }
@@ -70,7 +61,13 @@ public class ProgressService : IProgressService
     public event EventHandler<IProgress>? Updated;
     public event EventHandler<IProgress>? Added;
     public event EventHandler<IProgress>? Removed;
-    
+    public IProgress CreateProgress(string name, int total, bool representAsPercentage = false, int changeTolerance = 0)
+    {
+        var progress = new Progress(this, name, total, representAsPercentage, changeTolerance);
+        Added?.Invoke(this, progress);
+        return progress;
+    }
+
     private void UnregisterProgress(IProgress progress)
     {
         Removed?.Invoke(this, progress);
@@ -80,18 +77,5 @@ public class ProgressService : IProgressService
     {
         Updated?.Invoke(this, progress);
     }
-
-    public IPercentageProgress CreatePercentageProgress(string name)
-    {
-        var progress = new PercentageProgress(this, name);
-        Added?.Invoke(this, progress);
-        return progress;
-    }
-
-    public IChunkedProgress CreateChunkedProgress(string name, int maxItems)
-    {
-        var progress = new ChunkedProgress(this, maxItems, name);
-        Added?.Invoke(this, progress);
-        return progress;
-    }
+    
 }

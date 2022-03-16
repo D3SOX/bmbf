@@ -23,17 +23,14 @@ public interface IProgressService
     event EventHandler<IProgress> Removed;
 
     /// <summary>
-    /// Creates a percentage progress bar.
+    /// Creates a progress bar.
     /// </summary>
     /// <param name="name">The name of the progress bar.</param>
+    /// <param name="total">The total number of items (AKA the "full" value of the bar)</param>
+    /// <param name="representAsPercentage">Whether or not to represent the progress as a percentage</param>
+    /// <param name="changeTolerance">If the progress is changed by an amount less than or equal to this value,
+    /// the change will not be forwarded to the frontend</param>
     /// <returns>The created progress bar.</returns>
-    IPercentageProgress CreatePercentageProgress(string name);
-
-    /// <summary>
-    /// Creates a progress bar which functions on individual items.
-    /// </summary>
-    /// <param name="name">The name of the progress bar</param>
-    /// <param name="maxItems">The number of items being processed</param>
-    /// <returns>The created progress bar.</returns>
-    IChunkedProgress CreateChunkedProgress(string name, int maxItems);
+    IProgress CreateProgress(string name, int total, bool representAsPercentage = false, int changeTolerance = 0);
+    
 }
