@@ -48,6 +48,8 @@ public class BMBFSettings
     public string ModFilesPath { get; set; }
 
     public string LibFilesPath { get; set; }
+    
+    public string AuthFileName { get; set; }
 
     public Uri BeatSaverBaseUri { get; set; }
 }

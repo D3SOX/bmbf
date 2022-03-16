@@ -56,6 +56,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
         services.AddSingleton<ICoreModService, CoreModService>();
         services.AddSingleton<IProgressService, ProgressService>();
+        services.AddSingleton<IAuthService, AuthService>();
         services.AddTransient<IFileSystemWatcher>(s =>
             s.GetRequiredService<IFileSystem>()
                 .FileSystemWatcher.CreateNew());
@@ -70,6 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEndpoints, SongsEndpoints>();
         services.AddTransient<IEndpoints, ImportEndpoints>();
         services.AddTransient<IEndpoints, WebSocketEndpoints>();
+        services.AddSingleton<AuthEndpoints>();
 
         // Add the default JSON serializer options
         services.AddSingleton(new JsonSerializerOptions

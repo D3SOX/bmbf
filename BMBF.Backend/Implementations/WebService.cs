@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Endpoints;
+using BMBF.Backend.Services;
 using BMBF.WebServer;
 using Hydra;
 using Microsoft.Extensions.FileProviders;
@@ -14,6 +16,7 @@ using Serilog;
 using Server = BMBF.WebServer.Server;
 
 namespace BMBF.Backend.Implementations;
+
 
 public class WebService : IHostedService, IDisposable
 {
@@ -26,7 +29,9 @@ public class WebService : IHostedService, IDisposable
     public WebService(BMBFSettings settings,
         FileProviders fileProviders,
         JsonSerializerOptions serializerOptions, 
-        IEnumerable<IEndpoints> endpoints)
+        IEnumerable<IEndpoints> endpoints,
+        AuthEndpoints authEndpoints,
+        IAuthService authService)
     {
         _settings = settings;
         _webRootFileProvider = fileProviders.WebRootProvider;
@@ -38,16 +43,21 @@ public class WebService : IHostedService, IDisposable
         Responses.DefaultSerializerOptions = serializerOptions;
 
         var apiRouter = new Router();
-        
         // Add all configured implementations of IEndpoints
         foreach (var endpointObject in endpoints)
         {
             apiRouter.AddEndpoints(endpointObject); 
         }
 
+        var authRouter = new Router();
+        authRouter.AddEndpoints(authEndpoints);
+        // This is crucial, never remove this line - it would allow anybody to add arbitrary authentication credentials.
+        authRouter.Use(RequireLoopback);
+
         // First add our API endpoints
         _server.Mount("/api", apiRouter);
-
+        _server.Mount("/auth", authRouter);
+        
         // Make sure that / points to /index.html
         _server.Get("/", req =>
         {
@@ -57,6 +67,17 @@ public class WebService : IHostedService, IDisposable
 
         // Route remaining requests to static files
         _server.Get("*", req => Task.FromResult(StaticFileHandler(req)));
+        
+        _server.Use(authService.Authenticate);
+    }
+
+    private async Task<HttpResponse> RequireLoopback(Request request, Handler next)
+    {
+        if (request.Inner.Remote is IPEndPoint endPoint && IPAddress.IsLoopback(endPoint.Address))
+        {
+            return await next(request);
+        }
+        return Responses.Text("Only loopback clients are allowed to access this endpoint", 403);
     }
 
     private void OnException(object? sender, Exception ex)
