@@ -64,6 +64,13 @@ public class AuthService : IAuthService
         }
 #endif
 
+        if (cfg.Users.Count == 0)
+        {
+            return Responses.Text("This instance of BMBF is currently only accessible from inside the Quest.\n" +
+                                  "Please add a user account in the BMBF app and refresh the page," +
+                                  " then login with the credentials.", 403);
+        }
+
         // If no authorization provided, return unauthorized
         if (!request.Headers.TryGetValue("Authorization", out var auth))
         {
