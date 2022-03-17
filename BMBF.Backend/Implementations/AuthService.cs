@@ -144,7 +144,7 @@ public class AuthService : IAuthService
             }
 
             _authConfig = new AuthConfig();
-            await SaveAuthConfig();
+            await SaveAuthConfigInternal();
         }
         finally
         {
@@ -158,17 +158,22 @@ public class AuthService : IAuthService
         await _authLock.WaitAsync();
         try
         {
-            if (_io.File.Exists(_authConfigPath))
-            {
-                _io.File.Delete(_authConfigPath);
-            }
-        
-            await using var authFileStream = _io.File.OpenWrite(_authConfigPath);
-            await JsonSerializer.SerializeAsync(authFileStream, _authConfig, _serializerOptions);
+            await SaveAuthConfigInternal();
         }
         finally
         {
             _authLock.Release();
         }
+    }
+
+    private async Task SaveAuthConfigInternal()
+    {
+        if (_io.File.Exists(_authConfigPath))
+        {
+            _io.File.Delete(_authConfigPath);
+        }
+        
+        await using var authFileStream = _io.File.OpenWrite(_authConfigPath);
+        await JsonSerializer.SerializeAsync(authFileStream, _authConfig, _serializerOptions);
     }
 }
