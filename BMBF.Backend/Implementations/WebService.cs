@@ -99,7 +99,14 @@ public class WebService : IHostedService, IDisposable
         }
 
         var readStream = file.CreateReadStream();
-        return Responses.Stream(readStream, 200, MimeUtility.GetMimeMapping(file.Name));
+        return new HttpResponse(200, readStream)
+        {
+            Headers =
+            {
+                ["Content-Type"] = MimeUtility.GetMimeMapping(file.Name),
+                ["Connection"] = "Close"
+            }
+        };
     }
 
     private async Task ServerHandler()
