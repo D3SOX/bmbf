@@ -2,7 +2,7 @@ test:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
   stage: test
   script:
-    - apt-get install -y ssh
+    - apt-get install -y ssh git
     - git submodule update --init --recursive
     - dotnet test
 
@@ -10,13 +10,14 @@ publish:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
   stage: deploy
   script:
+    - apt-get install -y ssh git
+    - git submodule update --init --recursive
+    - dotnet test      
     - curl "$BMBF_KEYSTORE_URL" --output BMBF.keystore
     - dotnet publish ./BMBF/BMBF.csproj -c Release -p:AndroidSdkDirectory=/opt/android-sdk
   artifacts:
     paths:
       - ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
 
 docker-buildenv:
   image: docker:latest
