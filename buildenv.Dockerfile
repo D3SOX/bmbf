@@ -5,7 +5,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     apt-transport-https \
     ca-certificates \
-    curl
+    curl \
+    ssh
 
 # Install .NET
 RUN curl -fsSL https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -o packages-microsoft-prod.deb \
@@ -35,7 +36,6 @@ WORKDIR /var/tmp/bmbf
 # Install Android dependencies
 COPY BMBF/BMBF.csproj ./BMBF/BMBF.csproj
 COPY BMBF/AndroidManifest.xml ./BMBF/AndroidManifest.xml
-COPY BMBF/packages.config ./BMBF/packages.config
 COPY BMBF.Backend/BMBF.Backend.csproj ./BMBF.Backend/BMBF.Backend.csproj
 COPY BMBF.ModManagement/BMBF.ModManagement.csproj ./BMBF.ModManagement/BMBF.ModManagement.csproj
 COPY BMBF.Patching/BMBF.Patching.csproj ./BMBF.Patching/BMBF.Patching.csproj
