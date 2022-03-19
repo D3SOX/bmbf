@@ -2,6 +2,8 @@ test:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
   stage: test
   script:
+    - apt-get install -y ssh
+    - git submodule update --init --recursive
     - dotnet test
 
 publish:
@@ -13,6 +15,8 @@ publish:
   artifacts:
     paths:
       - ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
 
 docker-buildenv:
   image: docker:latest
