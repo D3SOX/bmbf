@@ -34,6 +34,7 @@ USER unicorns
 WORKDIR /var/tmp/bmbf
 
 # Install Android dependencies
+COPY nuget.config ./nuget.config
 COPY BMBF/BMBF.csproj ./BMBF/BMBF.csproj
 COPY BMBF/AndroidManifest.xml ./BMBF/AndroidManifest.xml
 COPY BMBF.Backend/BMBF.Backend.csproj ./BMBF.Backend/BMBF.Backend.csproj
