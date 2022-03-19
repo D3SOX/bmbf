@@ -1,0 +1,3 @@
+[submodule "SongFeedReaders"]
+	path = SongFeedReaders
+	url = https://github.com/Zingabopp/SongFeedReaders

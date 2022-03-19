@@ -36,6 +36,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMBF.WebServer", "BMBF.WebServer\BMBF.WebServer.csproj", "{16B1DC03-12E1-4BD4-A731-9B361217A47F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SongFeedReaders", "SongFeedReaders", "{9518E7B3-24D2-4016-B2BB-0E895B60BB37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SongFeedReaders", "SongFeedReaders\SongFeedReaders\SongFeedReaders.csproj", "{95D321B3-EF92-4138-864E-37D816CC3F72}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "submodules", "submodules", "{77246953-B48C-453D-BAC5-88BE59E8D4A6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebUtilities", "WebUtilities", "{C573A04A-7F02-4CC3-A183-476D0A932350}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebUtilities", "SongFeedReaders\submodules\WebUtilities\WebUtilities\WebUtilities.csproj", "{43CE1CDB-E252-4E35-84DD-6A7D890986CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,11 +98,25 @@ Global
 		{16B1DC03-12E1-4BD4-A731-9B361217A47F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16B1DC03-12E1-4BD4-A731-9B361217A47F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16B1DC03-12E1-4BD4-A731-9B361217A47F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95D321B3-EF92-4138-864E-37D816CC3F72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95D321B3-EF92-4138-864E-37D816CC3F72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95D321B3-EF92-4138-864E-37D816CC3F72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95D321B3-EF92-4138-864E-37D816CC3F72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43CE1CDB-E252-4E35-84DD-6A7D890986CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43CE1CDB-E252-4E35-84DD-6A7D890986CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43CE1CDB-E252-4E35-84DD-6A7D890986CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43CE1CDB-E252-4E35-84DD-6A7D890986CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DC2F8E57-483B-43EB-8A54-BA53714A6B0A}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{95D321B3-EF92-4138-864E-37D816CC3F72} = {9518E7B3-24D2-4016-B2BB-0E895B60BB37}
+		{77246953-B48C-453D-BAC5-88BE59E8D4A6} = {9518E7B3-24D2-4016-B2BB-0E895B60BB37}
+		{C573A04A-7F02-4CC3-A183-476D0A932350} = {77246953-B48C-453D-BAC5-88BE59E8D4A6}
+		{43CE1CDB-E252-4E35-84DD-6A7D890986CC} = {C573A04A-7F02-4CC3-A183-476D0A932350}
 	EndGlobalSection
 EndGlobal
