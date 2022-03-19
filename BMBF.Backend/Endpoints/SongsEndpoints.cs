@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.IO.Abstractions;
+using System.Linq;
 using System.Threading.Tasks;
 using BMBF.Backend.Services;
 using BMBF.WebServer;
@@ -12,12 +13,14 @@ namespace BMBF.Backend.Endpoints;
 public class SongsEndpoints : IEndpoints
 {
     private readonly ISongService _songService;
+    private readonly IPlaylistService _playlistService;
     private readonly IFileSystem _io;
 
-    public SongsEndpoints(ISongService songService, IFileSystem io)
+    public SongsEndpoints(ISongService songService, IFileSystem io, IPlaylistService playlistService)
     {
         _songService = songService;
         _io = io;
+        _playlistService = playlistService;
     }
 
     [HttpGet("/songs")]
@@ -57,5 +60,23 @@ public class SongsEndpoints : IEndpoints
         }
 
         return Responses.Stream(coverStream, 200, mimeType);
+    }
+
+    [HttpPost("/songs/clean")]
+    public async Task CleanUpSongs()
+    {
+        // Keep any songs in a playlist
+        var hashesToKeep = (await _playlistService.GetPlaylistsAsync())
+            .Values
+            .SelectMany(p => p.Songs.Select(bpSong => bpSong.Hash))
+            .ToHashSet();
+
+        // Delete all other songs
+        foreach (var song in (await _songService.GetSongsAsync())
+                 .Values
+                 .Where(s => !hashesToKeep.Contains(s.Hash)))
+        {
+            await _songService.DeleteSongAsync(song.Hash);
+        }
     }
 }
