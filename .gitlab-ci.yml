@@ -5,6 +5,8 @@ test:
     - apt-get install -y ssh
     - git submodule update --init --recursive
     - dotnet test
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
 
 publish:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
