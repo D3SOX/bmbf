@@ -32,12 +32,6 @@ docker pull registry.bmbf.dev/unicorns/bmbf/buildenv
 docker run -it -v "$(pwd):/bmbf/src" -p "50006:50006" registry.bmbf.dev/unicorns/bmbf/buildenv
 ```
 
-As of now, you need to set two environment variables (this will be removed soon).
-
-`GITHUB_USERNAME` to your github username.
-
-`GITHUB_KEY` to a github personal access token with the `read:packages` permission.
-
 ## Development
 
 When testing BMBF during development, you have 2 options. The quest, or running BMBF directly on your PC.
