@@ -55,7 +55,8 @@ public class FileImporterTests
     private readonly IFileSystem _fileSystem = Util.CreateMockFileSystem();
     private readonly BMBFSettings _settings = new()
     {
-        ConfigsPath = "/Configs"
+        ConfigsPath = "/Configs",
+        MaxConcurrentDownloads = 1
     };
 
     /// <summary>
