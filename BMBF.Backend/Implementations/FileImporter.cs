@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
@@ -62,58 +63,7 @@ public class FileImporter : IFileImporter
             return null;
         }
 
-        // Install any missing songs in the BPList
-        var songs = await _songService.GetSongsAsync();
-        var missingSongs = new List<BPSong>();
-        foreach (var song in playlist.Songs)
-        {
-            song.Hash = song.Hash.ToUpper(); // Verify hash case now
-            if (!songs.ContainsKey(song.Hash))
-            {
-                missingSongs.Add(song);
-            }
-        }
-        
-        using var progress = _progressService.CreateProgress($"Downloading songs from {fileName}", missingSongs.Count);
-
-        if (missingSongs.Count == 0)
-        {
-            Log.Information("All songs in the playlist were already downloaded");
-        }
-        else
-        {
-            Log.Information($"Found {missingSongs.Count} songs that will need to be installed");
-        }
-
-        foreach (var bpSong in missingSongs)
-        {
-            Log.Information($"Downloading song {bpSong.SongName ?? bpSong.Hash}");
-            try
-            {
-                await using var mapStream = bpSong.Key == null ? await _beatSaverService.DownloadSongByHash(bpSong.Hash) : await _beatSaverService.DownloadSongByKey(bpSong.Key);
-                if (mapStream == null)
-                {
-                    Log.Warning($"No map with hash {bpSong.Hash} or with key {bpSong.Key} found on BeatSaver");
-                    continue;
-                }
-
-                using var archive = new ZipArchive(mapStream, ZipArchiveMode.Read);
-                var importResult = await _songService.ImportSongAsync(new ArchiveSongProvider(archive), (bpSong.SongName ?? bpSong.Hash) + ".zip");
-                if (importResult.Type == FileImportResultType.Failed)
-                {
-                    Log.Error($"Failed to import song {bpSong.Hash}: {importResult.Error}");
-                }
-                else if (importResult.ImportedSong?.Hash != bpSong.Hash)
-                {
-                    Log.Warning($"Downloaded song {importResult.ImportedSong?.SongName} did NOT match expected hash of {bpSong.Hash}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Failed to download/import {bpSong.Hash}");
-            }
-            progress.Completed++;
-        }
+        await DownloadSongs(playlist, $"Downloading songs from {playlist.PlaylistTitle}");
 
         // TODO: Add playlist before all the songs are downloaded, or wait until all finished?
         // For now we are waiting until all of the songs are downloaded
@@ -268,5 +218,68 @@ public class FileImporter : IFileImporter
             throw new ImportException(result.Error);
         }
         return result;
+    }
+
+    public async Task DownloadSongs(Playlist playlist, string? progressName = null)
+    {
+        // Install any missing songs in the playlist
+        var songs = await _songService.GetSongsAsync();
+        var missingSongs = new List<BPSong>();
+        foreach (var song in playlist.Songs)
+        {
+            song.Hash = song.Hash.ToUpper(); // Verify hash case now
+            if (!songs.ContainsKey(song.Hash))
+            {
+                missingSongs.Add(song);
+            }
+        }
+        
+        if (missingSongs.Count == 0)
+        {
+            Log.Information("All songs in the playlist were already downloaded");
+            return;
+        }
+        Log.Information($"Found {missingSongs.Count} songs that will need to be installed");
+
+        using var progress = progressName == null ? null : _progressService.CreateProgress(progressName, missingSongs.Count);
+
+        int completed = 0;
+        await Parallel.ForEachAsync(missingSongs, new ParallelOptions
+        {
+            MaxDegreeOfParallelism = _bmbfSettings.MaxConcurrentDownloads
+        }, async (bpSong, _) =>
+        {
+            Log.Information($"Downloading song {bpSong.SongName ?? bpSong.Hash}");
+            try
+            {
+                await using var mapStream = bpSong.Key == null ? await _beatSaverService.DownloadSongByHash(bpSong.Hash) : await _beatSaverService.DownloadSongByKey(bpSong.Key);
+                if (mapStream == null)
+                {
+                    Log.Warning($"No map with hash {bpSong.Hash} or with key {bpSong.Key} found on BeatSaver");
+                    return;
+                }
+
+                using var archive = new ZipArchive(mapStream, ZipArchiveMode.Read);
+                var importResult = await _songService.ImportSongAsync(new ArchiveSongProvider(archive), (bpSong.SongName ?? bpSong.Hash) + ".zip");
+                if (importResult.Type == FileImportResultType.Failed)
+                {
+                    Log.Error($"Failed to import song {bpSong.Hash}: {importResult.Error}");
+                }
+                else if (importResult.ImportedSong?.Hash != bpSong.Hash)
+                {
+                    Log.Warning($"Downloaded song {importResult.ImportedSong?.SongName} did NOT match expected hash of {bpSong.Hash}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to download/import {bpSong.Hash}");
+            }
+
+            Interlocked.Increment(ref completed);
+            if (progress != null)
+            {
+                progress.Completed = completed;
+            }
+        });
     }
 }

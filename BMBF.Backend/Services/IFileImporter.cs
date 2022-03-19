@@ -25,4 +25,12 @@ public interface IFileImporter
     /// <exception cref="ImportException">If importing fails</exception>
     /// <returns>The result of the import operation - shows what file type the file was imported as</returns>
     Task<FileImportResult> ImportAsync(Stream stream, string fileName);
+    
+    /// <summary>
+    /// Attempts to download the songs in the given playlist
+    /// </summary>
+    /// <param name="playlist">Playlist to download the songs from. Does not have to be part of the
+    /// loaded playlist set</param>
+    /// <param name="progressName">If non-null, specifies the name of a progress bar to use for updates</param>
+    Task DownloadSongs(Playlist playlist, string? progressName = null);
 }

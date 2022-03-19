@@ -50,6 +50,8 @@ public class BMBFSettings
     public string LibFilesPath { get; set; }
     
     public string AuthFileName { get; set; }
+    
+    public int MaxConcurrentDownloads { get; set; }
 
     public Uri BeatSaverBaseUri { get; set; }
 }
