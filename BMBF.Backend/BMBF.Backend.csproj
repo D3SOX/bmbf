@@ -24,9 +24,9 @@
     <PackageReference Include="System.IO.Abstractions" Version="16.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+    <PackageReference Include="SongFeedReaders" Version="1.0.0-f083cb417eebc8563d2f0e6a830925b9480b491d" />
 
     <ProjectReference Include="../BMBF.WebServer/BMBF.WebServer.csproj" />
-    <ProjectReference Include="../SongFeedReaders/SongFeedReaders/SongFeedReaders.csproj" />
     <ProjectReference Include="../BMBF.Patching/BMBF.Patching.csproj" />
     <ProjectReference Include="../BMBF.Resources/BMBF.Resources.csproj" />
     <ProjectReference Include="../BMBF.ModManagement/BMBF.ModManagement.csproj" />

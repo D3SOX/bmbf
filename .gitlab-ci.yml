@@ -3,8 +3,6 @@ test:
   stage: test
   script:
     - dotnet test
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
 
 publish:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
@@ -15,8 +13,6 @@ publish:
   artifacts:
     paths:
       - ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
 
 docker-buildenv:
   image: docker:latest
