@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -27,7 +29,7 @@ public class BeatSaverService : IBeatSaverService
         return await FindAndDownload($"maps/id/{key}", null);
     }
 
-    private async Task<Stream?> FindAndDownload(string mapInfoUri, string? preferHash)
+    private async Task<Stream?> FindAndDownload(string mapInfoUri, string? withHash)
     {
         using var resp = await _httpClient.GetAsync(mapInfoUri, HttpCompletionOption.ResponseHeadersRead);
         if (resp.StatusCode == HttpStatusCode.NotFound)
@@ -43,18 +45,18 @@ public class BeatSaverService : IBeatSaverService
         }
 
         MapVersion? latest = null;
-        foreach (var version in map.Versions)
+        if (withHash is not null)
         {
-            var hash = version.Hash;
-
-            if (preferHash != null && hash != preferHash)
+            latest = map.Versions.FirstOrDefault(v => v.Hash.Equals(withHash, StringComparison.OrdinalIgnoreCase));
+        }
+        else
+        {
+            foreach (var version in map.Versions)
             {
-                continue;
-            }
-
-            if (latest == null || latest.CreatedAt < version.CreatedAt)
-            {
-                latest = version;
+                if (latest == null || latest.CreatedAt < version.CreatedAt)
+                {
+                    latest = version;
+                }
             }
         }
 
