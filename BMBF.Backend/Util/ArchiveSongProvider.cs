@@ -31,6 +31,12 @@ public class ArchiveSongProvider : ISongProvider
     {
         foreach (var entry in _archive.Entries)
         {
+            // Skip directories
+            if (entry.Name == "")
+            {
+                continue;
+            }
+            
             string newPath = Path.Combine(path, entry.FullName);
             var directory = Path.GetDirectoryName(newPath);
             if (directory != null) fileSystem.Directory.CreateDirectory(directory);
