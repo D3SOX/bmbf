@@ -95,6 +95,11 @@ public class Playlist
     /// </summary>
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalProperties { get; set; }
+    
+    /// <summary>
+    /// If non-null, this indicates the SyncSaber feed that this playlist was synced from
+    /// </summary>
+    public FeedType? SyncSaberFeed { get; }
 
     // The below intentionally do not notify changes
 
@@ -126,13 +131,15 @@ public class Playlist
         string playlistAuthor,
         string playlistDescription,
         ImmutableList<BPSong> songs,
-        string? imageString = null)
+        string? imageString = null,
+        FeedType? syncSaberFeed = null)
     {
         _playlistTitle = playlistTitle;
         _playlistAuthor = playlistAuthor;
         _playlistDescription = playlistDescription;
         ImageString = imageString;
         _songs = songs;
+        SyncSaberFeed = syncSaberFeed;
     }
 
     /// <summary>

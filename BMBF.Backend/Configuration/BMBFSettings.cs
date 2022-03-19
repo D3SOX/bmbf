@@ -51,6 +51,8 @@ public class BMBFSettings
     
     public string AuthFileName { get; set; }
     
+    public string SyncSaberConfigName { get; set; }
+    
     public int MaxConcurrentDownloads { get; set; }
 
     public Uri BeatSaverBaseUri { get; set; }

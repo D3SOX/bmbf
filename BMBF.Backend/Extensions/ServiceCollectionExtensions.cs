@@ -11,6 +11,12 @@ using BMBF.Patching;
 using BMBF.QMod;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using SongFeedReaders.Feeds;
+using SongFeedReaders.Feeds.BeastSaber;
+using SongFeedReaders.Feeds.BeatSaver;
+using SongFeedReaders.Feeds.ScoreSaber;
+using WebUtilities;
+using WebUtilities.HttpClientWrapper;
 
 namespace BMBF.Backend.Extensions;
 
@@ -56,6 +62,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBeatSaverService, BeatSaverService>();
         services.AddSingleton<ICoreModService, CoreModService>();
         services.AddSingleton<IProgressService, ProgressService>();
+        services.AddSingleton<ISyncSaberService, SyncSaberService>();
         services.AddSingleton<IAuthService, AuthService>();
         services.AddTransient<IFileSystemWatcher>(s =>
             s.GetRequiredService<IFileSystem>()
@@ -71,7 +78,33 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEndpoints, SongsEndpoints>();
         services.AddTransient<IEndpoints, ImportEndpoints>();
         services.AddTransient<IEndpoints, WebSocketEndpoints>();
+        services.AddTransient<IEndpoints, SyncSaberEndpoints>();
         services.AddSingleton<AuthEndpoints>();
+
+        // SongFeedReaders services
+        services.AddTransient<IFeed, BeatSaverLatestFeed>();
+        services.AddTransient<IFeed, BeastSaberBookmarksFeed>();
+        services.AddTransient<IFeed, BeatSaverMapperFeed>();
+        services.AddTransient<IFeed, BeastSaberCuratorFeed>();
+        services.AddTransient<IFeed, ScoreSaberLatestFeed>();
+        services.AddTransient<IFeed, ScoreSaberTrendingFeed>();
+        services.AddTransient<IFeed, ScoreSaberTopRankedFeed>();
+        services.AddTransient<IFeed, ScoreSaberTopPlayedFeed>();
+        services.AddTransient<IBeastSaberPageHandler, BeastSaberPageHandler>();
+        services.AddTransient<IBeatSaverPageHandler, BeatSaverPageHandler>();
+        services.AddTransient<IScoreSaberPageHandler, ScoreSaberPageHandler>();
+        var webClient = new HttpClientWrapper();
+        webClient.SetUserAgent(UserAgent);
+        services.AddSingleton<IWebClient>(webClient);
+
+        services.AddSingleton<IFeedSettings>(new BeatSaverLatestSettings());
+        services.AddSingleton<IFeedSettings>(new BeastSaberBookmarksSettings());
+        services.AddSingleton<IFeedSettings>(new BeatSaverMapperSettings());
+        services.AddSingleton<IFeedSettings>(new BeastSaberCuratorSettings());
+        services.AddSingleton<IFeedSettings>(new ScoreSaberLatestSettings());
+        services.AddSingleton<IFeedSettings>(new ScoreSaberTrendingSettings());
+        services.AddSingleton<IFeedSettings>(new ScoreSaberTopRankedSettings());
+        services.AddSingleton<IFeedSettings>(new ScoreSaberTopPlayedSettings());
 
         // Add the default JSON serializer options
         services.AddSingleton(new JsonSerializerOptions
