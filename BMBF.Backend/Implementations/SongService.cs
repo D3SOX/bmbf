@@ -83,7 +83,7 @@ public class SongService : IDisposable, ISongService
 
     public async Task<FileImportResult> ImportSongAsync(ISongProvider folderProvider, string fileName)
     {
-        Song? song = await SongUtil.TryLoadSongInfoAsync(folderProvider, fileName);
+        var song = await SongUtil.TryLoadSongInfoAsync(folderProvider, fileName);
         if (song == null)
         {
             return FileImportResult.CreateError($"{fileName} was not a valid song");
@@ -124,6 +124,15 @@ public class SongService : IDisposable, ISongService
                 Type = FileImportResultType.Song,
                 ImportedSong = song
             };
+        }
+        catch (Exception)
+        {
+            // If extracting the song fails, we need to make sure that we delete the (now garbage) directory
+            if (song.Path != null)
+            {
+                _io.Directory.Delete(song.Path, true);
+            }
+            throw;
         }
         finally
         {
