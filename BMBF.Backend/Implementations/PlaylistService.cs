@@ -136,9 +136,12 @@ public class PlaylistService : IPlaylistService, IDisposable
                         _io.File.Delete(playlist.LoadedFrom);
                     }
 
-                    await using var playlistStream = _io.File.OpenWrite(playlist.LoadedFrom);
-                    playlistStream.Position = 0;
-                    await JsonSerializer.SerializeAsync(playlistStream, playlist, _serializerOptions);
+                    await using (var playlistStream = _io.File.OpenWrite(playlist.LoadedFrom))
+                    {
+                        playlistStream.Position = 0;
+                        await JsonSerializer.SerializeAsync(playlistStream, playlist, _serializerOptions);
+                    }
+                    playlist.LastLoadTime = _io.File.GetLastWriteTimeUtc(playlist.LoadedFrom);
                     playlist.IsPendingSave = false;
                 }
                 catch (Exception ex)
