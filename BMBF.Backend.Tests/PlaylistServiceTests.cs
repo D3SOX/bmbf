@@ -168,6 +168,7 @@ public class PlaylistServiceTests : IDisposable
         {
             JsonSerializer.Serialize(playlistFile, modifiedPlaylist);
         }
+        _fileSystem.File.SetLastWriteTimeUtc(playlist.LoadedFrom, DateTime.UtcNow + TimeSpan.FromSeconds(1));
         await _playlistService.UpdatePlaylistCacheAsync();
 
         // As the playlist was NOT modified, it should have been reloaded from disk
