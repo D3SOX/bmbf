@@ -139,7 +139,7 @@ public class SyncSaberService : ISyncSaberService
 
         var config = await GetConfig();
 
-        using var feedProgress = _progressService.CreateProgress("(Sync) Updating playlists", config.Feeds.Count);
+        using var progress = _progressService.CreateProgress("Syncing playlists", config.Feeds.Count);
         foreach (var (type, settings) in config.Feeds)
         {
             if (!settings.Enabled)
@@ -208,7 +208,7 @@ public class SyncSaberService : ISyncSaberService
             );
 
             // Download the new songs from the feed (concurrently)
-            await _fileImporter.DownloadSongs(playlist, $"(Sync) Downloading songs from {type.GetDisplayName()}");
+            await _fileImporter.DownloadSongs(playlist, $"Downloading songs from {type.GetDisplayName()}", progress);
 
             // Delete existing playlists with the same feed
             foreach (var existing in playlists.Values.Where(p => p.SyncSaberFeed == type))
@@ -218,7 +218,7 @@ public class SyncSaberService : ISyncSaberService
 
             // Add our synced playlist
             await _playlistService.AddPlaylistAsync(playlist);
-            feedProgress.Completed++;
+            progress.ItemCompleted();
         }
     }
 }

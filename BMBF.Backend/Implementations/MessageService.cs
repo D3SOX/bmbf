@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using BMBF.Backend.Models;
 using BMBF.Backend.Models.Messages;
@@ -16,10 +14,7 @@ public class MessageService : IMessageService
     public event MessageEventHandler? MessageSend;
 
     private void Send(IMessage message) => MessageSend?.Invoke(message);
-
-    private readonly ConcurrentDictionary<IProgress, int> _progressIds = new();
-    private int _currentProgressId;
-
+    
     public MessageService(
         ISetupService setupService,
         ISongService songService,
@@ -95,27 +90,8 @@ public class MessageService : IMessageService
 
     private void OnModStatusChanged(object? sender, IMod mod) => Send(new ModStatusChanged(mod.Id, mod.Installed));
 
-    private void OnProgressAdded(object? sender, IProgress progress)
-    {
-        int newProgressId = Interlocked.Increment(ref _currentProgressId);
-        _progressIds[progress] = newProgressId;
-        
-        Send(new ProgressAdded(progress, newProgressId));
-    }
+    private void OnProgressAdded(object? sender, IProgress progress) => Send(new ProgressAdded(progress));
 
-    private void OnProgressUpdated(object? sender, IProgress progress)
-    {
-        if (_progressIds.TryGetValue(progress, out int id))
-        {
-            Send(new ProgressUpdated(progress, id));
-        }
-    }
-
-    private void OnProgressRemoved(object? sender, IProgress progress)
-    {
-        if (_progressIds.Remove(progress, out int id))
-        {
-            Send(new ProgressRemoved(id));
-        }
-    }
+    private void OnProgressUpdated(object? sender, IProgress progress) => Send(new ProgressUpdated(progress));
+    private void OnProgressRemoved(object? sender, IProgress progress) => Send(new ProgressRemoved(progress));
 }

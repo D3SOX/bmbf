@@ -32,5 +32,6 @@ public interface IFileImporter
     /// <param name="playlist">Playlist to download the songs from. Does not have to be part of the
     /// loaded playlist set</param>
     /// <param name="progressName">If non-null, specifies the name of a progress bar to use for updates</param>
-    Task DownloadSongs(Playlist playlist, string? progressName = null);
+    /// <param name="progressParent">If non-null, specifies the parent operations</param>
+    Task DownloadSongs(Playlist playlist, string? progressName = null, IProgress? progressParent = null);
 }

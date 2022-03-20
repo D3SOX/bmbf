@@ -79,6 +79,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEndpoints, ImportEndpoints>();
         services.AddTransient<IEndpoints, WebSocketEndpoints>();
         services.AddTransient<IEndpoints, SyncSaberEndpoints>();
+        services.AddTransient<IEndpoints, ProgressEndpoints>();
         services.AddSingleton<AuthEndpoints>();
 
         // SongFeedReaders services

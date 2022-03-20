@@ -2,21 +2,12 @@
 
 public class ProgressAdded : IMessage
 {
-    public ProgressAdded(IProgress progress, int id)
+    public ProgressAdded(IProgress progress)
     {
-        Name = progress.Name;
-        Id = id;
-        TotalItems = progress.Total;
-        RepresentAsPercentage = progress.RepresentAsPercentage;
+        Progress = progress;
     }
 
-    public string Name { get; }
-    
-    public int Id { get; }
-    
-    public int TotalItems { get; }
-
-    public bool RepresentAsPercentage { get; }
+    public IProgress Progress { get; }
     
     public MessageType Type => MessageType.ProgressAdded;
 }

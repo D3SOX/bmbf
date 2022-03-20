@@ -4,13 +4,13 @@ public class ProgressUpdated : IMessage
 {
     public MessageType Type => MessageType.ProgressUpdated;
 
-    public int Id { get; }
+    public long Id { get; }
     
     public int ItemsCompleted { get; }
     
-    public ProgressUpdated(IProgress progress, int id)
+    public ProgressUpdated(IProgress progress)
     {
-        Id = id;
+        Id = progress.Id;
         ItemsCompleted = progress.Completed;
     }
 }

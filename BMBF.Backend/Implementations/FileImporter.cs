@@ -5,7 +5,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Extensions;
@@ -220,7 +219,7 @@ public class FileImporter : IFileImporter
         return result;
     }
 
-    public async Task DownloadSongs(Playlist playlist, string? progressName = null)
+    public async Task DownloadSongs(Playlist playlist, string? progressName = null, IProgress? parentProgress = null)
     {
         // Install any missing songs in the playlist
         var songs = await _songService.GetSongsAsync();
@@ -241,9 +240,8 @@ public class FileImporter : IFileImporter
         }
         Log.Information($"Found {missingSongs.Count} songs that will need to be installed");
 
-        using var progress = progressName == null ? null : _progressService.CreateProgress(progressName, missingSongs.Count);
+        using var progress = progressName == null ? null : _progressService.CreateProgress(progressName, missingSongs.Count, parent: parentProgress);
 
-        int completed = 0;
         await Parallel.ForEachAsync(missingSongs, new ParallelOptions
         {
             MaxDegreeOfParallelism = _bmbfSettings.MaxConcurrentDownloads
@@ -275,11 +273,7 @@ public class FileImporter : IFileImporter
                 Log.Error(ex, $"Failed to download/import {bpSong.Hash}");
             }
 
-            Interlocked.Increment(ref completed);
-            if (progress != null)
-            {
-                progress.Completed = completed;
-            }
+            progress?.ItemCompleted();
         });
     }
 }

@@ -4,10 +4,10 @@ public class ProgressRemoved : IMessage
 {
     public MessageType Type => MessageType.ProgressRemoved;
 
-    public int Id { get; }
+    public long Id { get; }
     
-    public ProgressRemoved(int id)
+    public ProgressRemoved(IProgress progress)
     {
-        Id = id;
+        Id = progress.Id;
     }
 }

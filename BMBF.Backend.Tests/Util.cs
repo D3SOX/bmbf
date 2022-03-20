@@ -95,7 +95,8 @@ public static class Util
         mock.Setup(p => p.CreateProgress(It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.IsAny<bool>(),
-                It.IsAny<int>()))
+                It.IsAny<int>(),
+                It.IsAny<IProgress>()))
             .Returns(Mock.Of<IProgress>());
             
 

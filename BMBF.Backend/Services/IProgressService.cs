@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BMBF.Backend.Services;
 
@@ -21,6 +22,12 @@ public interface IProgressService
     /// Invoked when an operation is removed (this does not necessarily indicate its completion)
     /// </summary>
     event EventHandler<IProgress> Removed;
+    
+    /// <summary>
+    /// A dictionary of the current operations with progress information.
+    /// Key is <see cref="IProgress.Id"/>
+    /// </summary>
+    IReadOnlyDictionary<long, IProgress> CurrentOperations { get; }
 
     /// <summary>
     /// Creates a progress bar.
@@ -30,7 +37,9 @@ public interface IProgressService
     /// <param name="representAsPercentage">Whether or not to represent the progress as a percentage</param>
     /// <param name="changeTolerance">If the progress is changed by an amount less than or equal to this value,
     /// the change will not be forwarded to the frontend</param>
+    /// <param name="parent">Indicates the larger operation that this progress bar is part of</param>
     /// <returns>The created progress bar.</returns>
-    IProgress CreateProgress(string name, int total, bool representAsPercentage = false, int changeTolerance = 0);
+    IProgress CreateProgress(string name, int total, bool representAsPercentage = false, int changeTolerance = 0,
+        IProgress? parent = null);
     
 }

@@ -191,7 +191,7 @@ public class CoreModService : ICoreModService, IDisposable
                     result.FailedToInstall.Add(coreMod);
                 }
             }
-            progress.Completed++;
+            progress.ItemCompleted();
         }
 
         return result;
