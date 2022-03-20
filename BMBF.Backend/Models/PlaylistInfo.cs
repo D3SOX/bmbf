@@ -28,8 +28,8 @@ public class PlaylistInfo
     {
         Id = id;
         PlaylistTitle = playlistTitle;
-        PlaylistAuthor = playlistTitle;
-        PlaylistDescription = playlistTitle;
+        PlaylistAuthor = playlistAuthor;
+        PlaylistDescription = playlistDescription;
         SyncSaberFeed = syncSaberFeed;
     }
 }
