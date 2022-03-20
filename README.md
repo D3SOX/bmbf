@@ -27,6 +27,8 @@
 Alternatively, if you have docker installed, you can use the containerised build environment. This is what we use in CI and it is guaranteed to reliably work.
 Just mount the project directory as a docker volume and expose the right ports when debugging locally.
 
+Note: When building/publishing the APK, you must pass `-p:AndroidSdkDirectory=/opt/android-sdk` to tell `dotnet build` where to find the SDK.
+
 ```sh
 docker pull registry.bmbf.dev/unicorns/bmbf/buildenv
 docker run -it -v "$(pwd):/bmbf/src" -p "50006:50006" registry.bmbf.dev/unicorns/bmbf/buildenv
