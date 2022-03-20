@@ -24,17 +24,40 @@ public class ProgressServiceTests
         Assert.Equal(total, progress.Total);
         Assert.Equal(representAsPercentage, progress.RepresentAsPercentage);
         Assert.Equal(changeTolerance, progress.ChangeTolerance);
+        // No parent, so should be null
+        Assert.Null(progress.Parent);
+        Assert.Null(progress.ParentId);
     }
 
     [Fact]
-    public void MaxItemsShouldMatch()
+    public void ParentShouldMatch()
     {
-        const int exampleMaxItems = 30;
+        using var parent = _progressService.CreateProgress("Example parent", 10);
+        using var progress = _progressService.CreateProgress("Example child", 10, parent: parent);
         
-        using var progress = _progressService.CreateProgress("Test", exampleMaxItems);
-        Assert.Equal(exampleMaxItems, progress.Total);
+        Assert.Equal(parent, progress.Parent);
+        Assert.Equal(parent.Id, progress.ParentId);
     }
-    
+
+    [Fact]
+    public void ShouldInvokeAdded()
+    {
+        IProgress? added = null;
+        _progressService.Added += (_, args) => added = args;
+        
+        using var progress = _progressService.CreateProgress("Example", 10);
+        Assert.Equal(progress, added);
+    }
+
+    [Fact]
+    public void IdsShouldBeUnique()
+    {
+        using var progressA = _progressService.CreateProgress("A", 10);
+        using var progressB = _progressService.CreateProgress("B", 10);
+        
+        Assert.NotEqual(progressA.Id, progressB.Id);
+    }
+
     [Theory]
     [InlineData(5, 10, false)]
     [InlineData(5, 3, true)]

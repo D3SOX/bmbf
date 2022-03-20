@@ -49,9 +49,15 @@ public interface IProgress : IDisposable
     /// </summary>
     bool RepresentAsPercentage { get; }
     
+    /// <summary>
+    /// Progress of the larger operation that this operation is a part of
+    /// </summary>
     [JsonIgnore]
     public IProgress? Parent { get; }
 
+    /// <summary>
+    /// <see cref="IProgress.Id"/> of <see cref="Parent"/>
+    /// </summary>
     [JsonPropertyName("parent")] 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public long? ParentId => Parent?.Id;
