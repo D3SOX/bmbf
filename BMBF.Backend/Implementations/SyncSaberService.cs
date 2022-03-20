@@ -166,21 +166,29 @@ public class SyncSaberService : ISyncSaberService
             }
 
             Log.Information($"Fetching songs from feed {type}");
-            var songs = new List<BPSong>();
+            var songs = ImmutableList.CreateBuilder<BPSong>();
             var enumerator = reader.GetAsyncEnumerator();
             int pages = 0;
-            while(songs.Count < settings.SongsToSync) // Continue reading pages until song count is satisfied
+            while (songs.Count < settings.SongsToSync) // Continue reading pages until song count is satisfied
             {
                 Log.Debug($"Fetching page {pages}");
                 pages++;
-                    
+
                 var result = await enumerator.MoveNextAsync();
-                if (!result.Songs().Any())
+                if (!result.Successful)
                 {
-                    Log.Warning($"Could not sync {settings.SongsToSync} songs from {type}: only {songs.Count} songs existed");
+                    Log.Error(result.Exception, $"Failed to fetch page from {type}. " +
+                                                $"Ending page enumeration and skipping straight to song install");
                     break;
                 }
-                    
+
+                if (!result.Songs().Any())
+                {
+                    Log.Warning(
+                        $"Could not sync {settings.SongsToSync} songs from {type}: only {songs.Count} songs existed");
+                    break;
+                }
+
                 var pageSongs = result.Songs().DistinctBy(s => s.Hash);
                 foreach (var scrapedSong in pageSongs)
                 {
@@ -189,7 +197,7 @@ public class SyncSaberService : ISyncSaberService
                     {
                         continue;
                     }
-                        
+
                     songs.Add(new BPSong(scrapedSong.Hash.ToUpper(), scrapedSong.Name, scrapedSong.Key));
                     if (songs.Count >= settings.SongsToSync)
                     {
@@ -198,27 +206,36 @@ public class SyncSaberService : ISyncSaberService
                 }
             }
 
-            // Create a playlist to manage this feed
-            var playlist = new Playlist(
-                type.GetDisplayName(),
-                "Unicorns",
-                "Sync Saber playlist",
-                ImmutableList.Create(songs.ToArray()),
-                syncSaberFeed: type
-            );
+            // Update existing playlists with the same feed
+            var existingWithFeed = playlists.Values.Where(p => p.SyncSaberFeed == type).ToList();
+            Playlist playlist;
+            if (existingWithFeed.Count == 0)
+            {
+                playlist = new Playlist(
+                    type.GetDisplayName(),
+                    "Unicorns",
+                    "Sync Saber playlist",
+                    songs.ToImmutable(),
+                    syncSaberFeed: type
+                );
+                await _playlistService.AddPlaylistAsync(playlist);
+            }
+            else
+            {
+                playlist = existingWithFeed[0];
+                playlist.Songs = songs.ToImmutable();
+                foreach (var duplicate in existingWithFeed.Skip(1))
+                {
+                    await _playlistService.DeletePlaylistAsync(duplicate.Id);
+                }
+            }
 
             // Download the new songs from the feed (concurrently)
             await _fileImporter.DownloadSongs(playlist, $"Downloading songs from {type.GetDisplayName()}", progress);
-
-            // Delete existing playlists with the same feed
-            foreach (var existing in playlists.Values.Where(p => p.SyncSaberFeed == type))
-            {
-                await _playlistService.DeletePlaylistAsync(existing.Id);
-            }
-
-            // Add our synced playlist
-            await _playlistService.AddPlaylistAsync(playlist);
+            
             progress.ItemCompleted();
         }
+
+        await _playlistService.SavePlaylistsAsync();
     }
 }
