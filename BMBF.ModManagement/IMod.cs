@@ -52,7 +52,7 @@ namespace BMBF.ModManagement
         /// <summary>
         /// Version of the package that this mod is designed for
         /// </summary>
-        string PackageVersion { get; }
+        string? PackageVersion { get; }
 
         /// <summary>
         /// Installs the mod

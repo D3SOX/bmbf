@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="QuestPatcher.QMod" Version="1.1.0" />
+    <PackageReference Include="QuestPatcher.QMod" Version="2.0.0" />
     <PackageReference Include="System.IO.Abstractions" Version="16.0.1" />
 
     <InternalsVisibleTo Include="BMBF.QMod.Tests" />
