@@ -32,6 +32,7 @@ public class AuthService : IAuthService
     {
         _serializerOptions = serializerOptions;
         _io = io;
+        _io.Directory.CreateDirectory(settings.RootDataPath);
         _authConfigPath = Path.Combine(settings.RootDataPath, settings.AuthFileName);
     }
     

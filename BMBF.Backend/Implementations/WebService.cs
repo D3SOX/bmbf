@@ -32,11 +32,9 @@ public class WebService : IHostedService, IDisposable
         JsonSerializerOptions serializerOptions, 
         IEnumerable<IEndpoints> endpoints,
         AuthEndpoints authEndpoints,
-        IAuthService authService,
-        IFileSystem io)
+        IAuthService authService)
     {
         _settings = settings;
-        io.Directory.CreateDirectory(settings.RootDataPath);
         _webRootFileProvider = fileProviders.WebRootProvider;
         _server = new Server(settings.BindAddress, settings.BindPort);
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -26,6 +27,7 @@ public class SyncSaberService : ISyncSaberService
     private readonly IFileImporter _fileImporter;
     private readonly IProgressService _progressService;
     private readonly Dictionary<FeedType, (IFeed feed, IFeedSettings settings)> _feedReaders = new();
+    private readonly IFileSystem _io;
     private SyncSaberConfig? _config;
 
     public SyncSaberService(BMBFSettings settings,
@@ -34,7 +36,8 @@ public class SyncSaberService : ISyncSaberService
         IProgressService progressService,
         IFileImporter fileImporter,
         IEnumerable<IFeed> feeds,
-        IEnumerable<IFeedSettings> feedSettings)
+        IEnumerable<IFeedSettings> feedSettings, 
+        IFileSystem io)
     {
         // Match up the feeds with their feed settings
         var feedsById = feeds.ToDictionary(f => f.FeedId, f => f);
@@ -49,6 +52,8 @@ public class SyncSaberService : ISyncSaberService
         _playlistService = playlistService;
         _progressService = progressService;
         _fileImporter = fileImporter;
+        _io = io;
+        _io.Directory.CreateDirectory(settings.RootDataPath);
         _configPath = Path.Combine(settings.RootDataPath, settings.SyncSaberConfigName);
     }
 
@@ -66,7 +71,7 @@ public class SyncSaberService : ISyncSaberService
             {
                 return _config;
             }
-            await using var cfgStream = File.OpenRead(_configPath);
+            await using var cfgStream = _io.File.OpenRead(_configPath);
             _config = await JsonSerializer.DeserializeAsync<SyncSaberConfig>(cfgStream, _serializerOptions)
                       ?? throw new NullReferenceException("Deserialized config was null");
         }
@@ -124,12 +129,12 @@ public class SyncSaberService : ISyncSaberService
 
     private async Task SaveConfigInternal()
     {
-        if (File.Exists(_configPath))
+        if (_io.File.Exists(_configPath))
         {
-            File.Delete(_configPath);
+            _io.File.Delete(_configPath);
         }
 
-        await using var cfgStream = File.OpenWrite(_configPath);
+        await using var cfgStream = _io.File.OpenWrite(_configPath);
         await JsonSerializer.SerializeAsync(cfgStream, _config, _serializerOptions);
     }
 
