@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.Net;
 using System.Text.Json;
 using System.Threading;
@@ -31,9 +32,11 @@ public class WebService : IHostedService, IDisposable
         JsonSerializerOptions serializerOptions, 
         IEnumerable<IEndpoints> endpoints,
         AuthEndpoints authEndpoints,
-        IAuthService authService)
+        IAuthService authService,
+        IFileSystem io)
     {
         _settings = settings;
+        io.Directory.CreateDirectory(settings.RootDataPath);
         _webRootFileProvider = fileProviders.WebRootProvider;
         _server = new Server(settings.BindAddress, settings.BindPort);
 
