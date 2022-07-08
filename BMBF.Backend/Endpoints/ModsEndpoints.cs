@@ -122,7 +122,7 @@ public class ModsEndpoints : IEndpoints
         }
         catch (InstallationException ex)
         {
-            return Responses.InternalServerError(ex.Message);
+            return Responses.BadRequest(ex.Message);
         }
     }
     
