@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM mcr.microsoft.com/dotnet/sdk:6.0-jammy
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install basic packages
@@ -7,13 +7,6 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     ssh
-
-# Install .NET
-RUN curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -o packages-microsoft-prod.deb \
-    && dpkg -i packages-microsoft-prod.deb \
-    && rm packages-microsoft-prod.deb \
-    && apt-get update \
-    && apt-get install -y dotnet-sdk-6.0
 
 # Install Java
 RUN apt-get install -y openjdk-11-jdk-headless
