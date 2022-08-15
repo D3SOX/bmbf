@@ -53,13 +53,16 @@ public static class Responses
     /// </summary>
     /// <param name="status">Status code of the response</param>
     /// <returns>An HTTP response with an empty body</returns>
-    public static HttpResponse Empty(ushort status) => new(status)
+    public static HttpResponse Empty(ushort status)
     {
-        Headers =
+        var resp = new HttpResponse(status);
+        if (status != 204)
         {
-            ["Content-Length"] = 0.ToString()
+            resp.Headers["Content-Length"] = "0";
         }
-    };
+
+        return resp;
+    }
     
 
     /// <summary>
