@@ -1,12 +1,16 @@
 import { Mod } from '../types/mod';
-import { API_ROOT } from './base';
+import { API_ROOT, sendErrorNotification } from './base';
 import { proxy } from 'valtio';
 
 export const modsStore = proxy<{ mods: Mod[] }>({ mods: [] });
 
 export async function fetchMods(): Promise<void> {
   const data = await fetch(`${API_ROOT}/mods`);
-  modsStore.mods = await data.json();
+  if (data.ok) {
+    modsStore.mods = await data.json();
+  } else {
+    sendErrorNotification(await data.text());
+  }
 }
 
 export async function uninstallMod(mod: Pick<Mod, 'id'>): Promise<void> {

@@ -1,12 +1,16 @@
-import { API_ROOT } from './base';
-import { proxy } from 'valtio';
 import { Playlist, PlaylistSong } from '../types/playlist';
+import { API_ROOT, sendErrorNotification } from './base';
+import { proxy } from 'valtio';
 
 export const playlistsStore = proxy<{ playlists: Playlist[] }>({ playlists: [] });
 
 export async function fetchPlaylists(): Promise<void> {
   const data = await fetch(`${API_ROOT}/playlists`);
-  playlistsStore.playlists = await data.json();
+  if (data.ok) {
+    playlistsStore.playlists = await data.json();
+  } else {
+    sendErrorNotification(await data.text());
+  }
 }
 
 export async function getPlaylistSongs(
