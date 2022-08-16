@@ -42,10 +42,8 @@ public class SetupService : ISetupService, IDisposable
     private readonly string _latestCompleteApkPath; // Stores the APK of the last completed stage
     private readonly string _tempApkPath; // Stores the APK of the currently executing stage
     private readonly string _backupPath; // Beat Saber data backup used during uninstall and reinstall
-    private readonly string _packageId;
     private readonly ILogger _logger;
-
-    private string BeatSaberDataPath => $"/sdcard/Android/data/{_packageId}/files";
+    private readonly string _backupOriginPath;
 
     private static readonly string[] DataFiles =
     {
@@ -80,7 +78,7 @@ public class SetupService : ISetupService, IDisposable
         _latestCompleteApkPath = Path.Combine(_setupDirName, "PostCurrentStage.apk");
         _tempApkPath = Path.Combine(_setupDirName, "CurrentStage.apk");
         _backupPath = Path.Combine(_setupDirName, "DataBackup");
-        _packageId = settings.PackageId;
+        _backupOriginPath = settings.DataBackupBasePath;
         _logger = new LoggerConfiguration()
             .WriteTo.Logger(Log.Logger.ForContext<SetupService>())
             // TODO: Write to status update ws api
@@ -477,7 +475,7 @@ public class SetupService : ISetupService, IDisposable
                 _io.Directory.CreateDirectory(_backupPath);
                 foreach (string fileName in DataFiles)
                 {
-                    var filePath = Path.Combine(BeatSaberDataPath, fileName);
+                    var filePath = Path.Combine(_backupOriginPath, fileName);
                     var backupFilePath = Path.Combine(_backupPath, fileName);
 
                     if (_io.File.Exists(filePath))
@@ -520,13 +518,13 @@ public class SetupService : ISetupService, IDisposable
         {
             if (_io.Directory.Exists(_backupPath))
             {
-                _io.Directory.CreateDirectory(BeatSaberDataPath);
+                _io.Directory.CreateDirectory(_backupOriginPath);
                 string[]? files = _io.Directory.GetFiles(_backupPath);
                 _logger.Information($"Restoring {files.Length} files");
                 foreach (string file in files)
                 {
                     string fileName = Path.GetFileName(file);
-                    _io.File.Copy(file, Path.Combine(BeatSaberDataPath, fileName));
+                    _io.File.Copy(file, Path.Combine(_backupOriginPath, fileName));
                 }
             }
             else

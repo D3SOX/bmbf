@@ -49,6 +49,8 @@ public class BMBFSettings
 
     public string LibFilesPath { get; set; }
     
+    public string DataBackupBasePath { get; set; }
+    
     public string AuthFileName { get; set; }
     
     public string SyncSaberConfigName { get; set; }
