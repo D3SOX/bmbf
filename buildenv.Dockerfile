@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0-jammy
+FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install basic packages
@@ -14,7 +14,10 @@ RUN apt-get install -y openjdk-11-jdk-headless
 # Install Node
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash \
     && apt-get install -y nodejs \
-    && corepack enable
+    && corepack enable 
+
+# Install .NET 6
+RUN apt-get install -y dotnet6
 
 # Install Android workload
 RUN dotnet workload install android
