@@ -14,6 +14,11 @@ function Songs() {
     fetchSongs();
   }, []);
 
+  async function handleImport() {
+    await startImport(url);
+    setUrl('');
+  }
+
   return (
     <Stack align="center">
       <img src="/logo.png" alt="Logo" />
@@ -25,7 +30,7 @@ function Songs() {
           placeholder="URL to import"
           icon={<IconWorldDownload />}
         />
-        <Button onClick={() => startImport(url)} leftIcon={<IconArrowRight />}>
+        <Button onClick={handleImport} leftIcon={<IconArrowRight />}>
           Start import
         </Button>
       </Group>
