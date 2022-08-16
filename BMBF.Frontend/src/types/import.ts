@@ -1,23 +1,36 @@
 import { Song } from './song';
 import { Mod } from './mod';
 
-export interface FailedImportResponse {
-  type: 'Failed';
+export const enum ImportType {
+  Song = 'Song',
+  Mod = 'Mod',
+  FileCopy = 'FileCopy',
+  Config = 'Config',
+  Playlist = 'Playlist',
+  Failed = 'Failed',
+}
+
+export interface BaseImportResponse {
+  type: ImportType;
+}
+
+export interface FailedImportResponse extends BaseImportResponse {
+  type: ImportType.Failed;
   error: string;
 }
 
-export interface SongImportResponse {
-  type: 'Song';
+export interface SongImportResponse extends BaseImportResponse {
+  type: ImportType.Song;
   importedSong: Song;
 }
 
-export interface PlaylistImportResponse {
-  type: 'Playlist';
+export interface PlaylistImportResponse extends BaseImportResponse {
+  type: ImportType.Playlist;
   importedPlaylistId: string;
 }
 
-export interface ModImportResponse {
-  type: 'Mod';
+export interface ModImportResponse extends BaseImportResponse {
+  type: ImportType.Mod;
   importedMod: Mod;
 }
 
