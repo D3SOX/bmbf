@@ -1,4 +1,5 @@
 import { Song } from './song';
+import { Mod } from './mod';
 
 export interface FailedImportResponse {
   type: 'Failed';
@@ -15,4 +16,13 @@ export interface PlaylistImportResponse {
   importedPlaylistId: string;
 }
 
-export type ImportResponse = FailedImportResponse | SongImportResponse | PlaylistImportResponse;
+export interface ModImportResponse {
+  type: 'Mod';
+  importedMod: Mod;
+}
+
+export type ImportResponse =
+  | FailedImportResponse
+  | SongImportResponse
+  | PlaylistImportResponse
+  | ModImportResponse;
