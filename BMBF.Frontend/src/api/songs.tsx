@@ -1,5 +1,5 @@
 import { Song } from '../types/song';
-import { API_ROOT } from './base';
+import { API_ROOT, sendErrorNotification } from './base';
 import { proxy } from 'valtio';
 import { ImportResponse } from '../types/import';
 
@@ -25,8 +25,14 @@ export async function startImport(url: string): Promise<void> {
     method: 'POST',
     body: `"${url}"`,
   });
-  const json: ImportResponse = await data.json();
-  if (json.importedSong) {
-    songsStore.songs.unshift(json.importedSong);
+  if (data.ok) {
+    const json: ImportResponse = await data.json();
+    if (json.type === 'Song') {
+      songsStore.songs.unshift(json.importedSong);
+    } else {
+      sendErrorNotification(json.error);
+    }
+  } else {
+    sendErrorNotification(await data.text());
   }
 }
