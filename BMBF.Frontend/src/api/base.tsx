@@ -1,7 +1,8 @@
 import { showNotification } from '@mantine/notifications';
 import { IconAlertTriangle, IconCheck } from '@tabler/icons';
 
-export const API_ROOT = 'http://127.0.0.1:50006/api';
+export const API_HOST = '127.0.0.1:50006';
+export const API_ROOT = `http://${API_HOST}/api`;
 
 export function sendSuccessNotification(message: string) {
   showNotification({
