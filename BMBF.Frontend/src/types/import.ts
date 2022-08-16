@@ -10,4 +10,9 @@ export interface SongImportResponse {
   importedSong: Song;
 }
 
-export type ImportResponse = FailedImportResponse | SongImportResponse;
+export interface PlaylistImportResponse {
+  type: 'Playlist';
+  importedPlaylistId: string;
+}
+
+export type ImportResponse = FailedImportResponse | SongImportResponse | PlaylistImportResponse;
