@@ -40,7 +40,7 @@ export async function begin(): Promise<void> {
 export function needsDowngrade(): boolean {
   if (setupStore.setupStatus) {
     if (setupStore.setupStatus.stage === SetupStage.Downgrading) {
-      return setupStore.moddableVersions.includes(setupStore.setupStatus.currentBeatSaberVersion);
+      return !setupStore.moddableVersions.includes(setupStore.setupStatus.currentBeatSaberVersion);
     }
   }
   return false;
