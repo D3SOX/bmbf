@@ -1,9 +1,6 @@
 ﻿{
   "outputDirectory": "./Output",
   "additionalDiffs": [
-    {
-      "fromVersion": "1.19.0",
-      "toVersion": "1.17.1"
-    }
+
   ]
 }
