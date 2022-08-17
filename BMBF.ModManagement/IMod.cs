@@ -88,8 +88,7 @@ namespace BMBF.ModManagement
 
         /// <summary>
         /// Map of file extensions to paths which indicate file types this mod loads and where it loads them from.
-        /// Key is lower(!) case file extension without(!) period prefix, value is path.
-        /// !: This is important
+        /// Key is the extension without a period prefix, value is path.
         /// </summary>
         IReadOnlyDictionary<string, string> CopyExtensions { get; }
     }

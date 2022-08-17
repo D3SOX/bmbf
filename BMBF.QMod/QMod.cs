@@ -52,7 +52,7 @@ namespace BMBF.QMod
             Mod = mod;
             _provider = provider;
             // Verify that extensions are lower case
-            CopyExtensions = mod.CopyExtensions.ToDictionary(c => c.Extension.ToLower(), c => c.Destination);
+            CopyExtensions = mod.CopyExtensions.ToDictionary(c => c.Extension, c => c.Destination, StringComparer.OrdinalIgnoreCase);
         }
 
         private bool VerifyRegistered()
