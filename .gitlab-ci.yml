@@ -9,6 +9,7 @@ publish:
   stage: deploy
   script:
     - curl "$BMBF_KEYSTORE_URL" --output BMBF.keystore
+    - cd ./BMBF.Frontend && yarn install --frozen-lockfile && yarn build
     - dotnet publish ./BMBF/BMBF.csproj -c Release -p:AndroidSdkDirectory=/opt/android-sdk
   artifacts:
     paths:
