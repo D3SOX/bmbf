@@ -91,12 +91,8 @@ export async function finalize(): Promise<void> {
 
 export async function quit(): Promise<void> {
   if (setupStore.setupStatus) {
-    const data = await fetch(`${API_ROOT}/setup/quit`, {
+    await fetch(`${API_ROOT}/setup/quit`, {
       method: 'POST',
     });
-    if (data.ok) {
-      setupStore.setupStatus = null;
-      // TODO: do I need to reset beatSaber installationInfo here too?
-    }
   }
 }

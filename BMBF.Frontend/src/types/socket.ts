@@ -13,7 +13,7 @@ export const enum MessageType {
   PlaylistAdded = 'PlaylistAdded',
   PlaylistRemoved = 'PlaylistRemoved',
 
-  SetupFinished = 'SetupFinished',
+  SetupQuit = 'SetupQuit',
   SetupStatusUpdate = 'SetupStatusUpdate',
 
   InstallationUpdated = 'InstallationUpdated',
@@ -58,8 +58,9 @@ export interface PlaylistRemoved extends BaseSocketMessage {
   id: string;
 }
 
-export interface SetupFinished extends BaseSocketMessage {
-  type: MessageType.SetupFinished;
+export interface SetupQuit extends BaseSocketMessage {
+  type: MessageType.SetupQuit;
+  isFinished: boolean;
 }
 
 export interface SetupStatusUpdate extends BaseSocketMessage {
@@ -110,7 +111,7 @@ export type SocketMessage =
   | PlaylistUpdated
   | PlaylistAdded
   | PlaylistRemoved
-  | SetupFinished
+  | SetupQuit
   | SetupStatusUpdate
   | InstallationUpdated
   | ModAdded

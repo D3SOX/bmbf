@@ -51,8 +51,9 @@ function handleEvent(event: SocketMessage) {
       playlistsStore.playlists.splice(playlistIndex, 1);
       break;
     }
-    case MessageType.SetupFinished: {
+    case MessageType.SetupQuit: {
       setupStore.setupStatus = null;
+      // TODO: do I need to reset beatSaber installationInfo here too?
       break;
     }
     case MessageType.SetupStatusUpdate: {
