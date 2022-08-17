@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using BMBF.Backend.Extensions;
 using BMBF.Backend.Models.BPList;
 
 namespace BMBF.Backend.Models;
@@ -21,13 +23,13 @@ public class Playlist
 
     [JsonPropertyName("playlistAuthor")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyInfoUpdated(); } } }
-    private string _playlistAuthor;
+    public string? PlaylistAuthor { get => _playlistAuthor; set { if (_playlistAuthor != value) { _playlistAuthor = value; NotifyInfoUpdated(); } } }
+    private string? _playlistAuthor;
 
     [JsonPropertyName("playlistDescription")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyInfoUpdated(); } } }
-    private string _playlistDescription;
+    public string? PlaylistDescription { get => _playlistDescription; set { if (_playlistDescription != value) { _playlistDescription = value; NotifyInfoUpdated(); } } }
+    private string? _playlistDescription;
 
     [JsonIgnore] public string Id { get; set; } = null!;
 
@@ -56,7 +58,7 @@ public class Playlist
         get => _image;
         set
         {
-            if (_image != value)
+            if (!_image.NullableSequenceEquals(value))
             {
                 _image = value;
                 NotifyUpdated(false, false, true);
@@ -77,7 +79,7 @@ public class Playlist
         get => _songs;
         set
         {
-            if (_songs != value)
+            if (!_songs.SequenceEqual(value))
             {
                 _songs = value;
                 NotifyUpdated(false, true, false);
@@ -128,8 +130,8 @@ public class Playlist
 
     [JsonConstructor]
     public Playlist(string playlistTitle,
-        string playlistAuthor,
-        string playlistDescription,
+        string? playlistAuthor,
+        string? playlistDescription,
         ImmutableList<BPSong> songs,
         string? imageString = null,
         FeedType? syncSaberFeed = null)
@@ -149,11 +151,14 @@ public class Playlist
     public void SetPlaylistInfo(PlaylistInfo playlistInfo)
     {
         // Update the properties first
-        _playlistTitle = playlistInfo.PlaylistTitle;
-        _playlistDescription = playlistInfo.PlaylistDescription;
-        _playlistAuthor = playlistInfo.PlaylistAuthor;
-        // ID is deliberately not reflected here - playlist ID should only be set once after playlist creation
-
-        NotifyInfoUpdated();
+        if (playlistInfo.PlaylistTitle != _playlistTitle || playlistInfo.PlaylistAuthor != _playlistAuthor ||
+            playlistInfo.PlaylistDescription != _playlistDescription)
+        {
+            _playlistTitle = playlistInfo.PlaylistTitle;
+            _playlistDescription = playlistInfo.PlaylistDescription;
+            _playlistAuthor = playlistInfo.PlaylistAuthor;
+            NotifyInfoUpdated();
+            // ID is deliberately not reflected here - playlist ID should only be set once after playlist creation
+        }
     }
 }

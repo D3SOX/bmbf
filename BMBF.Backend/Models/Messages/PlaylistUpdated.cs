@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 using BMBF.Backend.Models.BPList;
 
 namespace BMBF.Backend.Models.Messages;
@@ -10,11 +11,13 @@ public class PlaylistUpdated : IMessage
     /// <summary>
     /// The updated songs of the playlist, null if the songs did not change
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ImmutableList<BPSong>? Songs { get; set; }
 
     /// <summary>
     /// The updated details of the playlist, null if they did not change
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public PlaylistInfo? PlaylistInfo { get; set; }
 
     /// <summary>

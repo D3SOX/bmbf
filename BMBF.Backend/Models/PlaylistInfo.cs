@@ -9,8 +9,8 @@ public class PlaylistInfo
 {
     public string Id { get; set; }
     public string PlaylistTitle { get; set; }
-    public string PlaylistAuthor { get; set; }
-    public string PlaylistDescription { get; set; }
+    public string? PlaylistAuthor { get; set; }
+    public string? PlaylistDescription { get; set; }
     
     public FeedType? SyncSaberFeed { get; set; }
 
@@ -22,8 +22,8 @@ public class PlaylistInfo
     [JsonConstructor]
     public PlaylistInfo(string id,
         string playlistTitle,
-        string playlistAuthor,
-        string playlistDescription,
+        string? playlistAuthor,
+        string? playlistDescription,
         FeedType? syncSaberFeed)
     {
         Id = id;

@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace BMBF.Backend.Models.BPList;
 
 // ReSharper disable once InconsistentNaming
-public class BPSong
+public class BPSong : IEquatable<BPSong>
 {
     public string Hash { get; set; }
 
@@ -24,5 +25,20 @@ public class BPSong
         Hash = hash;
         SongName = songName;
         Key = key;
+    }
+
+    public bool Equals(BPSong? other)
+    {
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return Hash == other.Hash && SongName == other.SongName && Key == other.Key;
     }
 }
