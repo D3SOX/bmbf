@@ -25,11 +25,12 @@ export default function App() {
 
       // connect to websocket
       startSocket();
-      // disconnect on unmount
-      return () => {
-        stopSocket();
-      };
     })();
+
+    // disconnect on unmount
+    return () => {
+      stopSocket();
+    };
   }, []);
 
   return (
