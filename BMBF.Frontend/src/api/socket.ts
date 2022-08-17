@@ -24,7 +24,19 @@ function handleEvent(event: SocketMessage) {
       break;
     }
     case MessageType.PlaylistUpdated: {
-      // TODO
+      const { playlistInfo, coverUpdated } = event;
+      if (coverUpdated) {
+        // TODO: force cover image reload
+      }
+      if (playlistInfo) {
+        const playlist = playlistsStore.playlists.find(p => p.id === playlistInfo.id);
+        if (playlist) {
+          playlist.playlistTitle = playlistInfo.playlistTitle;
+          playlist.playlistAuthor = playlistInfo.playlistAuthor;
+          playlist.playlistDescription = playlistInfo.playlistDescription;
+          playlist.syncSaberFeed = playlistInfo.syncSaberFeed;
+        }
+      }
       break;
     }
     case MessageType.PlaylistAdded: {
