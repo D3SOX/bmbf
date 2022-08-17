@@ -7,7 +7,7 @@ export const progressStore = proxy<{ progress: Progress[] }>({
 });
 
 export async function fetchProgress(): Promise<void> {
-  const data = await fetch(`${API_ROOT}/setup/status`);
+  const data = await fetch(`${API_ROOT}/progress`);
   if (data.ok) {
     progressStore.progress = await data.json();
   }
