@@ -66,7 +66,7 @@ namespace BMBF.QMod
                 {
                     qMod = await QuestPatcher.QMod.QMod.ParseAsync(modArchive, false);
 
-                    if (qMod.PackageId != _packageId)
+                    if (qMod.PackageId != null && qMod.PackageId != _packageId)
                     {
                         throw new InstallationException($"Incorrect package ID {qMod.PackageId}");
                     }
