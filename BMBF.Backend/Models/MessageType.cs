@@ -12,7 +12,7 @@ public enum MessageType
     PlaylistAdded,
     PlaylistRemoved,
 
-    SetupFinished,
+    SetupQuit,
     SetupStatusUpdate,
 
     InstallationUpdated,

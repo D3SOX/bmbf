@@ -25,10 +25,10 @@ public interface ISetupService
     event EventHandler<SetupStatus>? StatusChanged;
 
     /// <summary>
-    /// Sent when setup finishes.
-    /// NOT sent if setup is cancelled via <see cref="QuitSetupAsync"/>
+    /// Sent when setup quits.
+    /// Argument is true if setup completed successfully, false if setup was quit by the user before completing.
     /// </summary>
-    event EventHandler SetupComplete;
+    event EventHandler<bool> SetupQuit;
 
     /// <summary>
     /// Copies the APK to a temporary location to start setup

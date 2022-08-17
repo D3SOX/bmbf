@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using BMBF.Backend.Models;
+﻿using BMBF.Backend.Models;
 using BMBF.Backend.Models.Messages;
 using BMBF.Backend.Models.Setup;
 using BMBF.Backend.Services;
@@ -27,7 +25,7 @@ public class MessageService : IMessageService
         
         // Register events to send our messages
         setupService.StatusChanged += OnSetupStatusUpdate;
-        setupService.SetupComplete += OnSetupFinished;
+        setupService.SetupQuit += OnSetupQuit;
 
         songService.SongAdded += OnSongAdded;
         songService.SongRemoved += OnSongRemoved;
@@ -57,7 +55,7 @@ public class MessageService : IMessageService
 
     private void OnSetupStatusUpdate(object? sender, SetupStatus newStatus) => Send(new SetupStatusUpdate(newStatus));
 
-    private void OnSetupFinished(object? sender, EventArgs args) => Send(new SetupFinished());
+    private void OnSetupQuit(object? sender, bool isFinished) => Send(new SetupQuit(isFinished));
 
     private void OnPlaylistAdded(object? sender, Playlist playlist)
     {

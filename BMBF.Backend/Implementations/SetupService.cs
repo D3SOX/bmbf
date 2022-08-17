@@ -32,7 +32,7 @@ public class SetupService : ISetupService, IDisposable
 
     public event EventHandler<SetupStatus>? StatusChanged;
 
-    public event EventHandler? SetupComplete;
+    public event EventHandler<bool>? SetupQuit;
 
     private readonly IBeatSaberService _beatSaberService;
     private readonly IAssetService _assetService;
@@ -121,7 +121,7 @@ public class SetupService : ISetupService, IDisposable
         {
             Log.Error(ex, "Failed to load setup status");
             // Cancel any current setup operation
-            QuitSetupInternal();
+            QuitSetupInternal(false);
         }
     }
 
@@ -185,7 +185,7 @@ public class SetupService : ISetupService, IDisposable
                 }
             }
 
-            QuitSetupInternal();
+            QuitSetupInternal(false);
         }
         finally
         {
@@ -193,12 +193,13 @@ public class SetupService : ISetupService, IDisposable
         }
     }
 
-    private void QuitSetupInternal()
+    private void QuitSetupInternal(bool isFinished)
     {
         Log.Information("Quitting setup");
         _io.Directory.Delete(_setupDirName, true);
         CurrentStatus = null;
         _cts.Dispose();
+        SetupQuit?.Invoke(this, isFinished);
     }
 
     private async Task<SetupStatus> BeginSetupStage(SetupStage beginningStage, SetupStage? allowStage = null, bool updateNow = true)
@@ -537,8 +538,7 @@ public class SetupService : ISetupService, IDisposable
             
             // Install a song by default?
 
-            QuitSetupInternal();
-            SetupComplete?.Invoke(this, EventArgs.Empty);
+            QuitSetupInternal(true);
             Log.Information("Setup finished");
             // All done!
         }
