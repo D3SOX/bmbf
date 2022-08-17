@@ -62,11 +62,9 @@ public class FileImporter : IFileImporter
             return null;
         }
 
+        string playlistId = await _playlistService.AddPlaylistAsync(playlist);
+        
         await DownloadSongs(playlist, $"Downloading songs from {playlist.PlaylistTitle}");
-
-        // TODO: Add playlist before all the songs are downloaded, or wait until all finished?
-        // For now we are waiting until all of the songs are downloaded
-        var playlistId = await _playlistService.AddPlaylistAsync(playlist);
         Log.Information($"Playlist file {fileName} imported as {playlistId}");
         return playlistId;
     }
