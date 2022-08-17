@@ -1,12 +1,30 @@
-import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
+import { Button, Group, Stack, TextInput, Title, Text } from '@mantine/core';
 import { useInputState } from '@mantine/hooks';
 import { startImport } from '../api/import';
 import { IconArrowRight, IconWorldDownload } from '@tabler/icons';
 import { useState } from 'react';
+import { useSnapshot } from 'valtio';
+import { beatSaberStore } from '../api/beatsaber';
 
 function Tools() {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useInputState('');
+
+  const { installationInfo } = useSnapshot(beatSaberStore);
+
+  function ModInfo() {
+    if (installationInfo?.modTag) {
+      return (
+        <>
+          <Text>Patcher name: {installationInfo.modTag.patcherName}</Text>
+          <Text>Patcher version: {installationInfo.modTag.patcherVersion}</Text>
+          <Text>Modloader name: {installationInfo.modTag.modloaderName}</Text>
+          <Text>Modloader version: {installationInfo.modTag.modloaderVersion}</Text>
+        </>
+      );
+    }
+    return <Text>Game not modded</Text>;
+  }
 
   async function handleImport() {
     setBusy(true);
@@ -32,6 +50,17 @@ function Tools() {
           Start import
         </Button>
       </Group>
+      <Title order={2}>Debug info</Title>
+      {installationInfo ? (
+        <Stack spacing={1}>
+          <Text>APK Version: {installationInfo.version}</Text>
+          <Text>APK Version code: {installationInfo.versionCode}</Text>
+          <Title order={3}>Mod Info</Title>
+          <ModInfo />
+        </Stack>
+      ) : (
+        <Text>Game not installed</Text>
+      )}
     </Stack>
   );
 }
