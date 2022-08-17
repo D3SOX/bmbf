@@ -1,6 +1,6 @@
-import { Grid, Stack, Text, Title } from '@mantine/core';
+import { Grid, Stack, Text, Title, Button } from '@mantine/core';
 import { useSnapshot } from 'valtio';
-import { fetchMods, modsStore } from '../api/mods';
+import { fetchMods, installCore, modsStore } from '../api/mods';
 import { useEffect } from 'react';
 import ModCard from '../components/ModCard';
 
@@ -24,7 +24,10 @@ function Mods() {
           ))}
         </Grid>
       ) : (
-        <Text>No mods found</Text>
+        <>
+          <Text>No mods found</Text>
+          <Button onClick={installCore}>Install core mods</Button>
+        </>
       )}
     </Stack>
   );
