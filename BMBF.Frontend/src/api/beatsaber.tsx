@@ -1,6 +1,8 @@
 import { InstallationInfo } from '../types/beatsaber';
 import { API_ROOT } from './base';
-import { proxy } from 'valtio';
+import { proxy, useSnapshot } from 'valtio';
+import { useMemo } from 'react';
+import { setupStore } from './setup';
 
 export const beatSaberStore = proxy<{ installationInfo: InstallationInfo | null }>({
   installationInfo: null,
@@ -13,4 +15,15 @@ export async function fetchInstallationInfo(): Promise<void> {
   } else {
     beatSaberStore.installationInfo = null;
   }
+}
+
+export function useNeedsSetup() {
+  const { installationInfo } = useSnapshot(beatSaberStore);
+  const { setupStatus } = useSnapshot(setupStore);
+
+  const needsSetup = useMemo(() => {
+    return installationInfo === null || installationInfo.modTag === null || setupStatus !== null;
+  }, [installationInfo, setupStatus]);
+
+  return needsSetup;
 }

@@ -37,14 +37,7 @@ export default function App() {
       <NotificationsProvider>
         <AppShell padding="md" header={<AppHeader />}>
           <Routes>
-            <Route
-              path="/"
-              element={
-                <RequireSetup>
-                  <Home />
-                </RequireSetup>
-              }
-            />
+            <Route path="/" element={<Home />} />
             <Route
               path="/mods"
               element={
@@ -105,9 +98,10 @@ function RequireSetup({ children }: { children: JSX.Element }): JSX.Element {
   const location = useLocation();
 
   const { installationInfo } = useSnapshot(beatSaberStore);
+  const { setupStatus } = useSnapshot(setupStore);
 
   // redirect when not installed or patched
-  if (!installationInfo || !installationInfo.modTag) {
+  if (!installationInfo || !installationInfo.modTag || setupStatus) {
     if (location.pathname !== '/setup') {
       return <Navigate to="/setup" state={{ from: location }} replace />;
     }

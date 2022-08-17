@@ -3,6 +3,7 @@ import { Link, useMatch, useResolvedPath } from 'react-router-dom';
 import { IconHome, IconMusic, IconPlaylist, IconRefresh, IconSettings, IconTool } from '@tabler/icons';
 import React from 'react';
 import NavigationButton from './NavigationButton';
+import { useNeedsSetup } from '../../api/beatsaber';
 
 export interface Page {
   to: string;
@@ -42,8 +43,7 @@ function AppHeader() {
   const resolvedHome = useResolvedPath('/');
   const matchedHome = useMatch({ path: resolvedHome.pathname, end: true });
 
-  const resolvedSetup = useResolvedPath('/setup');
-  const matchedSetup = useMatch({ path: resolvedSetup.pathname, end: true });
+  const needsSetup = useNeedsSetup();
 
   return (
     <Header height={60}>
@@ -59,18 +59,12 @@ function AppHeader() {
         noWrap
       >
         <Link to="/">
-          <ActionIcon
-            variant={matchedHome ? 'filled' : 'default'}
-            color="blue"
-            radius="xl"
-            size="xl"
-            disabled={!!matchedSetup}
-          >
+          <ActionIcon variant={matchedHome ? 'filled' : 'default'} color="blue" radius="xl" size="xl">
             <IconHome />
           </ActionIcon>
         </Link>
         {pages.map(page => (
-          <NavigationButton key={page.to} page={page} disabled={!!matchedSetup} />
+          <NavigationButton key={page.to} page={page} disabled={needsSetup} />
         ))}
       </Group>
     </Header>
