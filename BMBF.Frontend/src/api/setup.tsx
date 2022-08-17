@@ -2,9 +2,14 @@ import { API_ROOT, sendErrorNotification } from './base';
 import { SetupStage, SetupStatus, Versions } from '../types/setup';
 import { proxy } from 'valtio';
 
-export const setupStore = proxy<{ setupStatus: SetupStatus | null; moddableVersions: Versions }>({
+export const setupStore = proxy<{
+  setupStatus: SetupStatus | null;
+  moddableVersions: Versions;
+  loadingStep: number | null;
+}>({
   setupStatus: null,
   moddableVersions: [],
+  loadingStep: null,
 });
 
 export async function fetchSetupStatus(): Promise<void> {
@@ -27,13 +32,10 @@ export async function fetchModdableVersions(): Promise<void> {
 
 export async function begin(): Promise<void> {
   if (!setupStore.setupStatus) {
-    const data = await fetch(`${API_ROOT}/setup/begin`, {
+    setupStore.loadingStep = 0;
+    await fetch(`${API_ROOT}/setup/begin`, {
       method: 'POST',
     });
-    // this can be removed when the websocket is implemented
-    if (data.ok) {
-      await fetchSetupStatus();
-    }
   }
 }
 
@@ -52,8 +54,6 @@ export async function downgrade(version: string): Promise<void> {
       method: 'POST',
       body: `"${version}"`,
     });
-    // this can be removed when the websocket is implemented
-    await fetchSetupStatus();
   }
 }
 
@@ -62,8 +62,6 @@ export async function patch(): Promise<void> {
     await fetch(`${API_ROOT}/setup/patch`, {
       method: 'POST',
     });
-    // this can be removed when the websocket is implemented
-    await fetchSetupStatus();
   }
 }
 
@@ -72,8 +70,6 @@ export async function triggerUninstall(): Promise<void> {
     await fetch(`${API_ROOT}/setup/triggeruninstall`, {
       method: 'POST',
     });
-    // this can be removed when the websocket is implemented
-    await fetchSetupStatus();
   }
 }
 
@@ -82,8 +78,6 @@ export async function triggerInstall(): Promise<void> {
     await fetch(`${API_ROOT}/setup/triggerinstall`, {
       method: 'POST',
     });
-    // this can be removed when the websocket is implemented
-    await fetchSetupStatus();
   }
 }
 
@@ -92,7 +86,17 @@ export async function finalize(): Promise<void> {
     await fetch(`${API_ROOT}/setup/finalize`, {
       method: 'POST',
     });
-    // this can be removed when the websocket is implemented
-    await fetchSetupStatus();
+  }
+}
+
+export async function quit(): Promise<void> {
+  if (setupStore.setupStatus) {
+    const data = await fetch(`${API_ROOT}/setup/quit`, {
+      method: 'POST',
+    });
+    if (data.ok) {
+      setupStore.setupStatus = null;
+      // TODO: do I need to reset beatSaber installationInfo here too?
+    }
   }
 }

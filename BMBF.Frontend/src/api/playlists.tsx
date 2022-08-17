@@ -26,9 +26,7 @@ export async function deletePlaylist(playlist: Pick<Playlist, 'id'>): Promise<vo
   const data = await fetch(`${API_ROOT}/playlists/delete/${playlist.id}`, {
     method: 'DELETE',
   });
-  // this can be removed when the websocket is implemented
-  if (data.ok) {
-    const index = playlistsStore.playlists.findIndex(p => p.id === playlist.id);
-    playlistsStore.playlists.splice(index, 1);
+  if (!data.ok) {
+    sendErrorNotification(await data.text());
   }
 }

@@ -17,9 +17,7 @@ export async function deleteSong(song: Pick<Song, 'hash'>): Promise<void> {
   const data = await fetch(`${API_ROOT}/songs/delete/${song.hash}`, {
     method: 'DELETE',
   });
-  // this can be removed when the websocket is implemented
-  if (data.ok) {
-    const index = songsStore.songs.findIndex(s => s.hash === song.hash);
-    songsStore.songs.splice(index, 1);
+  if (!data.ok) {
+    sendErrorNotification(await data.text());
   }
 }

@@ -42,6 +42,9 @@ function AppHeader() {
   const resolvedHome = useResolvedPath('/');
   const matchedHome = useMatch({ path: resolvedHome.pathname, end: true });
 
+  const resolvedSetup = useResolvedPath('/setup');
+  const matchedSetup = useMatch({ path: resolvedSetup.pathname, end: true });
+
   return (
     <Header height={60}>
       <Group
@@ -56,12 +59,18 @@ function AppHeader() {
         noWrap
       >
         <Link to="/">
-          <ActionIcon variant={matchedHome ? 'filled' : 'default'} color="blue" radius="xl" size="xl">
+          <ActionIcon
+            variant={matchedHome ? 'filled' : 'default'}
+            color="blue"
+            radius="xl"
+            size="xl"
+            disabled={!!matchedSetup}
+          >
             <IconHome />
           </ActionIcon>
         </Link>
         {pages.map(page => (
-          <NavigationButton key={page.to} page={page} />
+          <NavigationButton key={page.to} page={page} disabled={!!matchedSetup} />
         ))}
       </Group>
     </Header>
