@@ -82,11 +82,8 @@ public class WebSocketEndpoints : IEndpoints
                 var message = await messageTask;
                 messageTask = null;
 
-                using var messageStream = new MemoryStream();
-                JsonSerializer.Serialize(messageStream, message, message.GetType(), _serializerOptions);
-                messageStream.Position = 0;
-
-                await webSocket.Send(new WebSocketBinaryMessage(messageStream), ct);
+                string msg = JsonSerializer.Serialize(message, message.GetType(), _serializerOptions);
+                await webSocket.Send(new WebSocketTextMessage(msg), ct);
             }
         }
     }
