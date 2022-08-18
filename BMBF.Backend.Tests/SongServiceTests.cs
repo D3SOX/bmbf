@@ -32,7 +32,8 @@ public class SongServiceTests : IDisposable
     {
         SongsCacheName = "songCache.json",
         RootDataPath = "/BMBFData",
-        SongsPath = "/Songs"
+        SongsPath = "/Songs",
+        MaxConcurrentSongLoads = 1
     };
 
     [Fact]
