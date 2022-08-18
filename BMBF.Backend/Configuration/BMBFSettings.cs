@@ -56,6 +56,8 @@ public class BMBFSettings
     public string SyncSaberConfigName { get; set; }
     
     public int MaxConcurrentDownloads { get; set; }
+    
+    public int MaxConcurrentSongLoads { get; set; }
 
     public Uri BeatSaverBaseUri { get; set; }
 }

@@ -40,6 +40,7 @@ public class SongService : IDisposable, ISongService
     private readonly SemaphoreSlim _cacheUpdateLock = new(1);
     private readonly Debouncey _autoUpdateDebouncey;
     private readonly IFileSystem _io;
+    private readonly int _maxConcurrentSongLoads;
 
     public SongService(BMBFSettings bmbfSettings,
         IFileSystem io,
@@ -47,6 +48,7 @@ public class SongService : IDisposable, ISongService
         JsonSerializerOptions serializerOptions)
     {
         _songsPath = bmbfSettings.SongsPath;
+        _maxConcurrentSongLoads = bmbfSettings.MaxConcurrentSongLoads;
         _cachePath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.SongsCacheName);
         _deleteDuplicateSongs = bmbfSettings.DeleteDuplicateSongs;
         _deleteInvalidFolders = bmbfSettings.DeleteInvalidSongs;
@@ -257,10 +259,10 @@ public class SongService : IDisposable, ISongService
         }
 
         // If the songs haven't loaded, we need to load them for the first time now
-        foreach (string songPath in songsToLoad)
+        await Parallel.ForEachAsync(songsToLoad, new ParallelOptions
         {
-            await ProcessNewSongAsync(songPath, songs, notify);
-        }
+            MaxDegreeOfParallelism = _maxConcurrentSongLoads
+        },async (songPath, _) => await ProcessNewSongAsync(songPath, songs, notify));
 
         return songs;
     }
