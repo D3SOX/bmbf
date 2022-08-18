@@ -17,9 +17,9 @@ function Tools() {
       return (
         <>
           <Text>Patcher name: {installationInfo.modTag.patcherName}</Text>
-          <Text>Patcher version: {installationInfo.modTag.patcherVersion}</Text>
-          <Text>Modloader name: {installationInfo.modTag.modloaderName}</Text>
-          <Text>Modloader version: {installationInfo.modTag.modloaderVersion}</Text>
+          <Text>Patcher version: {installationInfo.modTag.patcherVersion || 'Not available'}</Text>
+          <Text>Modloader name: {installationInfo.modTag.modloaderName || 'Not available'}</Text>
+          <Text>Modloader version: {installationInfo.modTag.modloaderVersion || 'Not available'}</Text>
         </>
       );
     }
