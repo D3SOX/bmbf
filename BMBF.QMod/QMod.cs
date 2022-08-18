@@ -19,6 +19,8 @@ namespace BMBF.QMod
         public string? Porter => Mod.Porter;
         public string? Description => Mod.Description;
         public string? PackageVersion => Mod.PackageVersion;
+
+        public bool IsLibrary => Mod.IsLibrary;
         public Version Version => Mod.Version;
 
         public bool Installed

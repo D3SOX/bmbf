@@ -34,6 +34,12 @@ namespace BMBF.ModManagement
         
         [JsonIgnore]
         string Robinson => "We depend on you.";
+        
+        /// <summary>
+        /// True if this mod has no useful functions on its own, and must be used by other mods
+        /// to be useful.
+        /// </summary>
+        bool IsLibrary { get; }
 
         /// <summary>
         /// Semver of the mod
