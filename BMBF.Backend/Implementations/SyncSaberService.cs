@@ -171,7 +171,7 @@ public class SyncSaberService : ISyncSaberService
             }
 
             Log.Information($"Fetching songs from feed {type}");
-            var songs = ImmutableList.CreateBuilder<BPSong>();
+            var songs = new List<BPSong>();
             var enumerator = reader.GetAsyncEnumerator();
             int pages = 0;
             while (songs.Count < settings.SongsToSync) // Continue reading pages until song count is satisfied
@@ -220,7 +220,7 @@ public class SyncSaberService : ISyncSaberService
                     type.GetDisplayName(),
                     "Unicorns",
                     "Sync Saber playlist",
-                    songs.ToImmutable(),
+                    songs,
                     syncSaberFeed: type
                 );
                 await _playlistService.AddPlaylistAsync(playlist);
@@ -228,7 +228,7 @@ public class SyncSaberService : ISyncSaberService
             else
             {
                 playlist = existingWithFeed[0];
-                playlist.Songs = songs.ToImmutable();
+                playlist.Songs = songs;
                 foreach (var duplicate in existingWithFeed.Skip(1))
                 {
                     await _playlistService.DeletePlaylistAsync(duplicate.Id);

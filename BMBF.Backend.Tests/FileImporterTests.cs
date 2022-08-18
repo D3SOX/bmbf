@@ -240,9 +240,9 @@ public class FileImporterTests
         const string songHash = "12345";
 
         var examplePlaylist = Util.ExamplePlaylist;
-        examplePlaylist.Songs = ImmutableList.Create(
-            new BPSong(songHash, null, null)
-        );
+        examplePlaylist.Songs = new List<BPSong> {
+            new(songHash, null, null)
+        };
 
         var song = Song.CreateBlank(songHash);
         _songServiceMock.Setup(s =>
@@ -272,9 +272,9 @@ public class FileImporterTests
         const string expectedPlaylistId = "Example_Playlist";
 
         var examplePlaylist = Util.ExamplePlaylist;
-        examplePlaylist.Songs = ImmutableList.Create(
-            new BPSong("", null, null)
-        );
+        examplePlaylist.Songs = new List<BPSong> {
+            new("", null, null)
+        };
 
         _beatSaverServiceMock.Setup(b => b.DownloadSongByHash(It.IsAny<string>()))
             .ThrowsAsync(new HttpRequestException());
@@ -296,9 +296,9 @@ public class FileImporterTests
         const string mapKey = "ff9";
 
         var examplePlaylist = Util.ExamplePlaylist;
-        examplePlaylist.Songs = ImmutableList.Create(
-            new BPSong("", null, mapKey)
-        );
+        examplePlaylist.Songs = new List<BPSong> {
+            new("", null, mapKey)
+        };
 
         _beatSaverServiceMock.Setup(b => b.DownloadSongByKey(It.IsAny<string>()))
             .ReturnsAsync(CreateEmptyZipStream());

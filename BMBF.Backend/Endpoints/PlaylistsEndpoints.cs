@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -71,7 +71,7 @@ public class PlaylistsEndpoints : IEndpoints
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(request.Param<string>("id"), out var matching))
         {
-            matching.Songs = request.JsonBody<ImmutableList<BPSong>>();
+            matching.Songs = request.JsonBody<List<BPSong>>();
             return Responses.Ok();
         }
 
@@ -127,7 +127,7 @@ public class PlaylistsEndpoints : IEndpoints
             playlistInfo.PlaylistTitle,
             playlistInfo.PlaylistAuthor,
             playlistInfo.PlaylistDescription,
-            ImmutableList.Create<BPSong>()
+            new List<BPSong>()
         );
         await _playlistService.AddPlaylistAsync(playlist);
         return Responses.Json(playlist.Id);

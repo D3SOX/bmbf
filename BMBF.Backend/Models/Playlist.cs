@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -74,7 +73,7 @@ public class Playlist
     /// The songs within the playlist
     /// </summary>
     [JsonPropertyName("songs")]
-    public ImmutableList<BPSong> Songs
+    public List<BPSong> Songs
     {
         get => _songs;
         set
@@ -86,7 +85,7 @@ public class Playlist
             }
         }
     }
-    private ImmutableList<BPSong> _songs;
+    private List<BPSong> _songs;
     
     /// <summary>
     /// Additional properties that may be present in the playlist which BMBF does not process.
@@ -132,7 +131,7 @@ public class Playlist
     public Playlist(string playlistTitle,
         string? playlistAuthor,
         string? playlistDescription,
-        ImmutableList<BPSong> songs,
+        List<BPSong> songs,
         string? imageString = null,
         FeedType? syncSaberFeed = null)
     {

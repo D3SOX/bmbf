@@ -24,7 +24,7 @@ public static class Util
         "Example Playlist",
         "Unicorns",
         "Example",
-        ImmutableList<BPSong>.Empty
+        new List<BPSong>()
     );
 
     public static byte[] ExampleFileContent { get; } = System.Text.Encoding.UTF8.GetBytes("Hello World!");
