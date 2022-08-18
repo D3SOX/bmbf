@@ -84,7 +84,7 @@ public class PlaylistService : IPlaylistService, IDisposable
         await _cacheUpdateLock.WaitAsync();
         try
         {
-            await UpdateCacheAsync(_cache);
+            await UpdateCacheAsync(_cache, true);
         }
         finally
         {
@@ -189,7 +189,7 @@ public class PlaylistService : IPlaylistService, IDisposable
 
             // We wait to assign the cache field until the cache is fully loaded
             var cache = new PlaylistCache();
-            await UpdateCacheAsync(cache);
+            await UpdateCacheAsync(cache, false);
 
             _cache = cache;
             if (_automaticUpdates)
@@ -216,7 +216,7 @@ public class PlaylistService : IPlaylistService, IDisposable
         _fileSystemWatcher.EnableRaisingEvents = true;
     }
 
-    private async Task UpdateCacheAsync(PlaylistCache cache)
+    private async Task UpdateCacheAsync(PlaylistCache cache, bool notify)
     {
         foreach (var entry in cache)
         {
@@ -228,17 +228,20 @@ public class PlaylistService : IPlaylistService, IDisposable
             {
                 Log.Information($"Playlist {entry.Key} deleted");
                 cache.Remove(entry.Key, out _);
-                PlaylistDeleted?.Invoke(this, entry.Value);
+                if (notify)
+                {
+                    PlaylistDeleted?.Invoke(this, entry.Value);
+                }
             }
         }
 
         foreach (string playlistPath in _io.Directory.EnumerateFiles(_playlistsPath))
         {
-            await ProcessNewPlaylistAsync(playlistPath, cache);
+            await ProcessNewPlaylistAsync(playlistPath, cache, notify);
         }
     }
 
-    private async Task ProcessNewPlaylistAsync(string path, PlaylistCache cache, bool logFailToRead = true)
+    private async Task ProcessNewPlaylistAsync(string path, PlaylistCache cache, bool notify, bool logFailToRead = true)
     {
         try
         {
@@ -282,7 +285,10 @@ public class PlaylistService : IPlaylistService, IDisposable
             {
                 string playlistId = AddPlaylist(playlist, cache, Path.GetFileNameWithoutExtension(path));
                 Log.Information($"Playlist ({playlistId}) loaded from {path}");
-                PlaylistAdded?.Invoke(this, playlist);
+                if (notify)
+                {
+                    PlaylistAdded?.Invoke(this, playlist);
+                }
             }
         }
         catch (IOException)
