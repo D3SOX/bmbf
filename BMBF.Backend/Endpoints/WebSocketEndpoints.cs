@@ -45,7 +45,11 @@ public class WebSocketEndpoints : IEndpoints
         }
         catch (OperationCanceledException)
         {
-            
+
+        }
+        catch (InvalidOperationException)
+        {
+            Log.Verbose("WebSocket disconnected");
         }
         finally
         {
