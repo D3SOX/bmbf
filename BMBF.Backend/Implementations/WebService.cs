@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text.Json;
 using System.Threading;
@@ -102,7 +103,14 @@ public class WebService : IHostedService, IDisposable
         var file = _webRootFileProvider.GetFileInfo(req.Path);
         if (!file.Exists)
         {
-            return Responses.NotFound();
+            if (Path.GetExtension(req.Path).Length == 0)
+            {
+                file = _webRootFileProvider.GetFileInfo("/index.html");
+            }
+            else
+            {
+                return Responses.NotFound();
+            }
         }
 
         var readStream = file.CreateReadStream();
