@@ -7,6 +7,7 @@
 - `BMBF` - The main BMBF project, which produces the Android APK for installation onto the Quest.
 - `BMBF.Backend` - Contains the code for the BMBF backend, uses abstractions to interact with android-specific APIs.
 - `BMBF.Backend.Tests` - Unit tests for the backend
+- `BMBF.Frontend` - Contains the code for the BMBF frontend, uses [React](https://reactjs.org) and [Mantine](https://mantine.dev) (maintained by @D3SOX)
 - `BMBF.Desktop` - A wrapper around BMBF for testing locally without an emulator. Allows BMBF to run directly on one's PC.
 - `BMBF.DiffGenerator` - Automatically downloads Beat Saber versions and computes diffs for downgrading.
 - `BMBF.ModManagement` - Abstractions which allow multiple mod types to be handled by BMBF.
