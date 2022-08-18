@@ -7,7 +7,8 @@ public class AuthConfig
     /// <summary>
     /// True if a username/password will be required to connect, false otherwise
     /// </summary>
-    public bool AuthEnabled { get; set; } = true;
+    // TODO: Disable this when there is UI for auth
+    public bool AuthEnabled { get; set; } = false;
 
     /// <summary>
     /// Username/password pairs which are accepted to access BMBF.
