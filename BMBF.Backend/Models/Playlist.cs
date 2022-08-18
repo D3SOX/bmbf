@@ -32,8 +32,8 @@ public class Playlist
 
     [JsonIgnore] public string Id { get; set; } = null!;
 
-    [JsonPropertyName("image")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("imageString")]
     public string? ImageString
     {
         get => Image == null ? null : "data:image/png;base64," + Convert.ToBase64String(Image);
@@ -47,6 +47,18 @@ public class Playlist
             {
                 var idx = value.IndexOf("base64,", StringComparison.Ordinal);
                 Image = Convert.FromBase64String(idx == -1 ? value : value.Substring(idx + 7));
+            }
+        }
+    }
+
+    [JsonPropertyName("image")]
+    public string? AltImage
+    {
+        set
+        {
+            if (_image == null)
+            {
+                ImageString = value;
             }
         }
     }
