@@ -74,7 +74,7 @@ namespace BMBF.QMod
             {
                 if (!VerifyRegistered())
                 {
-                    throw new InvalidOperationException("Cannot install a mod which is not registered to a provider");
+                    return;
                 }
 
                 await InstallAsyncInternal(new HashSet<string>());
@@ -92,7 +92,7 @@ namespace BMBF.QMod
             {
                 if (!VerifyRegistered())
                 {
-                    throw new InvalidOperationException("Cannot uninstall a mod which is not registered to a provider");
+                    return;
                 }
 
                 await UninstallAsyncInternal();

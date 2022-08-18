@@ -61,14 +61,14 @@ namespace BMBF.QMod.Tests
         }
 
         [Fact]
-        public async Task ShouldThrowIfModUnregistered()
+        public async Task ShouldNotThrowIfModUnregistered()
         {
             using var modStream = await Util.CreateTestingModAsync();
             using var mod = await _provider.TryParseModAsync(modStream);
             if (mod == null) throw new FormatException("Invalid testing mod");
 
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await mod.InstallAsync());
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await mod.UninstallAsync());
+            await mod.InstallAsync();
+            await mod.UninstallAsync();
         }
 
         [Fact]
