@@ -43,9 +43,9 @@ public class Server : Router, IDisposable
                 foreach (var method in allowed)
                 {
                     response.Headers.Add("Allow", method.ToString());
-                    // TODO: Make this configurable?
-                    response.Headers.Add("Access-Control-Allow-Origin", "*");
                 }
+                // TODO: Make this configurable?
+                response.Headers.Add("Access-Control-Allow-Origin", "*");
                 return response;
             }
             else
