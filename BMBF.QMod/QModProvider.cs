@@ -127,10 +127,10 @@ namespace BMBF.QMod
 
         private bool UnloadModInternal(QMod mod)
         {
+            ModUnloaded?.Invoke(this, mod.Id);
             if (Mods.Remove(mod.Id, out var removed))
             {
                 removed.Dispose();
-                ModUnloaded?.Invoke(this, removed.Id);
                 return true;
             }
             return false;
