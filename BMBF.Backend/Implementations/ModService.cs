@@ -150,7 +150,7 @@ public class ModService : IModService, IDisposable, IModManager
         await _installLock.WaitAsync();
         try
         {
-            await LoadNewModsAsyncInternal(_modsById);
+            await LoadNewModsAsyncInternal(_modsById, true);
         }
         finally
         {
@@ -205,7 +205,7 @@ public class ModService : IModService, IDisposable, IModManager
         }
 
         var newCache = new ModsCache();
-        await LoadNewModsAsyncInternal(newCache);
+        await LoadNewModsAsyncInternal(newCache, false);
         _modsById = newCache;
 
         // Now that we have loaded all mods, we need to start checking for changes in the mod folders (if configured)
@@ -261,7 +261,7 @@ public class ModService : IModService, IDisposable, IModManager
             if (cachedMod == null)
                 throw new InstallationException("Cached mod was null after previously successfully parsing mod");
 
-            await AddModAsync(savePath, cachedMod, provider, modsById);
+            await AddModAsync(savePath, cachedMod, provider, modsById, true);
             return cachedMod;
         }
         catch (Exception)
@@ -275,7 +275,7 @@ public class ModService : IModService, IDisposable, IModManager
         }
     }
 
-    private async Task LoadNewModsAsyncInternal(ModsCache cacheById)
+    private async Task LoadNewModsAsyncInternal(ModsCache cacheById, bool notify)
     {
         _io.Directory.CreateDirectory(_modsPath);
 
@@ -293,7 +293,7 @@ public class ModService : IModService, IDisposable, IModManager
                 if (result is not null)
                 {
                     parsedMod = result.Value.mod;
-                    await AddModAsync(modPath, parsedMod, result.Value.provider, cacheById);
+                    await AddModAsync(modPath, parsedMod, result.Value.provider, cacheById, notify);
                     continue;
                 }
                 Log.Warning($"{Path.GetFileName(modPath)} couldn't be loaded as a mod");
@@ -351,11 +351,14 @@ public class ModService : IModService, IDisposable, IModManager
         return null;
     }
 
-    private async Task AddModAsync(string savePath, IMod cachedMod, IModProvider provider, ModsCache modsById)
+    private async Task AddModAsync(string savePath, IMod cachedMod, IModProvider provider, ModsCache modsById, bool notify)
     {
         await provider.AddModAsync(cachedMod);
         modsById[cachedMod.Id] = (cachedMod, savePath);
-        ModAdded?.Invoke(this, cachedMod);
+        if (notify)
+        {
+            ModAdded?.Invoke(this, cachedMod);
+        }
 
         Log.Information($"Successfully added {cachedMod.Id} v{cachedMod.Version}");
     }

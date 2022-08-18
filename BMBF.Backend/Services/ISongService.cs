@@ -40,7 +40,8 @@ public interface ISongService
     Task<bool> DeleteSongAsync(string hash);
 
     /// <summary>
-    /// Invoked whenever a new song is loaded
+    /// Invoked whenever a new song is loaded.
+    /// NOT invoked upon initial song load, this only handles updates to the song cache after it is loaded.
     /// </summary>
     event EventHandler<Song>? SongAdded;
 

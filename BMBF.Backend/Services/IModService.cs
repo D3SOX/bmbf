@@ -10,7 +10,8 @@ namespace BMBF.Backend.Services;
 public interface IModService
 {
     /// <summary>
-    /// Invoked whenever a new mod is loaded
+    /// Invoked whenever a new mod is loaded.
+    /// NOT invoked upon initial mod load - this only handles updates to the existing mods collections.
     /// </summary>
     event EventHandler<IMod> ModAdded;
 

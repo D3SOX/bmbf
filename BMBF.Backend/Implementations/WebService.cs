@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.Abstractions;
 using System.Net;
 using System.Text.Json;
 using System.Threading;
@@ -70,6 +69,13 @@ public class WebService : IHostedService, IDisposable
         _server.Get("*", req => Task.FromResult(StaticFileHandler(req)));
         
         _server.Use(authService.Authenticate);
+        _server.Use(async (req, next) => 
+        {
+            var resp = await next(req);
+
+            resp.Headers["Access-Control-Allow-Origin"] = "*";
+            return resp;
+        });
     }
 
     private async Task<HttpResponse> RequireLoopback(Request request, Handler next)
