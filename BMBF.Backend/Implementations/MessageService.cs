@@ -32,6 +32,7 @@ public class MessageService : IMessageService
 
         playlistService.PlaylistAdded += OnPlaylistAdded;
         playlistService.PlaylistDeleted += OnPlaylistRemoved;
+        playlistService.PlaylistUpdated += OnPlaylistUpdated;
 
         beatSaberService.AppChanged += OnAppChanged;
 
@@ -60,12 +61,10 @@ public class MessageService : IMessageService
     private void OnPlaylistAdded(object? sender, Playlist playlist)
     {
         Send(new PlaylistAdded(new PlaylistInfo(playlist)));
-        playlist.Updated += OnPlaylistUpdated;
     }
 
     private void OnPlaylistRemoved(object? sender, Playlist playlist)
     {
-        playlist.Updated -= OnPlaylistUpdated;
         Send(new PlaylistRemoved(playlist.Id));
     }
 

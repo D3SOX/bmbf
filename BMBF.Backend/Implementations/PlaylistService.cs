@@ -19,6 +19,7 @@ public class PlaylistService : IPlaylistService, IDisposable
 {
     public event EventHandler<Playlist>? PlaylistAdded;
     public event EventHandler<Playlist>? PlaylistDeleted;
+    public event PlaylistUpdatedEventHandler? PlaylistUpdated;
 
     private PlaylistCache? _cache;
     private readonly SemaphoreSlim _cacheUpdateLock = new(1);
@@ -228,6 +229,8 @@ public class PlaylistService : IPlaylistService, IDisposable
             {
                 Log.Information($"Playlist {entry.Key} deleted");
                 cache.Remove(entry.Key, out _);
+                
+                entry.Value.Updated -= PlaylistUpdated;
                 if (notify)
                 {
                     PlaylistDeleted?.Invoke(this, entry.Value);
@@ -289,6 +292,7 @@ public class PlaylistService : IPlaylistService, IDisposable
                 {
                     PlaylistAdded?.Invoke(this, playlist);
                 }
+                playlist.Updated += PlaylistUpdated;
             }
         }
         catch (IOException)

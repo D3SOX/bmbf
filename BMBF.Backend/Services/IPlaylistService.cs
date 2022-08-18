@@ -43,6 +43,7 @@ public interface IPlaylistService
 
     /// <summary>
     /// Invoked whenever a playlist is added
+    /// NOT invoked upon initial cache load
     /// </summary>
     event EventHandler<Playlist> PlaylistAdded;
 
@@ -50,4 +51,9 @@ public interface IPlaylistService
     /// Invoked whenever a playlist is deleted
     /// </summary>
     event EventHandler<Playlist> PlaylistDeleted;
+
+    /// <summary>
+    /// Invoked when a playlist is updated
+    /// </summary>
+    event PlaylistUpdatedEventHandler PlaylistUpdated;
 }
