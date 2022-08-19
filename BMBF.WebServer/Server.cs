@@ -38,7 +38,6 @@ public class Server : Router, IDisposable
                 var allowed = Routes
                     .Where(r => r.Path.Matches(request.Path, out _))
                     .Select(r => r.Method)
-                    .Append(HttpMethod.Options)
                     .Distinct();
                 var response = Responses.Empty(204);
                 foreach (var method in allowed)
@@ -47,6 +46,7 @@ public class Server : Router, IDisposable
                 }
                 // TODO: Make this configurable?
                 response.Headers.Add("Access-Control-Allow-Origin", "*");
+                response.Headers.Add("Access-Control-Allow-Headers", "*");
                 return response;
             }
             else
