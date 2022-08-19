@@ -22,6 +22,7 @@
 - [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - .NET 6 Android workload. To install, first install .NET 6, then run `dotnet workload install android` as administrator.
 - JDK 11
+- [Node 16](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/getting-started/install)
 
 ### Containerised build environment
 
@@ -38,6 +39,11 @@ docker run -it -v "$(pwd):/bmbf/src" -p "50006:50006" registry.bmbf.dev/unicorns
 ## Development
 
 When testing BMBF during development, you have 2 options. The quest, or running BMBF directly on your PC.
+
+### Building the frontend
+Before you build or test BMBF, you first need to build the frontend:
+1. Navigate to `BMBF.Frontend` on the command line.
+2. Execute `yarn install` then `yarn build`.
 
 ### Using the Quest
 
@@ -56,10 +62,6 @@ Some notes:
 
 - Files in BMBF.Desktop will be located in the `./BMBF.Desktop/Device` directory - note that the directories don't completely reflect the Quest's filesystem, to make things easier to find.
 - The "beat saber installation" is simulated by an APK located in `./BMBF.Desktop/Device/BeatSaber.apk`. Creating or deleting this file is akin to installing or uninstalling Beat Saber.
-
-## Browsing API endpoints
-
-API endpoints can be viewed in swagger at the endpoint `/api/swagger` (only applies in the `Debug` configuration)
 
 ## Creating a releasable APK
 
