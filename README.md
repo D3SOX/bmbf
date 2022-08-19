@@ -33,7 +33,7 @@ Note: When building/publishing the APK, you must pass `-p:AndroidSdkDirectory=/o
 
 ```sh
 docker pull registry.bmbf.dev/unicorns/bmbf/buildenv
-docker run -it -v "$(pwd):/bmbf/src" -p "50006:50006" registry.bmbf.dev/unicorns/bmbf/buildenv
+docker run -it -v "$(pwd):/bmbf/src" -p "50005:50005" registry.bmbf.dev/unicorns/bmbf/buildenv
 ```
 
 ## Development
