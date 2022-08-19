@@ -20,7 +20,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash \
 RUN apt-get install -y dotnet6
 
 # Install Android workload
-RUN dotnet workload install maui-android
+RUN dotnet workload install android
 
 # Setup work user
 RUN apt-get install -y sudo \
