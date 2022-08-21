@@ -99,6 +99,27 @@ public class ModsEndpoints : IEndpoints
         return await SetInstallStatus(request.Param<string>("id"), false);
     }
 
+    [HttpPost("/mods/unload/{id}")]
+    public async Task<HttpResponse> Delete(Request request)
+    {
+        var mods = await _modService.GetModsAsync();
+        if (!mods.TryGetValue(request.Param<string>("id"), out var modPair))
+        {
+            return Responses.NotFound();
+        }
+
+        try
+        {
+            await _modService.UnloadModAsync(modPair.mod);
+            return Responses.Ok();
+        }
+        catch (InstallationException ex)
+        {
+            return Responses.BadRequest(ex.Message);
+        }
+    }
+    
+
     private async Task<HttpResponse> SetInstallStatus(string id, bool installed)
     {
         var mods = await _modService.GetModsAsync();
