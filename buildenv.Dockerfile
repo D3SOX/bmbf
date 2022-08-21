@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0
+FROM mcr.microsoft.com/dotnet/sdk:6.0.201
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install basic packages
