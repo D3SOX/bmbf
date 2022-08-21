@@ -11,6 +11,7 @@ using BMBF.Patching;
 using BMBF.QMod;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
 using SongFeedReaders.Feeds;
 using SongFeedReaders.Feeds.BeastSaber;
 using SongFeedReaders.Feeds.BeatSaver;
@@ -142,7 +143,8 @@ public static class ServiceCollectionExtensions
                 settings.LibFilesPath,
                 httpClientFactory.CreateClient(),
                 new FileSystem(),
-                modService
+                modService,
+                Log.Logger.ForContext(LogType.ModInstallation)
             );
 
             modService.RegisterProvider(provider);

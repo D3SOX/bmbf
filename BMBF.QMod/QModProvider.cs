@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
 using QuestPatcher.QMod;
+using Serilog;
 
 namespace BMBF.QMod
 {
@@ -28,6 +29,7 @@ namespace BMBF.QMod
         internal HttpClient HttpClient { get; }
         internal IFileSystem FileSystem { get; }
         internal IModManager ModManager { get; }
+        internal ILogger Logger { get; }
 
         private readonly string _packageId;
         private bool _disposed;
@@ -37,7 +39,7 @@ namespace BMBF.QMod
             return Path.GetExtension(fileName).ToLower() == ModExtension;
         }
 
-        public QModProvider(string packageId, string modsPath, string libsPath, HttpClient httpClient, IFileSystem fileSystem, IModManager modManager)
+        public QModProvider(string packageId, string modsPath, string libsPath, HttpClient httpClient, IFileSystem fileSystem, IModManager modManager, ILogger logger)
         {
             _packageId = packageId;
             ModsPath = modsPath;
@@ -45,6 +47,7 @@ namespace BMBF.QMod
             HttpClient = httpClient;
             FileSystem = fileSystem;
             ModManager = modManager;
+            Logger = logger;
         }
 
         public async Task<IMod?> TryParseModAsync(Stream stream, bool leaveOpen = false)
@@ -106,7 +109,12 @@ namespace BMBF.QMod
 
             if (mod.Installed)
             {
+                Log.Information($"Uninstalling and unloading {genericMod.Id}");
                 await mod.UninstallAsyncInternal();
+            }
+            else
+            {
+                Log.Information($"Unloading {genericMod.Id}");
             }
             return UnloadModInternal(mod);
         }
@@ -145,8 +153,10 @@ namespace BMBF.QMod
             {
                 if (existing.Installed)
                 {
+                    Logger.Information($"Uninstalling {existing.Id} v{existing.Version} to upgrade it to v{mod.Version}");
                     uninstalledDependants = await existing.UninstallAsyncInternal();
                 }
+                Logger.Information($"{uninstalledDependants.Count} dependants will need to be reinstalled");
 
                 UnloadModInternal(existing);
             }
@@ -161,16 +171,19 @@ namespace BMBF.QMod
 
             if (uninstalledDependants.Count > 0)
             {
+                Logger.Information($"Installing {mod} v{mod.Version} immediately, then reinstalling its dependants");
                 // Install the mod now, so that we can reinstall dependencies
                 await mod.InstallAsyncInternal(installPath);
 
                 // Now reinstall the dependant mods
-                foreach (QMod uninstalledDependant in uninstalledDependants)
+                foreach (var uninstalledDependant in uninstalledDependants)
                 {
                     // Cannot reinstall dependant mod - version range is not satisfied
-                    if (!uninstalledDependant.Mod.Dependencies.Single(d => d.Id == mod.Id).VersionRange
-                            .IsSatisfied(mod.Version))
+                    var versionRange = uninstalledDependant.Mod.Dependencies.Single(d => d.Id == mod.Id).VersionRange;
+                    if (!versionRange.IsSatisfied(mod.Version))
                     {
+                        Logger.Warning($"Could not reinstall dependant {uninstalledDependant.Id} v{uninstalledDependant}," +
+                                       $"as it depended on version {versionRange} of {mod.Id}, but the upgraded version v{mod.Version} did not intersect this range");
                         continue;
                     }
 

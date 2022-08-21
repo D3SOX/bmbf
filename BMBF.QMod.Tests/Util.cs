@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BMBF.ModManagement;
 using Moq;
 using QuestPatcher.QMod;
+using Serilog.Core;
 using Version = SemanticVersioning.Version;
 
 namespace BMBF.QMod.Tests
@@ -29,7 +30,7 @@ namespace BMBF.QMod.Tests
         {
             var modManagerMock = new Mock<IModManager>();
 
-            var provider = new QModProvider(PackageId, "/mods", "/libs", httpClient, fileSystem, modManagerMock.Object);
+            var provider = new QModProvider(PackageId, "/mods", "/libs", httpClient, fileSystem, modManagerMock.Object, Logger.None);
 
             var installLock = new SemaphoreSlim(1);
             modManagerMock.SetupGet(m => m.InstallLock).Returns(installLock);

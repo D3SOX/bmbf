@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
 using QuestPatcher.QMod;
+using Serilog;
 using Range = SemanticVersioning.Range;
 using Version = SemanticVersioning.Version;
 
@@ -47,6 +48,7 @@ namespace BMBF.QMod
 
         private IFileSystem FileSystem => _provider.FileSystem;
         private HttpClient HttpClient => _provider.HttpClient;
+        private ILogger Logger => _provider.Logger;
 
         private readonly QModProvider _provider;
 
@@ -61,6 +63,16 @@ namespace BMBF.QMod
             Dependencies = mod.Dependencies.ToDictionary(dep => dep.Id, dep => dep.VersionRange);
         }
 
+        /// <summary>
+        /// Creates a logger that will add indentation depending on the depth of the current mod within the install tree.
+        /// </summary>
+        /// <param name="depth">How deep the install/uninstall is. 0 is the root depth.</param>
+        /// <returns>The created logger</returns>
+        private ILogger CreateInstallLogger(int depth) =>
+            new LoggerConfiguration()
+                .WriteTo.Sink(new IndentationSink(Logger, depth * 4)) // 4 spaces per mod install
+                .CreateLogger();
+        
         private bool VerifyRegistered()
         {
             if (_provider.Mods.TryGetValue(Id, out var mod) && mod == this)
@@ -81,6 +93,7 @@ namespace BMBF.QMod
                     return;
                 }
 
+                Logger.Information($"Installing {Id} v{Version}");
                 await InstallAsyncInternal(new HashSet<string>());
             }
             finally
@@ -99,6 +112,7 @@ namespace BMBF.QMod
                     return;
                 }
 
+                Logger.Information($"Uninstalling {Id} v{Version}");
                 await UninstallAsyncInternal();
             }
             finally
@@ -161,15 +175,20 @@ namespace BMBF.QMod
 
         internal async Task InstallAsyncInternal(HashSet<string> installPath)
         {
+            var logger = CreateInstallLogger(installPath.Count);
             if (Installed) return;
 
             installPath.Add(Id);
             try
             {
                 // Install dependencies first
-                foreach (var dependency in Mod.Dependencies)
+                if (Mod.Dependencies.Count > 0)
                 {
-                    await PrepareDependency(dependency, installPath);
+                    logger.Information($"Checking that {Mod.Dependencies.Count} dependencies are installed:");
+                    foreach (var dependency in Mod.Dependencies)
+                    {
+                        await PrepareDependency(dependency, installPath, logger);
+                    }
                 }
 
                 // Make sure that destination paths exist first
@@ -183,6 +202,7 @@ namespace BMBF.QMod
                     string destPath = Path.Combine(_provider.ModsPath, Path.GetFileName(m));
                     await using var modStream = Mod.OpenModFile(m);
                     await ExtractAsync(modStream, destPath).ConfigureAwait(false);
+                    logger.Debug($"Copied {m} to mods");
                 }
 
                 foreach (var lib in Mod.LibraryFileNames)
@@ -190,6 +210,7 @@ namespace BMBF.QMod
                     string destPath = Path.Combine(_provider.LibsPath, Path.GetFileName(lib));
                     await using var libStream = Mod.OpenLibraryFile(lib);
                     await ExtractAsync(libStream, destPath).ConfigureAwait(false);
+                    logger.Debug($"Copied {lib} to libs");
                 }
 
                 foreach (var fc in Mod.FileCopies)
@@ -204,7 +225,9 @@ namespace BMBF.QMod
                     }
 
                     await ExtractAsync(copyStream, fc.Destination).ConfigureAwait(false);
+                    logger.Debug($"Copied {fc.Name} to {fc.Destination}");
                 }
+                logger.Information($"Installed {Mod.ModFileNames.Count} mod files, {Mod.LibraryFileNames.Count} library files and {Mod.FileCopies.Count} file copies");
 
                 Installed = true;
             }
@@ -214,16 +237,21 @@ namespace BMBF.QMod
             }
         }
 
-        internal async Task<List<QMod>> UninstallAsyncInternal()
+        internal async Task<List<QMod>> UninstallAsyncInternal(int depth = 0)
         {
             if (!Installed) return new List<QMod>();
+            var logger = CreateInstallLogger(depth);
 
             // Uninstall ourself
 
             foreach (string m in Mod.ModFileNames)
             {
                 string destPath = Path.Combine(_provider.ModsPath, Path.GetFileName(m));
-                if (FileSystem.File.Exists(destPath)) FileSystem.File.Delete(destPath);
+                if (FileSystem.File.Exists(destPath))
+                {
+                    FileSystem.File.Delete(destPath);
+                    logger.Debug($"Deleted {m} from mods");
+                }
             }
 
             foreach (string lib in Mod.LibraryFileNames)
@@ -232,12 +260,20 @@ namespace BMBF.QMod
                 if (_provider.Mods.Values.Any(mod => mod.Id != Id && mod.Installed && mod.Mod.LibraryFileNames.Contains(lib))) continue;
 
                 string destPath = Path.Combine(_provider.LibsPath, Path.GetFileName(lib));
-                if (FileSystem.File.Exists(destPath)) FileSystem.File.Delete(destPath);
+                if (FileSystem.File.Exists(destPath))
+                {
+                    FileSystem.File.Delete(destPath);
+                    logger.Debug($"Deleted {lib} from libs");
+                }
             }
 
             foreach (var fileCopy in Mod.FileCopies)
             {
-                if (FileSystem.File.Exists(fileCopy.Destination)) FileSystem.File.Delete(fileCopy.Destination);
+                if (FileSystem.File.Exists(fileCopy.Destination))
+                {
+                    logger.Debug($"Deleted {fileCopy.Destination}");
+                    FileSystem.File.Delete(fileCopy.Destination);
+                }
             }
 
             // Set ourself to uninstalled to avoid being included with potentially recursive dependency uninstalls
@@ -245,32 +281,38 @@ namespace BMBF.QMod
 
             // Uninstall mods depending on this mod (and collect in list)
             var uninstalledDependants = new List<QMod>();
-            foreach (QMod mod in _provider.Mods.Values.Where(m => m.Installed && m.Mod.Dependencies.Any(d => d.Id == Id)))
+            foreach (var mod in _provider.Mods.Values.Where(m => m.Installed && m.Mod.Dependencies.Any(d => d.Id == Id)))
             {
+                logger.Warning($"Uninstalling mod {mod.Id} v{mod.Version}: (as it depends on {Id}, which is being uninstalled)");
                 uninstalledDependants.Add(mod);
-                await mod.UninstallAsyncInternal().ConfigureAwait(false);
+                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
             }
 
             // Uninstall libraries that no installed mods depend on
-            foreach (QMod mod in _provider.Mods.Values.Where(m =>
+            foreach (var mod in _provider.Mods.Values.Where(m =>
                          m.Installed &&
                          m.Mod.IsLibrary &&
                          !_provider.Mods.Values.Any(dependingMod => dependingMod.Installed && dependingMod.Mod.Dependencies.Any(d => d.Id == m.Id))))
             {
-                await mod.UninstallAsyncInternal().ConfigureAwait(false);
+                logger.Information($"Uninstalling library {mod.Id} v{mod.Version}: (as no installed mods depend on it)");
+                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
             }
+            
+            logger.Information($"Uninstalled {Id} v{Version}. Removed {Mod.ModFileNames.Count} mod files, {Mod.LibraryFileNames.Count} lib files and {Mod.FileCopies.Count} file copies");
 
             _provider.InvokeModStatusChanged(this); // Now we actually forward the uninstall to the frontend
             return uninstalledDependants;
         }
 
-        private async Task PrepareDependency(Dependency dependency, HashSet<string> installPath)
+        private async Task PrepareDependency(Dependency dependency, HashSet<string> installPath, ILogger logger)
         {
             // Cyclical dependency!
             if (installPath.Contains(dependency.Id))
             {
                 return;
             }
+
+            string prefix = $"{dependency.Id} {dependency.VersionRange}: ";
 
             var existing = _provider.Mods.Values.FirstOrDefault(m => m.Mod.Id == dependency.Id);
             if (existing != null)
@@ -280,7 +322,12 @@ namespace BMBF.QMod
                     // Dependency is already loaded and within the version range.
                     if (!existing.Installed)
                     {
+                        logger.Information(prefix + $"Existing mod v{existing.Version} intersects range but is uninstalled, installing now:");
                         await existing.InstallAsyncInternal(installPath).ConfigureAwait(false); // Install it if it is not already installed
+                    }
+                    else
+                    {
+                        logger.Information(prefix + $"Existing mod v{existing.Version} intersects range and is installed; no action required");
                     }
                     return;
                 }
@@ -290,10 +337,15 @@ namespace BMBF.QMod
                     throw new InstallationException(
                         $"Dependency {dependency.Id} is installed, but with an incorrect version ({existing.Mod.Version}) and does not specify a download link if missing, so the version couldn't be upgraded");
                 }
+                logger.Information(prefix + $"Existing mod v{existing.Version} does not intersect range. Downloading update");
             }
             else if (dependency.DownloadIfMissing == null)
             {
                 throw new InstallationException($"Dependency {dependency.Id} is not installed, and does not specify a download link if missing");
+            }
+            else
+            {
+                logger.Information(prefix + "No installation found. Downloading");
             }
 
             try
@@ -307,7 +359,7 @@ namespace BMBF.QMod
                 memStream.Position = 0;
 
                 var loadedDep = (QMod)await _provider.ModManager.ImportMod(_provider, memStream, $"{dependency.Id}.qmod");
-
+                
                 // Quick sanity check to avoid people putting invalid download links and not noticing
                 if (!dependency.VersionRange.IsSatisfied(loadedDep.Version))
                 {
@@ -316,6 +368,7 @@ namespace BMBF.QMod
                 }
 
                 // Actually install the dependency, which may involve installing more dependencies 
+                logger.Information($"Now installing downloaded dependency (v{loadedDep.Version}):");
                 await loadedDep.InstallAsyncInternal(installPath).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)

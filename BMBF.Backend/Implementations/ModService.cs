@@ -108,6 +108,7 @@ public class ModService : IModService, IDisposable, IModManager
                 // Wind back the stream in order to save, then reimport the mod
                 stream.Position = 0;
                 mod = await CacheAndImportMod(provider, stream, fileName);
+                Log.Information($"Successfully added {mod.Id} v{mod.Version}");
             }
             catch (InstallationException ex)
             {
@@ -362,8 +363,6 @@ public class ModService : IModService, IDisposable, IModManager
         {
             ModAdded?.Invoke(this, cachedMod);
         }
-
-        _logger.Information($"Successfully added {cachedMod.Id} v{cachedMod.Version}");
     }
 
     private void OnModUnloaded(object? sender, string modId)
@@ -375,7 +374,7 @@ public class ModService : IModService, IDisposable, IModManager
 
         if (_modsById.Remove(modId, out var removedMod))
         {
-            _logger.Information($"Mod {modId} removed - deleting {removedMod.path}");
+            _logger.Debug($"Mod {modId} removed - deleting {removedMod.path}");
             _io.File.Delete(removedMod.path);
             ModRemoved?.Invoke(this, modId);
         }
