@@ -79,10 +79,7 @@ public class SetupService : ISetupService, IDisposable
         _tempApkPath = Path.Combine(_setupDirName, "CurrentStage.apk");
         _backupPath = Path.Combine(_setupDirName, "DataBackup");
         _backupOriginPath = settings.DataBackupBasePath;
-        _logger = new LoggerConfiguration()
-            .WriteTo.Logger(Log.Logger.ForContext<SetupService>())
-            // TODO: Write to status update ws api
-            .CreateLogger();
+        _logger = Log.Logger.ForContext(LogType.Setup);
         _io = io;
 
         _beatSaberService.AppChanged += OnBeatSaberServiceAppChanged;

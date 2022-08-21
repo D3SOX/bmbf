@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
+using BMBF.Backend.Extensions;
 using BMBF.Backend.Models;
 using BMBF.Backend.Services;
 using BMBF.Backend.Util;
@@ -33,6 +34,7 @@ public class ModService : IModService, IDisposable, IModManager
     private readonly BMBFSettings _bmbfSettings;
     private readonly IFileSystemWatcher _modFilesWatcher;
     private readonly IFileSystemWatcher _libFilesWatcher;
+    private readonly ILogger _logger;
     
     private readonly Debouncey _modFilesDebouncey;
     
@@ -48,6 +50,7 @@ public class ModService : IModService, IDisposable, IModManager
         _modsPath = Path.Combine(bmbfSettings.RootDataPath, bmbfSettings.ModsDirectoryName);
         _io = io;
         _bmbfSettings = bmbfSettings;
+        _logger = Log.Logger.ForContext(LogType.ModInstallation);
 
         _modFilesDebouncey = new Debouncey(bmbfSettings.ModFilesDebounceDelay);
         _modFilesDebouncey.Debounced += OnModFileDebounced;
@@ -94,12 +97,12 @@ public class ModService : IModService, IDisposable, IModManager
                 var providerPair = await FindProvider(stream, fileName, true);
                 if (providerPair == null)
                 {
-                    Log.Debug($"No provider found to import {fileName} as mod");
+                    _logger.Debug($"No provider found to import {fileName} as mod");
                     return null; // File cannot be loaded as a mod
                 }
 
                 var (provider, tempMod) = providerPair.Value;
-                Log.Information($"Successfully parsed mod from {fileName}. ID: {tempMod.Id}. Version: {tempMod.Version}. PackageVersion: {tempMod.PackageVersion}");
+                _logger.Debug($"Successfully parsed mod from {fileName}. ID: {tempMod.Id}. Version: {tempMod.Version}. PackageVersion: {tempMod.PackageVersion}");
                 tempMod.Dispose();
 
                 // Wind back the stream in order to save, then reimport the mod
@@ -247,7 +250,7 @@ public class ModService : IModService, IDisposable, IModManager
             i++;
         }
 
-        Log.Debug($"Caching mod locally to {savePath}");
+        _logger.Debug($"Caching mod locally to {savePath}");
         var cacheStream = _io.File.Open(savePath, FileMode.Create, FileAccess.ReadWrite);
         IMod? cachedMod = null;
         try
@@ -255,7 +258,7 @@ public class ModService : IModService, IDisposable, IModManager
             await modStream.CopyToAsync(cacheStream); // Copy our mod to the mod file on disk
             cacheStream.Position = 0; // Move back to the beginning in order to reparse and add the mod
 
-            Log.Debug("Reparsing and adding mod");
+            _logger.Debug("Reparsing and adding mod");
 
             cachedMod = await provider.TryParseModAsync(cacheStream);
             if (cachedMod == null)
@@ -296,26 +299,26 @@ public class ModService : IModService, IDisposable, IModManager
                     await AddModAsync(modPath, parsedMod, result.Value.provider, cacheById, notify);
                     continue;
                 }
-                Log.Warning($"{Path.GetFileName(modPath)} couldn't be loaded as a mod");
+                _logger.Warning($"{Path.GetFileName(modPath)} couldn't be loaded as a mod");
             }
             catch (Exception ex)
             {
                 // In this case, ownership is NOT passed to the provider, so we dispose the mod and underlying stream
                 if (modStream != null) await modStream.DisposeAsync();
                 parsedMod?.Dispose();
-                Log.Error(ex, $"Failed to load mod from {modPath}");
+                _logger.Error(ex, $"Failed to load mod from {modPath}");
             }
 
             if (_bmbfSettings.DeleteInvalidMods)
             {
-                Log.Debug("Deleting invalid mod");
+                _logger.Debug("Deleting invalid mod");
                 try
                 {
                     _io.File.Delete(modPath);
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex, "Failed to delete invalid mod");
+                    _logger.Warning(ex, "Failed to delete invalid mod");
                 }
             }
         }
@@ -360,7 +363,7 @@ public class ModService : IModService, IDisposable, IModManager
             ModAdded?.Invoke(this, cachedMod);
         }
 
-        Log.Information($"Successfully added {cachedMod.Id} v{cachedMod.Version}");
+        _logger.Information($"Successfully added {cachedMod.Id} v{cachedMod.Version}");
     }
 
     private void OnModUnloaded(object? sender, string modId)
@@ -372,7 +375,7 @@ public class ModService : IModService, IDisposable, IModManager
 
         if (_modsById.Remove(modId, out var removedMod))
         {
-            Log.Information($"Mod {modId} removed - deleting {removedMod.path}");
+            _logger.Information($"Mod {modId} removed - deleting {removedMod.path}");
             _io.File.Delete(removedMod.path);
             ModRemoved?.Invoke(this, modId);
         }
@@ -380,7 +383,7 @@ public class ModService : IModService, IDisposable, IModManager
 
     private void OnModStatusChanged(object? sender, IMod mod)
     {
-        Log.Debug($"Mod {mod.Id} marked as {(mod.Installed ? "installed" : "uninstalled")}");
+        _logger.Debug($"Mod {mod.Id} marked as {(mod.Installed ? "installed" : "uninstalled")}");
         ModStatusChanged?.Invoke(this, mod);
     }
 
@@ -388,14 +391,14 @@ public class ModService : IModService, IDisposable, IModManager
 
     private async void OnModFileDebounced(object? sender, EventArgs args)
     {
-        Log.Debug("Processing mods/libs debounce");
+        _logger.Debug("Processing mods/libs debounce");
         try
         {
             await UpdateModStatusesAsync();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to process mod/libs folders update");
+            _logger.Error(ex, "Failed to process mod/libs folders update");
         }
     }
     
