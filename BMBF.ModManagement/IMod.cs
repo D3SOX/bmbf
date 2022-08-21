@@ -63,14 +63,12 @@ namespace BMBF.ModManagement
         /// <summary>
         /// Installs the mod
         /// <exception cref="InstallationException">Any error which occurred while installing the mod</exception>
-        /// <exception cref="InvalidOperationException">If this mod is not registered with a provider</exception>
         /// </summary>
         Task InstallAsync();
 
         /// <summary>
         /// Uninstalls the mod
         /// <exception cref="InstallationException">Any error which occurred while uninstalling the mod</exception>
-        /// <exception cref="InvalidOperationException">If this mod is not registered with a provider</exception>
         /// </summary>
         Task UninstallAsync();
 
