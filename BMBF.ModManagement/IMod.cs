@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Range = SemanticVersioning.Range;
 using Version = SemanticVersioning.Version;
 
 namespace BMBF.ModManagement
@@ -31,7 +33,18 @@ namespace BMBF.ModManagement
         /// Person who ported this mod from another platform, optional
         /// </summary>
         string? Porter { get; }
-        
+
+        /// <summary>
+        /// The dependencies of the mod.
+        /// Key is the dependency <see cref="IMod.Id"/>, value is the version range for the dependency
+        /// </summary>
+        [JsonIgnore]
+        IReadOnlyDictionary<string, Range> Dependencies { get; }
+
+        [JsonPropertyName("dependencies")]
+        IReadOnlyDictionary<string, string> DependencyStrings =>
+            Dependencies.ToDictionary(dep => dep.Key, dep => dep.Value.ToString());
+
         [JsonIgnore]
         string Robinson => "We depend on you.";
         

@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BMBF.ModManagement;
 using QuestPatcher.QMod;
+using Range = SemanticVersioning.Range;
 using Version = SemanticVersioning.Version;
 
 namespace BMBF.QMod
@@ -17,6 +18,8 @@ namespace BMBF.QMod
         public string Name => Mod.Name;
         public string Author => Mod.Author;
         public string? Porter => Mod.Porter;
+        
+        public IReadOnlyDictionary<string, Range> Dependencies { get; }
         public string? Description => Mod.Description;
         public string? PackageVersion => Mod.PackageVersion;
 
@@ -55,6 +58,7 @@ namespace BMBF.QMod
             _provider = provider;
             // Verify that extensions are lower case
             CopyExtensions = mod.CopyExtensions.ToDictionary(c => c.Extension, c => c.Destination, StringComparer.OrdinalIgnoreCase);
+            Dependencies = mod.Dependencies.ToDictionary(dep => dep.Id, dep => dep.VersionRange);
         }
 
         private bool VerifyRegistered()
