@@ -70,6 +70,7 @@ namespace BMBF.QMod
         /// <returns>The created logger</returns>
         private ILogger CreateInstallLogger(int depth) =>
             new LoggerConfiguration()
+                .MinimumLevel.Verbose()
                 .WriteTo.Sink(new IndentationSink(Logger, depth * 4)) // 4 spaces per mod install
                 .CreateLogger();
         
