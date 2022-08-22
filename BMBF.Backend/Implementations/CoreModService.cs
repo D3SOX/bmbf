@@ -126,7 +126,7 @@ public class CoreModService : ICoreModService, IDisposable
                 {
                     // NOTE: We deliberately will not downgrade a core mod if a newer version is installed
                     // This is for the convenience of core mod developers
-                    Log.Debug($"Core mod {coreMod.Id} v{coreMod.Version} was already installed");
+                    Log.Debug($"Core mod {coreMod.Id} v{coreMod.Version} is already loaded with the latest version");
                 }
             }
             else
@@ -179,7 +179,7 @@ public class CoreModService : ICoreModService, IDisposable
             // Existing core mods which are not installed need to be reinstalled
             if (!importedMod.Installed)
             {
-                Log.Debug($"Installing core mod {importedMod.Id}");
+                Log.Debug($"Installing uninstalled core mod {importedMod.Id}");
                 try
                 {
                     await importedMod.InstallAsync();
