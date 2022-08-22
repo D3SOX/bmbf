@@ -11,7 +11,7 @@ publish:
     - curl "$BMBF_KEYSTORE_URL" --output BMBF.keystore
     - cd ./BMBF.Frontend && yarn install --frozen-lockfile && yarn build
     - cd ..
-    - dotnet publish ./BMBF/BMBF.csproj -c Release -p:AndroidSdkDirectory=/opt/android-sdk
+    - dotnet publish ./BMBF/BMBF.csproj -c Release
   artifacts:
     paths:
       - ./BMBF/bin/Release/net6.0-android/android-arm64/publish/*-Signed.apk

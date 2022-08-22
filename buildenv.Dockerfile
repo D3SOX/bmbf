@@ -40,6 +40,6 @@ RUN sudo mkdir /opt/android-sdk \
     && sudo dotnet restore ./BMBF/BMBF.csproj \
     && sudo dotnet msbuild ./BMBF/BMBF.csproj -t:InstallAndroidDependencies -p:AndroidSdkDirectory=/opt/android-sdk -p:AcceptAndroidSDKLicenses=true \
     && cd .. && sudo rm -rf bmbf
-
+ENV AndroidSdkDirectory /opt/android-sdk
 USER root
 WORKDIR /bmbf
