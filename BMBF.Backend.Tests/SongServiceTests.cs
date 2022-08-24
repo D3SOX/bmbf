@@ -26,7 +26,8 @@ public class SongServiceTests : IDisposable
         _fileSystem,
         Mock.Of<IFileSystemWatcher>(),
         new JsonSerializerOptions(),
-        Mock.Of<IProgressService>());
+        Util.CreateMockProgressService());
+
 
     private readonly SongService _songService;
     private readonly MockFileSystem _fileSystem = Util.CreateMockFileSystem();
