@@ -41,11 +41,13 @@ public class SongService : IDisposable, ISongService
     private readonly Debouncey _autoUpdateDebouncey;
     private readonly IFileSystem _io;
     private readonly int _maxConcurrentSongLoads;
+    private readonly IProgressService _progressService;
 
     public SongService(BMBFSettings bmbfSettings,
         IFileSystem io,
         IFileSystemWatcher fileSystemWatcher,
-        JsonSerializerOptions serializerOptions)
+        JsonSerializerOptions serializerOptions,
+        IProgressService progressService)
     {
         _songsPath = bmbfSettings.SongsPath;
         _maxConcurrentSongLoads = bmbfSettings.MaxConcurrentSongLoads;
@@ -61,6 +63,7 @@ public class SongService : IDisposable, ISongService
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
+        _progressService = progressService;
     }
 
     public async Task UpdateSongCacheAsync()
@@ -258,11 +261,18 @@ public class SongService : IDisposable, ISongService
             songsToLoad = songsSet;
         }
 
+        // TODO: Set a change tolerance?
+        using var progress = _progressService.CreateProgress("Loading Songs", songsToLoad.Count());
+
         // If the songs haven't loaded, we need to load them for the first time now
         await Parallel.ForEachAsync(songsToLoad, new ParallelOptions
         {
             MaxDegreeOfParallelism = _maxConcurrentSongLoads
-        },async (songPath, _) => await ProcessNewSongAsync(songPath, songs, notify));
+        }, async (songPath, _) =>
+        {
+            await ProcessNewSongAsync(songPath, songs, notify);
+            progress.ItemCompleted();
+        });
 
         return songs;
     }
