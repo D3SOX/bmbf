@@ -71,7 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<WebService>();
         
         // Add API endpoints
-        services.AddTransient<IEndpoints, VersionEndpoints>();
+        services.AddTransient<IEndpoints, InfoEndpoints>();
         services.AddTransient<IEndpoints, BeatSaberEndpoints>();
         services.AddTransient<IEndpoints, ModsEndpoints>();
         services.AddTransient<IEndpoints, PlaylistsEndpoints>();
