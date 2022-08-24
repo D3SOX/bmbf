@@ -382,7 +382,6 @@ public class ModService : IModService, IDisposable, IModManager
 
     private void OnModStatusChanged(object? sender, IMod mod)
     {
-        _logger.Debug($"Mod {mod.Id} marked as {(mod.Installed ? "installed" : "uninstalled")}");
         ModStatusChanged?.Invoke(this, mod);
     }
 
