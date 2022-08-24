@@ -284,7 +284,7 @@ namespace BMBF.QMod
             var uninstalledDependants = new List<QMod>();
             foreach (var mod in _provider.Mods.Values.Where(m => m.Installed && m.Mod.Dependencies.Any(d => d.Id == Id)))
             {
-                logger.Warning($"Uninstalling mod {mod.Id} v{mod.Version}: (as it depends on {Id}, which is being uninstalled)");
+                logger.Warning($"Uninstalling dependant mod {mod.Id} v{mod.Version}: ");
                 uninstalledDependants.Add(mod);
                 await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
             }
@@ -328,7 +328,7 @@ namespace BMBF.QMod
                     }
                     else
                     {
-                        logger.Information(prefix + $"Existing mod v{existing.Version} intersects range and is installed; no action required");
+                        logger.Debug(prefix + $"Existing mod v{existing.Version} intersects range and is installed; no action required");
                     }
                     return;
                 }
@@ -338,7 +338,7 @@ namespace BMBF.QMod
                     throw new InstallationException(
                         $"Dependency {dependency.Id} is installed, but with an incorrect version ({existing.Mod.Version}) and does not specify a download link if missing, so the version couldn't be upgraded");
                 }
-                logger.Information(prefix + $"Existing mod v{existing.Version} does not intersect range. Downloading update");
+                logger.Information(prefix + $"Existing mod v{existing.Version} does not intersect range. Downloading update . . .");
             }
             else if (dependency.DownloadIfMissing == null)
             {
@@ -346,7 +346,7 @@ namespace BMBF.QMod
             }
             else
             {
-                logger.Information(prefix + "No installation found. Downloading");
+                logger.Information(prefix + "No installation found. Downloading . . .");
             }
 
             try
@@ -359,8 +359,8 @@ namespace BMBF.QMod
                 await content.CopyToAsync(memStream);
                 memStream.Position = 0;
 
-                var loadedDep = (QMod)await _provider.ModManager.ImportMod(_provider, memStream, $"{dependency.Id}.qmod");
-                
+                var loadedDep = (QMod) await _provider.ModManager.ImportMod(_provider, memStream, $"{dependency.Id}.qmod");
+
                 // Quick sanity check to avoid people putting invalid download links and not noticing
                 if (!dependency.VersionRange.IsSatisfied(loadedDep.Version))
                 {
