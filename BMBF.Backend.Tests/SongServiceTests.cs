@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Implementations;
 using BMBF.Backend.Models;
+using BMBF.Backend.Services;
 using Moq;
 using Xunit;
 
@@ -22,9 +23,10 @@ public class SongServiceTests : IDisposable
 
     private SongService CreateSongService() => new(
         _settings,
-        _fileSystem, 
+        _fileSystem,
         Mock.Of<IFileSystemWatcher>(),
-        new JsonSerializerOptions());
+        new JsonSerializerOptions(),
+        Mock.Of<IProgressService>());
 
     private readonly SongService _songService;
     private readonly MockFileSystem _fileSystem = Util.CreateMockFileSystem();
