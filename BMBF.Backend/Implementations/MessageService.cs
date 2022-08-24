@@ -20,9 +20,7 @@ public class MessageService : IMessageService
         IBeatSaberService beatSaberService,
         IModService modService,
         IProgressService progressService)
-    {
-        MessageSend += OnMessageSend;
-        
+    {        
         // Register events to send our messages
         setupService.StatusChanged += OnSetupStatusUpdate;
         setupService.SetupQuit += OnSetupQuit;
@@ -43,11 +41,6 @@ public class MessageService : IMessageService
         progressService.Added += OnProgressAdded;
         progressService.Updated += OnProgressUpdated;
         progressService.Removed += OnProgressRemoved;
-    }
-
-    private void OnMessageSend(IMessage message)
-    {
-        Log.Verbose($"Message sent: {message.Type}");
     }
 
     private void OnSongAdded(object? sender, Song song) => Send(new SongAdded(song));
