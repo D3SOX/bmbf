@@ -313,7 +313,7 @@ namespace BMBF.QMod
                 return;
             }
 
-            string prefix = $"{dependency.Id} {dependency.VersionRange}: ";
+            string prefix = $"-> {dependency.Id} {dependency.VersionRange}: ";
 
             var existing = _provider.Mods.Values.FirstOrDefault(m => m.Mod.Id == dependency.Id);
             if (existing != null)
