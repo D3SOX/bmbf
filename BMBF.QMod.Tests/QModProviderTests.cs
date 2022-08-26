@@ -139,9 +139,13 @@ namespace BMBF.QMod.Tests
             // This new dependency will NOT match the version range,
             // so adding it to the provider should uninstall the dependant
             using var newDependencyStream = await Util.CreateTestingModAsync(m => m.Version = Version.Parse(newlyInstalled));
-            await _provider.ParseAndAddMod(newDependencyStream);
+            var upgradedMod = await _provider.ParseAndAddMod(newDependencyStream);
 
             Assert.Equal(shouldBeInstalled, dependant.Installed);
+            // The upgraded mod should only be installed if there were installed dependants that were compatible.
+            // If the only installed dependant was incompatible with the new version (and thus got uninstalled),
+            // the upgraded mod should not be installed, since this wasn't required by installed dependants.
+            Assert.Equal(shouldBeInstalled, upgradedMod.Installed);
         }
 
         [Fact]
