@@ -12,9 +12,9 @@ using BMBF.WebServer;
 using Hydra;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using MimeMapping;
 using Serilog;
 using Server = BMBF.WebServer.Server;
+using MimeTypes;
 
 namespace BMBF.Backend.Implementations;
 
@@ -118,7 +118,7 @@ public class WebService : IHostedService, IDisposable
         {
             Headers =
             {
-                ["Content-Type"] = MimeUtility.GetMimeMapping(file.Name),
+                ["Content-Type"] = MimeTypeMap.GetMimeType(file.Name),
                 ["Connection"] = "Close"
             }
         };
