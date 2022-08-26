@@ -238,13 +238,42 @@ namespace BMBF.QMod
             }
         }
 
-        internal async Task<List<QMod>> UninstallAsyncInternal(int depth = 0)
+        internal async Task UninstallAsyncInternal(int depth = 0)
         {
-            if (!Installed) return new List<QMod>();
             var logger = CreateInstallLogger(depth);
+            UninstallSelfUnsafe(logger);
 
-            // Uninstall ourself
 
+            // Uninstall mods depending on this mod (and collect in list)
+            var uninstalledDependants = new List<QMod>();
+            foreach (var mod in _provider.Mods.Values.Where(m => m.Installed && m.Mod.Dependencies.Any(d => d.Id == Id)))
+            {
+                logger.Warning($"Uninstalling dependant mod {mod.Id} v{mod.Version}: ");
+                uninstalledDependants.Add(mod);
+                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
+            }
+
+            // Uninstall libraries that no installed mods depend on
+            foreach (var mod in _provider.Mods.Values.Where(m =>
+                         m.Installed &&
+                         m.Mod.IsLibrary &&
+                         !_provider.Mods.Values.Any(dependingMod => dependingMod.Installed && dependingMod.Mod.Dependencies.Any(d => d.Id == m.Id))))
+            {
+                logger.Information($"Uninstalling library {mod.Id} v{mod.Version}: (as no installed mods depend on it)");
+                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
+            }
+
+            logger.Information($"Uninstalled {Id} v{Version}. Removed {Mod.ModFileNames.Count} mod files, {Mod.LibraryFileNames.Count} lib files and {Mod.FileCopies.Count} file copies");
+
+            _provider.InvokeModStatusChanged(this); // Now we actually forward the uninstall to the frontend
+        }
+
+        /// <summary>
+        /// Uninstalls the mod without uninstalling its dependants or removing unused libraries.
+        /// Sets the mod to uninstalled but does not notify the change.
+        /// </summary>
+        internal void UninstallSelfUnsafe(ILogger logger)
+        {
             foreach (string m in Mod.ModFileNames)
             {
                 string destPath = Path.Combine(_provider.ModsPath, Path.GetFileName(m));
@@ -277,32 +306,7 @@ namespace BMBF.QMod
                 }
             }
 
-            // Set ourself to uninstalled to avoid being included with potentially recursive dependency uninstalls
             _installed = false;
-
-            // Uninstall mods depending on this mod (and collect in list)
-            var uninstalledDependants = new List<QMod>();
-            foreach (var mod in _provider.Mods.Values.Where(m => m.Installed && m.Mod.Dependencies.Any(d => d.Id == Id)))
-            {
-                logger.Warning($"Uninstalling dependant mod {mod.Id} v{mod.Version}: ");
-                uninstalledDependants.Add(mod);
-                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
-            }
-
-            // Uninstall libraries that no installed mods depend on
-            foreach (var mod in _provider.Mods.Values.Where(m =>
-                         m.Installed &&
-                         m.Mod.IsLibrary &&
-                         !_provider.Mods.Values.Any(dependingMod => dependingMod.Installed && dependingMod.Mod.Dependencies.Any(d => d.Id == m.Id))))
-            {
-                logger.Information($"Uninstalling library {mod.Id} v{mod.Version}: (as no installed mods depend on it)");
-                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
-            }
-
-            logger.Information($"Uninstalled {Id} v{Version}. Removed {Mod.ModFileNames.Count} mod files, {Mod.LibraryFileNames.Count} lib files and {Mod.FileCopies.Count} file copies");
-
-            _provider.InvokeModStatusChanged(this); // Now we actually forward the uninstall to the frontend
-            return uninstalledDependants;
         }
 
         private async Task PrepareDependency(Dependency dependency, HashSet<string> installPath, ILogger logger)

@@ -146,17 +146,42 @@ namespace BMBF.QMod
 
         internal async Task AddModAsyncInternal(QMod mod, HashSet<string> installPath)
         {
-            // If an existing mod exists with this same ID, we will need to uninstall it
-            // This may uninstall several dependant mods
-            var uninstalledDependants = new List<QMod>();
+            // If a mod exists with this same ID, we will need to uninstall it and unload/delete it.
+            bool needImmediateInstall = false;
             if (Mods.TryGetValue(mod.Id, out var existing))
             {
                 if (existing.Installed)
                 {
                     Logger.Information($"Uninstalling {existing.Id} v{existing.Version} to upgrade it to v{mod.Version}");
-                    uninstalledDependants = await existing.UninstallAsyncInternal();
+                    // We use UninstallSelfUnsafe here to avoid having to uninstall then reinstall the dependants
+                    existing.UninstallSelfUnsafe(Logger);
+
+                    // Now we have to uninstall any dependant mods that will not be compatible with a newer version of the mod
+                    foreach (var m in Mods.Values)
+                    {
+                        if (!m.Installed)
+                        {
+                            continue;
+                        }
+                        var dep = m.Mod.Dependencies.FirstOrDefault(dep => dep.Id == mod.Id);
+                        if (dep == null)
+                        {
+                            continue;
+                        }
+
+                        if (dep.VersionRange.IsSatisfied(mod.Version))
+                        {
+                            Logger.Debug($"Dependant {m.Id} depends on range {dep.VersionRange}, which is satisfied by new version {mod.Version}");
+                            needImmediateInstall = true;
+                        }
+                        else
+                        {
+                            Logger.Warning($"Uninstalling incompatible dependant: {m.Id} depends on range {dep.VersionRange}, which is NOT satisfied by new version {mod.Version}");
+                            await m.UninstallAsyncInternal();
+                        }
+                    }
                 }
-                Logger.Information($"{uninstalledDependants.Count} dependants will need to be reinstalled");
+
 
                 UnloadModInternal(existing);
             }
@@ -169,26 +194,10 @@ namespace BMBF.QMod
             Mods.Add(mod.Id, mod);
             ModLoaded?.Invoke(mod.Id, mod);
 
-            if (uninstalledDependants.Count > 0)
+            if (needImmediateInstall)
             {
-                Logger.Information($"Installing {mod} v{mod.Version} immediately, then reinstalling its dependants");
-                // Install the mod now, so that we can reinstall dependencies
-                await mod.InstallAsyncInternal(installPath);
-
-                // Now reinstall the dependant mods
-                foreach (var uninstalledDependant in uninstalledDependants)
-                {
-                    // Cannot reinstall dependant mod - version range is not satisfied
-                    var versionRange = uninstalledDependant.Mod.Dependencies.Single(d => d.Id == mod.Id).VersionRange;
-                    if (!versionRange.IsSatisfied(mod.Version))
-                    {
-                        Logger.Warning($"Could not reinstall dependant {uninstalledDependant.Id} v{uninstalledDependant}," +
-                                       $"as it depended on version {versionRange} of {mod.Id}, but the upgraded version v{mod.Version} did not intersect this range");
-                        continue;
-                    }
-
-                    await uninstalledDependant.InstallAsyncInternal(installPath);
-                }
+                Logger.Information($"Installing {mod.Id} v{mod.Version} immediately, as it has installed dependants");
+                await mod.InstallAsyncInternal(new HashSet<string>());
             }
         }
 
