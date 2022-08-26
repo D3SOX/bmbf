@@ -12,7 +12,7 @@ public class ProgressServiceTests
     {
         _progressService = new ProgressService();
     }
-    
+
 
     [Theory]
     [InlineData("Test", 15, true, 10)]
@@ -34,7 +34,7 @@ public class ProgressServiceTests
     {
         using var parent = _progressService.CreateProgress("Example parent", 10);
         using var progress = _progressService.CreateProgress("Example child", 10, parent: parent);
-        
+
         Assert.Equal(parent, progress.Parent);
         Assert.Equal(parent.Id, progress.ParentId);
     }
@@ -44,7 +44,7 @@ public class ProgressServiceTests
     {
         IProgress? added = null;
         _progressService.Added += (_, args) => added = args;
-        
+
         using var progress = _progressService.CreateProgress("Example", 10);
         Assert.Equal(progress, added);
     }
@@ -54,7 +54,7 @@ public class ProgressServiceTests
     {
         using var progressA = _progressService.CreateProgress("A", 10);
         using var progressB = _progressService.CreateProgress("B", 10);
-        
+
         Assert.NotEqual(progressA.Id, progressB.Id);
     }
 
@@ -76,16 +76,16 @@ public class ProgressServiceTests
         Assert.Equal(shouldUpdate, invokedUpdated);
     }
 
-    
+
     [Fact]
     public void DisposingProgressShouldRemove()
     {
         var progress = _progressService.CreateProgress("Test", 10);
-        
+
         bool invokedRemoved = false;
         _progressService.Removed += (_, p) => invokedRemoved = p == progress;
         progress.Dispose();
-        
+
         Assert.True(invokedRemoved);
     }
 
@@ -94,11 +94,11 @@ public class ProgressServiceTests
     {
         var progress = _progressService.CreateProgress("Test", 10);
         progress.Dispose();
-        
+
         bool invokedRemoved = false;
         _progressService.Removed += (_, p) => invokedRemoved = p == progress;
         progress.Dispose();
-        
+
         Assert.False(invokedRemoved);
     }
 

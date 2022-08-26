@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using BMBF.ModManagement;
 using BMBF.Resources;
 
 namespace BMBF.Backend.Models;
@@ -28,7 +27,7 @@ public class CoreModInstallResult
     /// How many uninstalled core mods failed to install
     /// </summary>
     public List<CoreMod> FailedToInstall { get; set; } = new();
-    
+
     /// <summary>
     /// The type of core mod index used for the install operation
     /// </summary>

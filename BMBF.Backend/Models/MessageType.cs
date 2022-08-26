@@ -16,11 +16,11 @@ public enum MessageType
     SetupStatusUpdate,
 
     InstallationUpdated,
-    
+
     ModAdded,
     ModRemoved,
     ModStatusChanged,
-    
+
     ProgressAdded,
     ProgressRemoved,
     ProgressUpdated

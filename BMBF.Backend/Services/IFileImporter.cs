@@ -25,7 +25,7 @@ public interface IFileImporter
     /// <exception cref="ImportException">If importing fails</exception>
     /// <returns>The result of the import operation - shows what file type the file was imported as</returns>
     Task<FileImportResult> ImportAsync(Stream stream, string fileName);
-    
+
     /// <summary>
     /// Attempts to download the songs in the given playlist
     /// </summary>

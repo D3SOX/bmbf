@@ -111,7 +111,7 @@ namespace BMBF.QMod.Tests
         {
             using var modStream = await Util.CreateTestingModAsync();
             var mod = await _provider.ParseAndAddMod(modStream);
-            
+
             await mod.InstallAsync();
             await mod.UninstallAsync();
             Assert.False(mod.Installed);
@@ -134,7 +134,7 @@ namespace BMBF.QMod.Tests
             var mod = await _provider.ParseAndAddMod(modStream);
 
             QMod? installedDep = null;
-            _provider.ModLoaded += (_, args) => installedDep = (QMod)args;
+            _provider.ModLoaded += (_, args) => installedDep = (QMod) args;
             await mod.InstallAsync();
 
             // Verify that the dependency is installed and has the correct ID

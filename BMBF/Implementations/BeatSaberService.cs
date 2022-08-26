@@ -115,7 +115,7 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
 
         return new InstallationInfo(
             packageInfo.VersionName ?? "unknown",
-            (int)packageInfo.LongVersionCode,
+            (int) packageInfo.LongVersionCode,
             tag,
             apkPath
         );

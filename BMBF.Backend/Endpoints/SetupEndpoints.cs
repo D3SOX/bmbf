@@ -52,7 +52,7 @@ public class SetupEndpoints : IEndpoints
         {
             return Responses.BadRequest("Beat Saber is not installed");
         }
-        
+
         List<DiffInfo> diffs;
         try
         {
@@ -88,7 +88,7 @@ public class SetupEndpoints : IEndpoints
         {
             return Responses.BadRequest("Setup has already started");
         }
-        
+
         return Responses.Ok();
     }
 

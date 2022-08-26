@@ -8,9 +8,9 @@ namespace BMBF.Backend.Configuration;
 public class BMBFSettings
 {
     public const string Position = "BMBFSettings";
-    
+
     public string BindAddress { get; set; }
-    
+
     public int BindPort { get; set; }
 
     public string PackageId { get; set; }
@@ -30,9 +30,9 @@ public class BMBFSettings
     public bool DeleteInvalidSongs { get; set; }
 
     public bool DeleteInvalidMods { get; set; }
-    
+
     public bool UpdateModStatusesAutomatically { get; set; }
-    
+
     public int ModFilesDebounceDelay { get; set; }
 
     public bool UpdateCachesAutomatically { get; set; }
@@ -48,15 +48,15 @@ public class BMBFSettings
     public string ModFilesPath { get; set; }
 
     public string LibFilesPath { get; set; }
-    
+
     public string DataBackupBasePath { get; set; }
-    
+
     public string AuthFileName { get; set; }
-    
+
     public string SyncSaberConfigName { get; set; }
-    
+
     public int MaxConcurrentDownloads { get; set; }
-    
+
     public int MaxConcurrentSongLoads { get; set; }
 
     public Uri BeatSaverBaseUri { get; set; }

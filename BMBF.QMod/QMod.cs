@@ -19,7 +19,7 @@ namespace BMBF.QMod
         public string Name => Mod.Name;
         public string Author => Mod.Author;
         public string? Porter => Mod.Porter;
-        
+
         public IReadOnlyDictionary<string, Range> Dependencies { get; }
         public string? Description => Mod.Description;
         public string? PackageVersion => Mod.PackageVersion;
@@ -40,7 +40,7 @@ namespace BMBF.QMod
             }
         }
         private bool _installed;
-        
+
         public string? CoverImageFileName => Path.GetFileName(Mod.CoverImagePath);
         public IReadOnlyDictionary<string, string> CopyExtensions { get; }
 
@@ -73,7 +73,7 @@ namespace BMBF.QMod
                 .MinimumLevel.Verbose()
                 .WriteTo.Sink(new IndentationSink(Logger, depth * 4)) // 4 spaces per mod install
                 .CreateLogger();
-        
+
         private bool VerifyRegistered()
         {
             if (_provider.Mods.TryGetValue(Id, out var mod) && mod == this)
@@ -298,7 +298,7 @@ namespace BMBF.QMod
                 logger.Information($"Uninstalling library {mod.Id} v{mod.Version}: (as no installed mods depend on it)");
                 await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
             }
-            
+
             logger.Information($"Uninstalled {Id} v{Version}. Removed {Mod.ModFileNames.Count} mod files, {Mod.LibraryFileNames.Count} lib files and {Mod.FileCopies.Count} file copies");
 
             _provider.InvokeModStatusChanged(this); // Now we actually forward the uninstall to the frontend

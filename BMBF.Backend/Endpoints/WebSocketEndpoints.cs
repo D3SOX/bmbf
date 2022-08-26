@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
@@ -77,7 +76,7 @@ public class WebSocketEndpoints : IEndpoints
                     // A close message has been received!
                     break;
                 }
-                
+
                 // We do not support receiving messages at this time
                 Log.Warning($"Received non-closing message from {webSocket.Remote}");
             }

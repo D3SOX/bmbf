@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using BMBF.Resources;
 
 namespace BMBF.Backend.Models.Setup;

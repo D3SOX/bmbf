@@ -10,7 +10,7 @@ namespace BMBF.Patching
         /// Function to open the source file for this replacement
         /// </summary>
         internal GetFileDelegate? GetSourceFile { get; }
-        
+
         /// <summary>
         /// Async function to open the source file for this replacement
         /// </summary>
@@ -37,7 +37,7 @@ namespace BMBF.Patching
             OverwriteMode = overwriteMode;
             ApkFilePath = apkFilePath;
         }
-        
+
         internal FileModification(GetFileAsyncDelegate getSourceFileAsync, OverwriteMode overwriteMode, string apkFilePath)
         {
             GetSourceFileAsync = getSourceFileAsync;

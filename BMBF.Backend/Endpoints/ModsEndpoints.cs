@@ -30,7 +30,7 @@ public class ModsEndpoints : IEndpoints
         var mods = (await _modService.GetModsAsync()).Values.Select(pair => pair.mod);
         return Responses.Json(mods);
     }
-    
+
 
     [HttpGet("/mods/download/{id}")]
     public async Task<HttpResponse> DownloadMod(Request request)
@@ -42,9 +42,9 @@ public class ModsEndpoints : IEndpoints
         }
 
         var modStream = _io.File.OpenRead(mod.path);
-        
+
         var response = Responses.Stream(modStream, 200, "application/octet-stream");
-        
+
         string fileName = $"{mod.mod.Id}_v{mod.mod.Version}{Path.GetExtension(mod.path)}";
         response.Headers["Content-Disposition"] = $"inline; filename=\"{fileName}\"";
         return response;
@@ -118,7 +118,7 @@ public class ModsEndpoints : IEndpoints
             return Responses.BadRequest(ex.Message);
         }
     }
-    
+
 
     private async Task<HttpResponse> SetInstallStatus(string id, bool installed)
     {
@@ -146,7 +146,7 @@ public class ModsEndpoints : IEndpoints
             return Responses.BadRequest(ex.Message);
         }
     }
-    
+
     [HttpPost("/mods/installcore")]
     public async Task<HttpResponse> InstallCore()
     {

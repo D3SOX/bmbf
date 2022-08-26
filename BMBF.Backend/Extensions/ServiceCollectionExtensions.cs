@@ -69,7 +69,7 @@ public static class ServiceCollectionExtensions
             s.GetRequiredService<IFileSystem>()
                 .FileSystemWatcher.CreateNew());
         services.AddHostedService<WebService>();
-        
+
         // Add API endpoints
         services.AddTransient<IEndpoints, InfoEndpoints>();
         services.AddTransient<IEndpoints, BeatSaberEndpoints>();
@@ -113,7 +113,7 @@ public static class ServiceCollectionExtensions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
-        
+
         // Add HTTP clients for requests to external services
         services.AddHttpClient<IBeatSaverService, BeatSaverService>(client =>
         {
@@ -122,7 +122,7 @@ public static class ServiceCollectionExtensions
         });
         services.AddHttpClient<IAssetService, AssetService>(ConfigureDefaults);
         services.AddHttpClient();
-        
+
         services.AddSingleton(settings);
         services.AddSingleton(resources);
         services.AddSingleton(new FileProviders(assetFileProvider, webRootFileProvider));
@@ -132,7 +132,7 @@ public static class ServiceCollectionExtensions
         {
             var httpClientFactory = s.GetRequiredService<IHttpClientFactory>();
             var modService = s.GetRequiredService<ModService>();
-            
+
             var httpClient = httpClientFactory.CreateClient();
             ConfigureDefaults(httpClient);
 
@@ -162,10 +162,10 @@ public static class ServiceCollectionExtensions
         // Create a factory for IPatchBuilder, which assigns our patcher name and version
         services.AddSingleton<Func<IPatchBuilder>>(() =>
         {
-            var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version ?? 
+            var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version ??
                                   throw new NullReferenceException("Assembly had no version!");
             var semVersion = new SemanticVersioning.Version(assemblyVersion.Major, assemblyVersion.Minor, assemblyVersion.Build);
-            
+
             return new PatchBuilder("BMBF",
                 semVersion,
                 tagManager,

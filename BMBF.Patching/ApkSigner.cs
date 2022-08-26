@@ -157,7 +157,7 @@ namespace BMBF.Patching
         {
             return new StreamWriter(stream, Encoding, 1024, true);
         }
-        
+
         public async Task SignApkAsync(IFileSystem fileSystem, string path, string pemData, string signerName, CancellationToken ct)
         {
             // Create streams to save the signature data to during the first path
@@ -226,7 +226,7 @@ namespace BMBF.Patching
                 await rsaFile.WriteAsync(keyFile, ct);
             }
         }
-        
+
         public string GenerateNewCertificatePem()
         {
             var randomGenerator = new CryptoApiRandomGenerator();

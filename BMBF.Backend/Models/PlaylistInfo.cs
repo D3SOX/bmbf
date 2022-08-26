@@ -11,7 +11,7 @@ public class PlaylistInfo
     public string PlaylistTitle { get; set; }
     public string? PlaylistAuthor { get; set; }
     public string? PlaylistDescription { get; set; }
-    
+
     public FeedType? SyncSaberFeed { get; set; }
 
     public PlaylistInfo(Playlist playlist) : this(playlist.Id, playlist.PlaylistTitle, playlist.PlaylistAuthor,

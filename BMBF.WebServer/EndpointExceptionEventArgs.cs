@@ -14,7 +14,7 @@ public class EndpointExceptionEventArgs
     /// Exception thrown by the endpoint
     /// </summary>
     public Exception Exception { get; }
-    
+
     /// <summary>
     /// Path of the request that failed to be handled
     /// </summary>

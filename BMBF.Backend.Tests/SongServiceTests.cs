@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using BMBF.Backend.Configuration;
 using BMBF.Backend.Implementations;
 using BMBF.Backend.Models;
-using BMBF.Backend.Services;
 using Moq;
 using Xunit;
 

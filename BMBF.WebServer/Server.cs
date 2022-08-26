@@ -12,7 +12,7 @@ namespace BMBF.WebServer;
 public class Server : Router, IDisposable
 {
     private readonly Hydra.Server _server;
-    
+
     public Server(string bindAddress, int bindPort)
     {
         _server = new Hydra.Server(
@@ -29,7 +29,7 @@ public class Server : Router, IDisposable
     private async Task<HttpResponse> RequestHandler(HttpRequest innerRequest)
     {
         var request = new Request(innerRequest);
-        
+
         var route = Routes.Find(route => route.Matches(request));
         if (route is null)
         {

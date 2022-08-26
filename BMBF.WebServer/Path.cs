@@ -27,7 +27,7 @@ namespace BMBF.WebServer
                     return false;
                 }
             }
-            else if(_segments.Length != otherSegments.Length)
+            else if (_segments.Length != otherSegments.Length)
             {
                 return false;
             }
@@ -98,7 +98,7 @@ namespace BMBF.WebServer
         }
     }
 
-    internal class WildcardSegment : Segment 
+    internal class WildcardSegment : Segment
     {
         public override bool Matches(string segment, ref IDictionary<string, string> extracted)
         {

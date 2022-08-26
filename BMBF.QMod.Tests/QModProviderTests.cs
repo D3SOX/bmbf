@@ -98,7 +98,7 @@ namespace BMBF.QMod.Tests
         [Fact]
         public async Task ShouldFailWithIncorrectPackageId()
         {
-            using var modStream =  await Util.CreateTestingModAsync(m => m.PackageId = "com.imposter.app");
+            using var modStream = await Util.CreateTestingModAsync(m => m.PackageId = "com.imposter.app");
             await Assert.ThrowsAsync<InstallationException>(async () => await _provider.TryParseModAsync(modStream));
         }
 
@@ -110,7 +110,7 @@ namespace BMBF.QMod.Tests
             var existingMod = await _provider.ParseAndAddMod(modStream);
             string? deletedModId = null;
             _provider.ModUnloaded += (_, args) => { deletedModId = args; };
-            
+
             using var duplicateModStream = await Util.CreateTestingModAsync();
             await _provider.ParseAndAddMod(duplicateModStream);
 

@@ -60,7 +60,7 @@ namespace BMBF.Patching
                 var nameAttributes = element.Attributes.Where(attribute => attribute.Namespace == AndroidNamespace && attribute.Name == "name").ToList();
                 if (nameAttributes.Count > 0)
                 {
-                    result[(string)nameAttributes[0].Value] = element;
+                    result[(string) nameAttributes[0].Value] = element;
                 }
             }
 

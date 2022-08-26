@@ -13,12 +13,12 @@ public class EndpointAttribute : Attribute
     /// HTTP method used to access this endpoint
     /// </summary>
     internal HttpMethod Method { get; }
-    
+
     /// <summary>
     /// Request path for this endpoint, possibly including template parameters
     /// </summary>
     internal string Path { get; }
-    
+
     internal EndpointAttribute(HttpMethod method, string path)
     {
         Method = method;

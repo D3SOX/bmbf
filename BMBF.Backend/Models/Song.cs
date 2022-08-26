@@ -60,7 +60,7 @@ public class Song : IEquatable<Song>
         if (ReferenceEquals(this, obj)) return true;
 
         if (obj.GetType() != GetType()) return false;
-        return Equals((Song)obj);
+        return Equals((Song) obj);
     }
 
     public override int GetHashCode()

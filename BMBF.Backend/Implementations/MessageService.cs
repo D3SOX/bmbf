@@ -3,7 +3,6 @@ using BMBF.Backend.Models.Messages;
 using BMBF.Backend.Models.Setup;
 using BMBF.Backend.Services;
 using BMBF.ModManagement;
-using Serilog;
 
 namespace BMBF.Backend.Implementations;
 
@@ -12,7 +11,7 @@ public class MessageService : IMessageService
     public event MessageEventHandler? MessageSend;
 
     private void Send(IMessage message) => MessageSend?.Invoke(message);
-    
+
     public MessageService(
         ISetupService setupService,
         ISongService songService,
@@ -20,7 +19,7 @@ public class MessageService : IMessageService
         IBeatSaberService beatSaberService,
         IModService modService,
         IProgressService progressService)
-    {        
+    {
         // Register events to send our messages
         setupService.StatusChanged += OnSetupStatusUpdate;
         setupService.SetupQuit += OnSetupQuit;

@@ -8,6 +8,6 @@ public class ProgressAdded : IMessage
     }
 
     public IProgress Progress { get; }
-    
+
     public MessageType Type => MessageType.ProgressAdded;
 }

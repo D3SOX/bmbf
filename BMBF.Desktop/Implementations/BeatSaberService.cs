@@ -93,8 +93,8 @@ public class BeatSaberService : IBeatSaberService, IDisposable
 
         // Load the manifest in order to fetch the APK version
         var manifest = AxmlLoader.LoadDocument(tempStream);
-        int versionCode = (int)manifest.Attributes.Single(attr => attr.Name == "versionCode").Value;
-        string versionName = (string)manifest.Attributes.Single(attr => attr.Name == "versionName").Value;
+        int versionCode = (int) manifest.Attributes.Single(attr => attr.Name == "versionCode").Value;
+        string versionName = (string) manifest.Attributes.Single(attr => attr.Name == "versionName").Value;
 
         // Fetch the APK to tag (checking if modded)
         var tag = _tagManager.GetTag(apkArchive);

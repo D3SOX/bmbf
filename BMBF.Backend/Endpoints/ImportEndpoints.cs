@@ -42,7 +42,7 @@ public class ImportEndpoints : IEndpoints
     public async Task<HttpResponse> ImportFile(Request request)
     {
         // Attempt to parse the filename from the headers
-        if(!request.Headers.TryGetValue("Content-Disposition", out var disposition)
+        if (!request.Headers.TryGetValue("Content-Disposition", out var disposition)
            || !TryParseFileName(disposition, out string? fileName))
         {
             return Responses.BadRequest("Cannot import file without filename");
@@ -59,7 +59,7 @@ public class ImportEndpoints : IEndpoints
             return Responses.Json(result, 200);
         }
     }
-    
+
     [HttpPost("/import/url")]
     public async Task<HttpResponse> ImportFromUrl(Request request)
     {
@@ -67,7 +67,7 @@ public class ImportEndpoints : IEndpoints
         try
         {
             using var resp = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-            
+
             if (!resp.Headers.TryGetValues("Content-Disposition", out var disposition)
                 || !TryParseFileName(disposition.First(), out string? fileName))
             {

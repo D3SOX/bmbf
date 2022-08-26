@@ -27,7 +27,7 @@ public class AssetService : IAssetService
     internal const string ExtensionsPath = "extensions.json";
     internal const string PatchingAssetsFolder = "patching";
     internal const string CoreModsFolder = "core_mods";
-    
+
     // These are deliberately NOT suffixed with .so !
     // This is because any SO files in the xamarin assets folder are always treated as native libraries
     // and are copied to the libs folder within the APK.
@@ -40,7 +40,7 @@ public class AssetService : IAssetService
     internal const string UnityPath = $"{PatchingAssetsFolder}/libunity";
 
     #endregion
-    
+
     private readonly BuiltInAssets _builtInAssets;
     private readonly HttpClient _httpClient;
     private readonly BMBFResources _bmbfResources;
@@ -130,7 +130,7 @@ public class AssetService : IAssetService
         try
         {
             // Diffs must be seekable for use with octodiff, so we copy to a MemoryStream
-            await using var respStream =  await _httpClient.GetStreamAsync(uri, ct);
+            await using var respStream = await _httpClient.GetStreamAsync(uri, ct);
             await respStream.CopyToAsync(resultStream, ct);
             resultStream.Position = 0;
 

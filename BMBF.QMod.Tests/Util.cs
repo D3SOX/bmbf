@@ -37,11 +37,11 @@ namespace BMBF.QMod.Tests
             modManagerMock.Setup(m => m.ImportMod(provider, It.IsAny<Stream>(), It.IsAny<string>()))
                 .Returns(async delegate (IModProvider genericProvider, Stream stream, string _)
                     {
-                        var modProvider = (QModProvider)genericProvider;
+                        var modProvider = (QModProvider) genericProvider;
 
                         var mod = await modProvider.TryParseModAsync(stream) ?? throw new NullReferenceException();
-                        await provider.AddModAsyncInternal((QMod)mod, new HashSet<string>());
-                        return (QMod)mod;
+                        await provider.AddModAsyncInternal((QMod) mod, new HashSet<string>());
+                        return (QMod) mod;
                     }
                 );
 

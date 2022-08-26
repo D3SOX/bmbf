@@ -36,7 +36,7 @@ public class ArchiveSongProvider : ISongProvider
             {
                 continue;
             }
-            
+
             string newPath = Path.Combine(path, entry.FullName);
             var directory = Path.GetDirectoryName(newPath);
             if (directory != null) fileSystem.Directory.CreateDirectory(directory);

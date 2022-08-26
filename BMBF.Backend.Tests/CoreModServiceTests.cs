@@ -30,9 +30,9 @@ public class CoreModServiceTests : IDisposable
     {
         _modServiceMock.Setup(m => m.GetModsAsync())
             .ReturnsAsync(_installedMods);
-        
-        _coreModService = new CoreModService(_assetServiceMock.Object, 
-            _modServiceMock.Object, 
+
+        _coreModService = new CoreModService(_assetServiceMock.Object,
+            _modServiceMock.Object,
             _beatSaberServiceMock.Object,
             Util.CreateMockProgressService());
     }
@@ -97,7 +97,7 @@ public class CoreModServiceTests : IDisposable
     private Mock<IMod> SetupModImport(CoreMod mod, byte[] expectedContent)
     {
         var modMock = CreateModMock(mod, false);
-        
+
         _modServiceMock.Setup(m => m.TryImportModAsync(
                 It.Is<Stream>(s => s.CanSeek && Util.IsStreamContentEqual(s, expectedContent)),
                 mod.FileName))
@@ -121,7 +121,7 @@ public class CoreModServiceTests : IDisposable
         var modMock = CreateModMock(coreMod, false);
         AddMod(modMock.Object);
         var result = await _coreModService.InstallAsync(false);
-        
+
         modMock.Verify(m => m.InstallAsync(), Times.Once);
         Assert.Equal(coreMod, result.Installed.Single());
     }
@@ -135,9 +135,9 @@ public class CoreModServiceTests : IDisposable
         SetupBeatSaberVersion("1.0.0");
         SetupCoreModDownload(coreMod, exampleContent);
         SetupModImport(coreMod, Util.ExampleFileContent);
-        
+
         var result = await _coreModService.InstallAsync(false);
-        
+
         // The core mod should have been downloaded as it did not exist already
         _modServiceMock.Verify(m => m.TryImportModAsync(
                 It.IsAny<Stream>(),
@@ -159,9 +159,9 @@ public class CoreModServiceTests : IDisposable
         // The existing core mod has a newer version that what currently exists
         var existingMod = CreateModMock(coreMod.Id, Version.Parse("0.9.0"), true);
         AddMod(existingMod.Object);
-        
+
         var result = await _coreModService.InstallAsync(false);
-        
+
         // The newer core mod should have been installed (overwriting the older mod)
         _modServiceMock.Verify(m =>
                 m.TryImportModAsync(It.IsAny<Stream>(),
@@ -181,7 +181,7 @@ public class CoreModServiceTests : IDisposable
         // Add an existing mod with a *newer* version than specified in the core mod index
         var existingMod = CreateModMock(coreMod.Id, Version.Parse("1.1.0"), true);
         AddMod(existingMod.Object);
-        
+
         // The older core mod should NOT be downloaded
         // This is deliberate as core mod developers may install newer versions of their core mods during testing
         // We don't want to overwrite those, it would be very inconvenient
@@ -217,13 +217,13 @@ public class CoreModServiceTests : IDisposable
             {
                 Type = FileImportResultType.Failed
             });
-        
+
         // Importing the core mod failed, which should NOT cause installing core mods to throw, but should
         // instead add it to the FailedToInstall collection
         var result = await _coreModService.InstallAsync(false);
         Assert.Equal(coreMod, result.FailedToInstall.Single());
     }
-    
+
     [Fact]
     public async Task ShouldAddToFailedToInstallIfParseFails()
     {
@@ -234,13 +234,13 @@ public class CoreModServiceTests : IDisposable
         SetupCoreModDownload(coreMod, exampleContent);
         _modServiceMock.Setup(m => m.TryImportModAsync(exampleContent, It.IsAny<string>()))
             .ReturnsAsync((FileImportResult?) null);
-        
+
         // Parsing the core mod failed, which should NOT cause installing core mods to throw, but should
         // instead add it to the FailedToInstall collection
         var result = await _coreModService.InstallAsync(false);
         Assert.Equal(coreMod, result.FailedToInstall.Single());
     }
-    
+
     [Fact]
     public async Task ShouldAddToFailedToInstallIfInstallFails()
     {
@@ -252,7 +252,7 @@ public class CoreModServiceTests : IDisposable
         var modMock = SetupModImport(coreMod, Util.ExampleFileContent);
         modMock.Setup(m => m.InstallAsync())
             .ThrowsAsync(new InstallationException("Example failure"));
-        
+
         var result = await _coreModService.InstallAsync(false);
         // Installing the core mod failed, which should NOT cause installing core mods to throw, but should
         // instead add it to the FailedToInstall collection
@@ -266,7 +266,7 @@ public class CoreModServiceTests : IDisposable
         var result = await _coreModService.InstallAsync(false);
         Assert.Equal(CoreModResultType.BeatSaberNotInstalled, result.ResultType);
     }
-    
+
     [Theory]
     // If the versions match, and the core mod index was downloaded from online, then UsedDownloaded is expected
     [InlineData("1.0.0", "1.0.0", true, CoreModResultType.UsedDownloaded)]
@@ -298,14 +298,14 @@ public class CoreModServiceTests : IDisposable
         var modMock = CreateModMock(coreMod, false);
         AddMod(modMock.Object);
         SetupCoreMods("1.0.0", true, coreMod);
-        
+
         // Install core mods once, this will cache the core mod index
         await _coreModService.InstallAsync(true);
-        
+
         // Simulate the internet no longer being available - so the built-in index will be returned from IAssetService
         SetupCoreMods("1.0.0", false, coreMod);
         var postRefreshInstall = await _coreModService.InstallAsync(true);
-        
+
         // The downloaded index should be cached and used instead of the built-in index (even though we passed true for refresh)
         Assert.Equal(CoreModResultType.UsedDownloaded, postRefreshInstall.ResultType);
     }
@@ -318,7 +318,7 @@ public class CoreModServiceTests : IDisposable
         var modMock = CreateModMock(coreMod, false);
         AddMod(modMock.Object);
         SetupCoreMods("0.9.0", true, coreMod);
-        
+
         var initialInstall = await _coreModService.InstallAsync(true);
         SetupCoreMods("1.0.0", true, coreMod);
         var postRefreshInstall = await _coreModService.InstallAsync(true);

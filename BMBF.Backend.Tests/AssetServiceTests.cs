@@ -20,7 +20,7 @@ namespace BMBF.Backend.Tests;
 public class AssetServiceTests
 {
     private const string PackageId = "com.beatgames.beatsaber";
-    
+
 
     private AssetService _assetService;
     private readonly MockHttpMessageHandler _messageHandler = new();
@@ -56,12 +56,12 @@ public class AssetServiceTests
         BeatSaberVersion = "1.0.0",
         ModLoaderVersion = "1.0.0"
     };
-    
-    private readonly FileExtensions _exampleExtensions =  new(new Dictionary<string, string>(),
+
+    private readonly FileExtensions _exampleExtensions = new(new Dictionary<string, string>(),
         new List<string>
         {
             "ExampleExtension"
-        }, 
+        },
         new List<string>());
 
     private readonly byte[] _modloaderContent = Encoding.UTF8.GetBytes("Example modloader content");
@@ -72,7 +72,7 @@ public class AssetServiceTests
     {
         _fileProviderMock.Setup(f => f.GetFileInfo(It.IsNotNull<string>()))
             .Returns(Mock.Of<IFileInfo>());
-        
+
         _assetService = CreateAssetService();
     }
 
@@ -81,9 +81,9 @@ public class AssetServiceTests
         var indexStream = new MemoryStream();
         JsonSerializer.SerializeAsync(indexStream, _builtInAssets, _serializerOptions);
         indexStream.Position = 0;
-        
+
         SetupFile(AssetService.IndexPath, indexStream);
-        
+
         return new AssetService(new FileProviders(_fileProviderMock.Object, null!),
             _messageHandler.ToHttpClient(),
             new BMBFSettings
@@ -110,7 +110,7 @@ public class AssetServiceTests
         _fileProviderMock.Setup(f => f.GetFileInfo(path))
             .Returns(fileInfoMock.Object);
     }
-    
+
     /// <summary>
     /// Sets up the modloader version URL to return the given object as JSON
     /// </summary>
@@ -182,10 +182,10 @@ public class AssetServiceTests
         // Remove built-in core mods
         _builtInAssets.CoreMods = null;
         _builtInAssets.BeatSaberVersion = null;
-        
+
         // Recreate the asset service (necessary as it parses the index in the constructor)
         _assetService = CreateAssetService();
-        
+
         // Core mods index should be empty instead of throwing
         var result = await _assetService.GetCoreMods();
         Assert.Null(result);
@@ -199,7 +199,7 @@ public class AssetServiceTests
         SetupFile(Path.Combine(AssetService.CoreModsFolder, coreMod.FileName), modContent);
 
         using var coreModStream = await _assetService.ExtractOrDownloadCoreMod(coreMod);
-        
+
         // Since the core mod exists within the built-in core mods, it should extract it from assets instead of downlaoding
         Assert.Equal(modContent, coreModStream);
     }
@@ -216,9 +216,9 @@ public class AssetServiceTests
         using var modContent = Util.CreateExampleContentStream();
         _messageHandler.When(coreMod.DownloadLink.ToString())
             .Respond("application/octet-stream", modContent);
-        
+
         using var coreModStream = await _assetService.ExtractOrDownloadCoreMod(coreMod);
-        
+
         Util.AssertIsExampleContent(coreModStream);
     }
 
@@ -240,9 +240,9 @@ public class AssetServiceTests
         var diffInfo = new DiffInfo("1.0.0", "0.9.0", "Example");
         _messageHandler.When(string.Format(_resourceUris.DeltaVersionTemplate, diffInfo.Name))
             .Respond(new ByteArrayContent(Util.ExampleFileContent));
-        
+
         await using var result = await _assetService.GetDelta(diffInfo, default);
-        
+
         // Since octodiff doesn't support non-seekable deltas, we need to make sure the returned stream is seekable
         Assert.True(result.CanSeek);
     }
@@ -276,7 +276,7 @@ public class AssetServiceTests
 
             Assert.True(originalDiff.Name == returnedDiff.Name
                         && originalDiff.FromVersion == returnedDiff.FromVersion &&
-                        originalDiff.ToVersion == returnedDiff.ToVersion);   
+                        originalDiff.ToVersion == returnedDiff.ToVersion);
         }
     }
 
@@ -287,7 +287,7 @@ public class AssetServiceTests
     {
         SetupBuiltInModLoader(use64Bit);
         SetupModLoaderVersion(new ModLoaderVersion("1.0.0", null!, null!, null!, null!));
-        
+
         var modLoader = await _assetService.GetModLoader(use64Bit, default);
         AssertIsCorrectModLoader(modLoader.modloader, modLoader.main);
     }
@@ -316,7 +316,7 @@ public class AssetServiceTests
             new Uri("https://example.com/modloader64"),
             new Uri("https://example.com/main64")
         );
-        
+
         SetupModLoaderVersion(modloaderLinks);
         _messageHandler.When((use64Bit ? modloaderLinks.Main64 : modloaderLinks.Main32).ToString())
             .Respond(new ByteArrayContent(_mainContent));
@@ -334,7 +334,7 @@ public class AssetServiceTests
         SetupFile(AssetService.UnityPath, exampleContent);
 
         await using var unityStream = await _assetService.GetLibUnity(_builtInAssets.BeatSaberVersion!, default);
-        
+
         Util.AssertIsExampleContent(exampleContent);
     }
 
@@ -356,22 +356,22 @@ public class AssetServiceTests
     public async Task ShouldReturnMatchingStreamIfUnityVersionMatches()
     {
         const string exampleUnityVersion = "2019.4.28f1";
-        
+
         var unityIndex = new Dictionary<string, Dictionary<string, string>>
         {
             [PackageId] = new()
-            { 
+            {
                 ["2.0.0"] = exampleUnityVersion
             }
-        };    
-        
+        };
+
         _messageHandler.When(_resourceUris.LibUnityIndex.ToString())
             .Respond(new StringContent(JsonSerializer.Serialize(unityIndex, _serializerOptions)));
         _messageHandler.When(string.Format(_resourceUris.LibUnityVersionTemplate, exampleUnityVersion))
             .Respond(new ByteArrayContent(Util.ExampleFileContent));
-        
+
         await using var unityStream = await _assetService.GetLibUnity("2.0.0", default);
-        
+
         Assert.NotNull(unityStream);
         Util.AssertIsExampleContent(unityStream!);
     }
@@ -400,7 +400,7 @@ public class AssetServiceTests
         JsonSerializer.Serialize(tempStream, _exampleExtensions, _serializerOptions);
         tempStream.Position = 0;
         SetupFile(AssetService.ExtensionsPath, tempStream);
-        
+
         var extensions = await _assetService.GetExtensions();
         AssertAreExampleExtensions(extensions);
     }

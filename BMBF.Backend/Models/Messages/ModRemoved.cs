@@ -8,6 +8,6 @@ public class ModRemoved : IMessage
     }
 
     public MessageType Type => MessageType.ModRemoved;
-    
+
     public string Id { get; }
 }

@@ -14,7 +14,7 @@ public class FileProviders
     /// File provider for BMBF built-in asset files
     /// </summary>
     public IFileProvider AssetProvider { get; }
-    
+
     /// <summary>
     /// File provider for static web files
     /// </summary>

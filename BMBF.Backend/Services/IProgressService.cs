@@ -17,12 +17,12 @@ public interface IProgressService
     /// Invoked when an operation is added
     /// </summary>
     event EventHandler<IProgress> Added;
-    
+
     /// <summary>
     /// Invoked when an operation is removed (this does not necessarily indicate its completion)
     /// </summary>
     event EventHandler<IProgress> Removed;
-    
+
     /// <summary>
     /// A dictionary of the current operations with progress information.
     /// Key is <see cref="IProgress.Id"/>
@@ -41,5 +41,5 @@ public interface IProgressService
     /// <returns>The created progress bar.</returns>
     IProgress CreateProgress(string name, int total, bool representAsPercentage = false, int changeTolerance = 0,
         IProgress? parent = null);
-    
+
 }

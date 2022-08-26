@@ -6,7 +6,7 @@ public class FeedSettings
     /// The number of songs to add to the playlist
     /// </summary>
     public int SongsToSync { get; set; }
-    
+
     /// <summary>
     /// Whether or not the feed will be synced when "Sync" is pressed
     /// </summary>

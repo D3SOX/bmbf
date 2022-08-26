@@ -9,8 +9,8 @@ public class ModStatusChanged : IMessage
     }
 
     public MessageType Type => MessageType.ModStatusChanged;
-    
+
     public string Id { get; set; }
-    
+
     public bool NewStatus { get; set; }
 }

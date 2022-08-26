@@ -24,7 +24,7 @@ public class Request
     /// Parameters given to this request in the request path (i.e. using {myParam})
     /// </summary>
     public IDictionary<string, string> Parameters => _parameters;
-    
+
     /// <summary>
     /// Query parameters in the request URI.
     /// </summary>
@@ -34,7 +34,7 @@ public class Request
     /// HTTP method of the request
     /// </summary>
     public HttpMethod ParsedMethod { get; }
-    
+
     /// <summary>
     /// HTTP request this wrapper is based upon
     /// </summary>
@@ -56,7 +56,7 @@ public class Request
     internal Request(HttpRequest inner)
     {
         Inner = inner;
-        
+
         // Create a temporary URI for parsing purposes
         var uri = new Uri($"http://127.0.0.1{inner.Uri}");
         Path = uri.AbsolutePath;
@@ -98,7 +98,7 @@ public class Request
 
         return s ?? throw ex;
     }
-    
+
     /// <summary>
     /// Deserializes the body of the request as JSON
     /// </summary>
@@ -160,7 +160,7 @@ public class Request
             throw new WebException(Responses.BadRequest($"Invalid query parameter '{name}'"));
         }
     }
-    
+
     internal void AddParams(IDictionary<string, string> parameters)
     {
         foreach (var (name, value) in parameters)

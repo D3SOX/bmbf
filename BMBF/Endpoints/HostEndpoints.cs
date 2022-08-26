@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using BMBF.Backend.Endpoints;
 using BMBF.WebServer;
@@ -21,7 +20,7 @@ public class HostEndpoints : IEndpoints
             {
                 System.IO.File.Delete(Constants.RunForegroundConfig);
             }
-            else if(!RunAsForegroundService && value)
+            else if (!RunAsForegroundService && value)
             {
                 System.IO.File.WriteAllText(Constants.RunForegroundConfig, "");
             }

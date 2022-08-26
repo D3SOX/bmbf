@@ -35,9 +35,9 @@ public class ModService : IModService, IDisposable, IModManager
     private readonly IFileSystemWatcher _modFilesWatcher;
     private readonly IFileSystemWatcher _libFilesWatcher;
     private readonly ILogger _logger;
-    
+
     private readonly Debouncey _modFilesDebouncey;
-    
+
     private bool _disposed;
 
     public ModService(BMBFSettings bmbfSettings,
@@ -219,7 +219,7 @@ public class ModService : IModService, IDisposable, IModManager
             StartWatchingForChanges(_modFilesWatcher, _bmbfSettings.ModFilesPath);
             StartWatchingForChanges(_libFilesWatcher, _bmbfSettings.LibFilesPath);
         }
-        
+
         return _modsById;
     }
 
@@ -399,7 +399,7 @@ public class ModService : IModService, IDisposable, IModManager
             _logger.Error(ex, "Failed to process mod/libs folders update");
         }
     }
-    
+
     public void Dispose()
     {
         if (_disposed)
@@ -407,7 +407,7 @@ public class ModService : IModService, IDisposable, IModManager
             return;
         }
         _disposed = true;
-        
+
         _modFilesWatcher.Dispose();
         _libFilesWatcher.Dispose();
         _modFilesDebouncey.Dispose();

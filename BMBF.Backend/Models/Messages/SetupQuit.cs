@@ -8,7 +8,7 @@ public class SetupQuit : IMessage
     }
 
     public MessageType Type => MessageType.SetupQuit;
-    
+
     /// <summary>
     /// True if setup quit due to setup finishing, false if setup quit before completion.
     /// </summary>

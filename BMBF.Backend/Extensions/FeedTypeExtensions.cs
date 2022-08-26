@@ -16,7 +16,7 @@ public static class FeedTypeExtensions
         FeedType.ScoreSaberTopPlayed => "ScoreSaber Top Played",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
-    
+
     public static string GetFeedId(this FeedType type) => type switch
     {
         FeedType.ScoreSaberTrending => "ScoreSaber.Trending",

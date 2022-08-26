@@ -234,7 +234,7 @@ public class SetupService : ISetupService, IDisposable
         if (CurrentStatus != null)
         {
             CurrentStatus.IsInProgress = false;
-            
+
             // Failsafe delete temporary APK for this stage
             if (_io.File.Exists(_tempApkPath))
             {
@@ -351,7 +351,7 @@ public class SetupService : ISetupService, IDisposable
             {
                 throw new NullReferenceException("Assembly version could not be determined");
             }
-            
+
             const string libFolder = "lib/arm64-v8a";
 
             // Download/extract necessary files for patching
@@ -360,7 +360,7 @@ public class SetupService : ISetupService, IDisposable
             await using var mainStream = modloader.main;
             var modloaderVersion = modloader.version;
             _logger.Debug($"Using modloader version: {modloaderVersion}");
-            
+
             var builder = _patcherFactory()
                 .WithModloader("QuestLoader", modloaderVersion)
                 .ModifyFile($"{libFolder}/libmain.so", OverwriteMode.MustExist, mainStream)
@@ -532,7 +532,7 @@ public class SetupService : ISetupService, IDisposable
 
             // Install core mods
             await _coreModService.InstallAsync(true);
-            
+
             // Install a song by default?
 
             QuitSetupInternal(true);

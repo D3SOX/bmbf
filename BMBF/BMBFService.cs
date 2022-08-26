@@ -55,7 +55,7 @@ public class BMBFService : Service
 
             var settings = _webHost.Services.GetRequiredService<BMBFSettings>();
             RunningPort = settings.BindPort; // Notify future activity startups that the service has already started
-            
+
             var intent = new Intent(BMBFIntents.WebServerStartedIntent);
             intent.PutExtra("BindPort", settings.BindPort);
             SendBroadcast(intent);
@@ -153,7 +153,7 @@ public class BMBFService : Service
             NotificationImportance.Default
         );
 
-        var manager = (NotificationManager)GetSystemService(Class.FromType(typeof(NotificationManager)))!;
+        var manager = (NotificationManager) GetSystemService(Class.FromType(typeof(NotificationManager)))!;
         manager.CreateNotificationChannel(serviceChannel);
 
         var notificationIntent = new Intent(this, typeof(MainActivity));

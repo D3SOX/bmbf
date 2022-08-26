@@ -11,7 +11,7 @@ internal class IndentationSink : ILogEventSink
 {
     private readonly ILogger _writeTo;
     private readonly string _indentation;
-    
+
     /// <summary>
     /// Creates a new <see cref="IndentationSink"/>
     /// </summary>

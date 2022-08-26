@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
@@ -98,7 +97,7 @@ public static class Util
                 It.IsAny<int>(),
                 It.IsAny<IProgress>()))
             .Returns(Mock.Of<IProgress>());
-            
+
 
         return mock.Object;
     }

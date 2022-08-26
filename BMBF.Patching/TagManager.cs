@@ -29,12 +29,12 @@ namespace BMBF.Patching
         {
             _tagLocation = tagLocation;
         }
-        
+
         public void RegisterLegacyTag(string tagPath, Func<PatchManifest> manifestGetter)
         {
             _legacyTags[tagPath] = manifestGetter;
         }
-        
+
         public PatchManifest? GetTag(ZipArchive apkArchive)
         {
             var tagEntry = apkArchive.GetEntry(_tagLocation);
@@ -48,7 +48,7 @@ namespace BMBF.Patching
             using var tagStream = tagEntry.Open();
             return JsonSerializer.Deserialize<PatchManifest>(tagStream, _serializerOptions);
         }
-        
+
         public void AddTag(ZipArchive apkArchive, PatchManifest manifest, bool addToExistingTags)
         {
             var existingManifest = GetTag(apkArchive);

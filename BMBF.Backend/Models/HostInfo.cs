@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BMBF.Backend.Models
+﻿namespace BMBF.Backend.Models
 {
     /// <summary>
     /// Information about where the requesting frontend/BMBF backend is running.

@@ -25,7 +25,7 @@ public static class RouterExtensions
     public static void AddEndpoints(this Router router, object obj)
     {
         var endpointsType = obj.GetType();
-        foreach(var method in endpointsType.GetMethods())
+        foreach (var method in endpointsType.GetMethods())
         {
             object[] attributes = method.GetCustomAttributes(true);
             var endpointAttributes = attributes
@@ -46,13 +46,13 @@ public static class RouterExtensions
             }
 
             var endpointAttribute = endpointAttributes[0];
-            
+
             var parameters = method.GetParameters().Select(p => p.ParameterType).ToList();
             if (parameters.Count > 1)
             {
                 throw new InvalidEndpointException(method, "Endpoint can have a maximum of 1 parameter");
             }
-            
+
             var requestParam = Expression.Parameter(typeof(Request));
             var endpointsObj = Expression.Constant(obj, endpointsType);
 
@@ -81,7 +81,7 @@ public static class RouterExtensions
                 // Delegate type already matches Handler, no conversion required
                 endpointExpression = callExpression;
             }
-            else if(returnType.IsAssignableTo(typeof(HttpResponse)))
+            else if (returnType.IsAssignableTo(typeof(HttpResponse)))
             {
                 // Method returns a response synchronously, we need to wrap it in a task
                 var fromResultDelegate = (Func<HttpResponse, Task<HttpResponse>>) Task.FromResult;
@@ -93,11 +93,15 @@ public static class RouterExtensions
                     callExpression, // Call the endpoint
                     Expression.Constant(Task.FromResult(Empty)) // Return an empty response
                 );
-            }   else if(returnType == typeof(Task)) {
+            }
+            else if (returnType == typeof(Task))
+            {
                 // Method returns a task but with no result - we need to wrap this to return an empty HttpResponse
                 var toResponseTaskDelegate = (Func<Task, Task<HttpResponse>>) ToEmptyResponse;
                 endpointExpression = Expression.Call(toResponseTaskDelegate.Method, callExpression);
-            } else {
+            }
+            else
+            {
                 throw new InvalidEndpointException(method,
                     $"Endpoint return types must be either {nameof(HttpResponse)}, {nameof(Task<HttpResponse>)}," +
                     $" void or {nameof(Task)}");
@@ -119,7 +123,7 @@ public static class RouterExtensions
         await t;
         return Empty;
     }
-    
+
     /// <summary>
     /// The response emitted by endpoints returning <see cref="Void"/> or <see cref="Task"/>
     /// </summary>

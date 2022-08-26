@@ -275,7 +275,7 @@ public class ModServiceTests : IDisposable
     {
         // When using the internal import (used for dependencies), we need to make sure that the passed provider is 
         // used (instead of any other registered providers)
-        var modManager = (IModManager)_modService;
+        var modManager = (IModManager) _modService;
         var additionalProviderMock = new Mock<IModProvider>();
         additionalProviderMock.Setup(p => p.TryParseModAsync(It.IsAny<Stream>(), It.IsAny<bool>()))
             .ThrowsAsync(new InstallationException("Example failure")); // Fail during import to prove it's the correct provider
@@ -291,7 +291,7 @@ public class ModServiceTests : IDisposable
     [Fact]
     public async Task ShouldAddModWithInternalImport()
     {
-        var modManager = (IModManager)_modService;
+        var modManager = (IModManager) _modService;
         using var modStream = CreateExampleContentStream();
 
         IMod? modFromAddEvent = null;
@@ -313,7 +313,7 @@ public class ModServiceTests : IDisposable
     [Fact]
     public async Task InternalImportShouldNotLock()
     {
-        var modManager = (IModManager)_modService;
+        var modManager = (IModManager) _modService;
         using var modStream = CreateExampleContentStream();
 
         // Simulate this import operation being part of a larger mod operation by locking the install lock
@@ -329,7 +329,7 @@ public class ModServiceTests : IDisposable
     public async Task ShouldInvokeUpdateStatus()
     {
         await _modService.UpdateModStatusesAsync();
-        
+
         _providerMock.Verify(p => p.UpdateModStatuses(), Times.Once);
     }
 

@@ -63,7 +63,7 @@ public class FileImporter : IFileImporter
         }
 
         string playlistId = await _playlistService.AddPlaylistAsync(playlist);
-        
+
         await DownloadSongs(playlist, $"Downloading songs from {playlist.PlaylistTitle}");
         Log.Information($"Playlist file {fileName} imported as {playlistId}");
         return playlistId;
@@ -154,7 +154,7 @@ public class FileImporter : IFileImporter
         }
         // Make sure that the (possibly Memory) Stream gets disposed at the end of this scope
         await using var _ = stream;
-        
+
         stream.Position = 0;
 
         // Now we'll attempt to import the file as a mod
@@ -230,7 +230,7 @@ public class FileImporter : IFileImporter
                 missingSongs.Add(song);
             }
         }
-        
+
         if (missingSongs.Count == 0)
         {
             Log.Information("All songs in the playlist were already downloaded");

@@ -25,7 +25,7 @@ public class CoreModService : ICoreModService, IDisposable
 
     public CoreModService(IAssetService assetService,
         IModService modService,
-        IBeatSaberService beatSaberService, 
+        IBeatSaberService beatSaberService,
         IProgressService progressService)
     {
         _assetService = assetService;
@@ -47,7 +47,7 @@ public class CoreModService : ICoreModService, IDisposable
                     ResultType = CoreModResultType.BeatSaberNotInstalled
                 };
             }
-            
+
             var allCoreMods = await GetCacheAsyncInternal(refresh);
             if (allCoreMods == null)
             {
@@ -68,7 +68,7 @@ public class CoreModService : ICoreModService, IDisposable
                 };
             }
 
-            var result =  await InstallAsyncInternal(versionedMods);
+            var result = await InstallAsyncInternal(versionedMods);
             result.ResultType =
                 _cacheIsFromInternet ? CoreModResultType.UsedDownloaded : CoreModResultType.UsedBuiltIn;
             return result;
@@ -78,7 +78,7 @@ public class CoreModService : ICoreModService, IDisposable
             _coreModsLock.Release();
         }
     }
-    
+
     private async Task<Dictionary<string, CoreMods>?> GetCacheAsyncInternal(bool refresh)
     {
         // If the cache has not been fetched yet, or we are refreshing
@@ -89,14 +89,14 @@ public class CoreModService : ICoreModService, IDisposable
             {
                 return _cachedCoreModsIndex; // Return the existing core mod index, possibly null
             }
-            
+
             var coreMods = possibleCoreMods.Value;
             // Do not overwrite the index if we have a downloaded index already, and the new index could not be downloaded
-            if(_cacheIsFromInternet && !coreMods.downloaded)
+            if (_cacheIsFromInternet && !coreMods.downloaded)
             {
                 return _cachedCoreModsIndex;
             }
-            
+
             // Otherwise, overwrite and use the new index
             _cacheIsFromInternet = coreMods.downloaded;
             _cachedCoreModsIndex = coreMods.coreMods;
@@ -107,10 +107,10 @@ public class CoreModService : ICoreModService, IDisposable
     private async Task<CoreModInstallResult> InstallAsyncInternal(CoreMods versionedMods)
     {
         using var progress = _progressService.CreateProgress("Installing core mods", versionedMods.Mods.Count);
-        
+
         var existingMods = await _modService.GetModsAsync();
         var result = new CoreModInstallResult();
-        
+
         foreach (var coreMod in versionedMods.Mods)
         {
             bool needDownload = false;
@@ -154,7 +154,7 @@ public class CoreModService : ICoreModService, IDisposable
                         result.FailedToInstall.Add(coreMod);
                         continue;
                     }
-                    
+
                     importedMod = importResult.ImportedMod!;
                     result.Added.Add(coreMod);
                 }
@@ -196,7 +196,7 @@ public class CoreModService : ICoreModService, IDisposable
 
         return result;
     }
-    
+
 
     public void Dispose()
     {

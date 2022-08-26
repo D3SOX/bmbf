@@ -98,7 +98,7 @@ public class Playlist
         }
     }
     private List<BPSong> _songs;
-    
+
     /// <summary>
     /// Additional properties that may be present in the playlist which BMBF does not process.
     /// Examples include the <code>customData</code> property, or <code>syncURL</code>.
@@ -108,7 +108,7 @@ public class Playlist
     /// </summary>
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalProperties { get; set; }
-    
+
     /// <summary>
     /// If non-null, this indicates the SyncSaber feed that this playlist was synced from
     /// </summary>

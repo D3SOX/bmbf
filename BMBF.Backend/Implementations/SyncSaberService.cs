@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
@@ -36,7 +35,7 @@ public class SyncSaberService : ISyncSaberService
         IProgressService progressService,
         IFileImporter fileImporter,
         IEnumerable<IFeed> feeds,
-        IEnumerable<IFeedSettings> feedSettings, 
+        IEnumerable<IFeedSettings> feedSettings,
         IFileSystem io)
     {
         // Match up the feeds with their feed settings
@@ -47,7 +46,7 @@ public class SyncSaberService : ISyncSaberService
             string feedId = feedType.GetFeedId();
             _feedReaders[feedType] = (feedsById[feedId], feedSettingsById[feedId]);
         }
-        
+
         _serializerOptions = serializerOptions;
         _playlistService = playlistService;
         _progressService = progressService;
@@ -63,7 +62,7 @@ public class SyncSaberService : ISyncSaberService
         {
             return _config;
         }
-        
+
         await _configLock.WaitAsync();
         try
         {
@@ -75,7 +74,7 @@ public class SyncSaberService : ISyncSaberService
             _config = await JsonSerializer.DeserializeAsync<SyncSaberConfig>(cfgStream, _serializerOptions)
                       ?? throw new NullReferenceException("Deserialized config was null");
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             if (ex is FileNotFoundException)
             {
@@ -237,7 +236,7 @@ public class SyncSaberService : ISyncSaberService
 
             // Download the new songs from the feed (concurrently)
             await _fileImporter.DownloadSongs(playlist, $"Downloading songs from {type.GetDisplayName()}", progress);
-            
+
             progress.ItemCompleted();
         }
 

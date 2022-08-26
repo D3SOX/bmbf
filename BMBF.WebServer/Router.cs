@@ -6,7 +6,7 @@ using Hydra;
 namespace BMBF.WebServer
 {
     public delegate Task<HttpResponse> Handler(Request request);
-    
+
     public delegate Task<HttpResponse> Middleware(Request request, Handler next);
 
     public class Router

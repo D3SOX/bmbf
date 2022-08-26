@@ -8,8 +8,8 @@ public class ModAdded : IMessage
     {
         Mod = mod;
     }
-    
+
     public MessageType Type => MessageType.ModAdded;
-    
+
     public IMod Mod { get; set; }
 }

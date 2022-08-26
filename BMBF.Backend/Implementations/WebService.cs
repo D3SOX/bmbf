@@ -26,10 +26,10 @@ public class WebService : IHostedService, IDisposable
     private readonly IFileProvider _webRootFileProvider;
     private readonly CancellationTokenSource _cts = new();
     private Task? _webServerTask;
-    
+
     public WebService(BMBFSettings settings,
         FileProviders fileProviders,
-        JsonSerializerOptions serializerOptions, 
+        JsonSerializerOptions serializerOptions,
         IEnumerable<IEndpoints> endpoints,
         AuthEndpoints authEndpoints,
         IAuthService authService)
@@ -47,7 +47,7 @@ public class WebService : IHostedService, IDisposable
         // Add all configured implementations of IEndpoints
         foreach (var endpointObject in endpoints)
         {
-            apiRouter.AddEndpoints(endpointObject); 
+            apiRouter.AddEndpoints(endpointObject);
         }
 
         var authRouter = new Router();
@@ -58,7 +58,7 @@ public class WebService : IHostedService, IDisposable
         // First add our API endpoints
         _server.Mount("/api", apiRouter);
         _server.Mount("/auth", authRouter);
-        
+
         // Make sure that / points to /index.html
         _server.Get("/", req =>
         {
@@ -68,9 +68,9 @@ public class WebService : IHostedService, IDisposable
 
         // Route remaining requests to static files
         _server.Get("*", req => Task.FromResult(StaticFileHandler(req)));
-        
+
         _server.Use(authService.Authenticate);
-        _server.Use(async (req, next) => 
+        _server.Use(async (req, next) =>
         {
             var resp = await next(req);
 
@@ -141,7 +141,7 @@ public class WebService : IHostedService, IDisposable
             Log.Error(ex, "An error occurred while starting the web server");
         }
     }
-    
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _webServerTask = ServerHandler();
@@ -151,7 +151,7 @@ public class WebService : IHostedService, IDisposable
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         Log.Information("Stopping web server");
-        
+
         _cts.Cancel();
         if (_webServerTask != null)
         {

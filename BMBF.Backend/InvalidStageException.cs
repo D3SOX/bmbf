@@ -7,5 +7,5 @@ namespace BMBF.Backend;
 /// </summary>
 public class InvalidStageException : Exception
 {
-    public InvalidStageException(string? message) : base(message) {}
+    public InvalidStageException(string? message) : base(message) { }
 }

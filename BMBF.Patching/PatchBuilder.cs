@@ -37,44 +37,44 @@ namespace BMBF.Patching
             _tagManager = tagManager ?? new TagManager();
             _apkSigner = apkSigner ?? new ApkSigner();
         }
-        
+
         public IPatchBuilder WithModloader(string modloaderName, Version modloaderVersion)
         {
             _manifest.ModloaderName = modloaderName;
             _manifest.ModloaderVersion = modloaderVersion;
             return this;
         }
-        
+
         public IPatchBuilder PatchFile(string apkFilePath, PatchFileDelegate patchFileDelegate)
         {
             _fileModifications.Add(new FileModification(patchFileDelegate, apkFilePath));
             return this;
         }
-        
+
         public IPatchBuilder ModifyFile(string apkFilePath, OverwriteMode overwriteMode, GetFileDelegate getFileDelegate)
         {
             _fileModifications.Add(new FileModification(getFileDelegate, overwriteMode, apkFilePath));
             return this;
         }
-        
+
         public IPatchBuilder ModifyFileAsync(string apkFilePath, OverwriteMode overwriteMode, GetFileAsyncDelegate getFileDelegate)
         {
             _fileModifications.Add(new FileModification(getFileDelegate, overwriteMode, apkFilePath));
             return this;
         }
-        
+
         public IPatchBuilder DisableTagging()
         {
             _tagManager = null;
             return this;
         }
-        
+
         public IPatchBuilder SetAllowExistingTag(bool allowExistingTag)
         {
             _allowExistingTag = allowExistingTag;
             return this;
         }
-        
+
         public IPatchBuilder Sign(string certificate)
         {
             _signingCertificate = certificate;
@@ -133,11 +133,11 @@ namespace BMBF.Patching
                     {
                         sourceFile = fileModification.GetSourceFile();
                     }
-                    else if(fileModification.GetSourceFileAsync != null)
+                    else if (fileModification.GetSourceFileAsync != null)
                     {
                         sourceFile = await fileModification.GetSourceFileAsync(ct);
                     }
-                    
+
                     if (sourceFile == null)
                     {
                         logger.Information($"File modification {fileModification.ApkFilePath} skipped");
@@ -145,7 +145,7 @@ namespace BMBF.Patching
                     }
 
                     using var chosenSourceFile = sourceFile; // Make sure that the file gets disposed
-                    
+
                     fileEntry?.Delete(); // Remove the existing entry
                     await using var fileStream = apkArchive.CreateEntry(fileModification.ApkFilePath).Open();
                     await sourceFile.CopyToAsync(fileStream, ct);
@@ -156,7 +156,7 @@ namespace BMBF.Patching
                 throw new ArgumentException("File modification was not set to open file or patch file");
             }
         }
-        
+
         public async Task PatchAsync(IFileSystem fileSystem, string apkPath, ILogger logger, CancellationToken ct)
         {
             logger.Information($"Patching {Path.GetFileName(apkPath)}");
@@ -171,10 +171,10 @@ namespace BMBF.Patching
                     logger.Information("Tagging APK");
                     _tagManager.AddTag(apkArchive, _manifest, _allowExistingTag);
                 }
-                
+
                 // Actually modify the APK
                 await DoFileModifications(apkArchive, logger, ct);
-                
+
                 logger.Information("Disposing archive (this takes a minute)");
             }
 

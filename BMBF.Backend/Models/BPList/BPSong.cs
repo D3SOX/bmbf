@@ -15,7 +15,7 @@ public class BPSong : IEquatable<BPSong>
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Key { get; set; }
-    
+
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalProperties { get; set; }
 

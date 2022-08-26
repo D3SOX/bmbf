@@ -38,19 +38,19 @@ public class ProgressService : IProgressService
 
         public int ChangeTolerance { get; set; }
         public bool RepresentAsPercentage { get; }
-        
+
         public IProgress? Parent { get; }
 
         private readonly ProgressService _progressService;
         private int _completed;
         private int _lastChange;
         private bool _disposed;
-        
+
         public Progress(ProgressService progressService,
             string name,
             int total,
             bool representAsPercentage,
-            int changeTolerance, 
+            int changeTolerance,
             IProgress? parent,
             long id)
         {
@@ -71,7 +71,7 @@ public class ProgressService : IProgressService
                 _progressService.InvokeProgressUpdated(this);
             }
         }
-        
+
         public void Dispose()
         {
             if (_disposed)
@@ -82,13 +82,13 @@ public class ProgressService : IProgressService
             _progressService.UnregisterProgress(this);
         }
     }
-    
+
     public event EventHandler<IProgress>? Updated;
     public event EventHandler<IProgress>? Added;
     public event EventHandler<IProgress>? Removed;
 
     public IReadOnlyDictionary<long, IProgress> CurrentOperations => _currentOperations;
-    
+
     private readonly ConcurrentDictionary<long, IProgress> _currentOperations = new();
 
     private int _currentProgressId;
@@ -96,7 +96,7 @@ public class ProgressService : IProgressService
     public IProgress CreateProgress(string name, int total, bool representAsPercentage = false, int changeTolerance = 0, IProgress? parent = null)
     {
         int progressId = Interlocked.Increment(ref _currentProgressId);
-        
+
         var progress = new Progress(this, name, total, representAsPercentage, changeTolerance, parent, progressId);
         _currentOperations[progressId] = progress;
         Added?.Invoke(this, progress);
@@ -120,5 +120,5 @@ public class ProgressService : IProgressService
     {
         Updated?.Invoke(this, progress);
     }
-    
+
 }

@@ -15,17 +15,17 @@ public interface IProgress : IDisposable
     /// This is not guaranteed to be unique
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     /// Total value that the progress represents (i.e. the full value)
     /// </summary>
     int Total { get; }
-    
+
     /// <summary>
     /// Unique identifier for each operation.
     /// </summary>
     long Id { get; }
-    
+
     /// <summary>
     /// The current progress, how many out of the total items have been completely
     /// Note: If incrementing this concurrently, you should use <see cref="ItemCompleted"/>
@@ -36,19 +36,19 @@ public interface IProgress : IDisposable
     /// Increments <see cref="Completed"/> in a thread-safe manner.
     /// </summary>
     void ItemCompleted();
-    
+
     /// <summary>
     /// If <see cref="Completed"/> changes by an amount less than or equal to this value, the change will not be
     /// forecast to the frontend.
     /// </summary>
     [JsonIgnore]
     int ChangeTolerance { get; set; }
-    
+
     /// <summary>
     /// Whether or not this progress will be represented as a percentage.
     /// </summary>
     bool RepresentAsPercentage { get; }
-    
+
     /// <summary>
     /// Progress of the larger operation that this operation is a part of
     /// </summary>
@@ -58,7 +58,7 @@ public interface IProgress : IDisposable
     /// <summary>
     /// <see cref="IProgress.Id"/> of <see cref="Parent"/>
     /// </summary>
-    [JsonPropertyName("parent")] 
+    [JsonPropertyName("parent")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public long? ParentId => Parent?.Id;
 }

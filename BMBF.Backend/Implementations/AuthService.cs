@@ -35,7 +35,7 @@ public class AuthService : IAuthService
         _io.Directory.CreateDirectory(settings.RootDataPath);
         _authConfigPath = Path.Combine(settings.RootDataPath, settings.AuthFileName);
     }
-    
+
     /// <summary>
     /// Default unauthorized response from BMBF.
     /// </summary>
@@ -49,17 +49,17 @@ public class AuthService : IAuthService
 
     public async Task<HttpResponse> Authenticate(Request request, Handler next)
     {
-        var cfg= await GetAuthConfig();
+        var cfg = await GetAuthConfig();
         if (!cfg.AuthEnabled)
         {
             // Skip straight to the next handler if authentication is disabled
             return await next(request);
         }
-        
+
 #if AUTHENTICATE_LOOPBACK
-#else 
+#else
         // If the peer is a loopback address, we skip authentication since BMBF is being viewed inside the Quest
-        if(request.Inner.Remote is IPEndPoint endPoint && IPAddress.IsLoopback(endPoint.Address))
+        if (request.Inner.Remote is IPEndPoint endPoint && IPAddress.IsLoopback(endPoint.Address))
         {
             return await next(request);
         }
@@ -96,7 +96,7 @@ public class AuthService : IAuthService
         {
             return Unauthorized;
         }
-        
+
         string[] split = decodedUserPassPair.Split(":");
         if (split.Length != 2)
         {
@@ -128,7 +128,7 @@ public class AuthService : IAuthService
             {
                 return _authConfig;
             }
-            
+
             await using var authFileStream = _io.File.OpenRead(_authConfigPath);
             _authConfig = await JsonSerializer.DeserializeAsync<AuthConfig>(authFileStream, _serializerOptions)
                           ?? throw new NullReferenceException("Deserialized result was null");
@@ -173,7 +173,7 @@ public class AuthService : IAuthService
         {
             _io.File.Delete(_authConfigPath);
         }
-        
+
         await using var authFileStream = _io.File.OpenWrite(_authConfigPath);
         await JsonSerializer.SerializeAsync(authFileStream, _authConfig, _serializerOptions);
     }

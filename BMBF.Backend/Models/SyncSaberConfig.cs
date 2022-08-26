@@ -8,7 +8,7 @@ public class SyncSaberConfig
     /// Settings for each map feed
     /// </summary>
     public Dictionary<FeedType, FeedSettings> Feeds { get; set; } = new();
-    
+
     /// <summary>
     /// Username for syncing mappers & bookmarks from BeastSaber.
     /// These feeds will be ignored if this is null!

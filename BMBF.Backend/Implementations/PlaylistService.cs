@@ -229,7 +229,7 @@ public class PlaylistService : IPlaylistService, IDisposable
             {
                 Log.Information($"Playlist {entry.Key} deleted");
                 cache.Remove(entry.Key, out _);
-                
+
                 entry.Value.Updated -= PlaylistUpdated;
                 if (notify)
                 {

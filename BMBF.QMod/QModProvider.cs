@@ -160,7 +160,7 @@ namespace BMBF.QMod
 
                 UnloadModInternal(existing);
             }
-            
+
             // Check whether or not the mod is installed
             // We deliberately do NOT notify changes yet, as this is only setting the initial mod status, which is not
             // actually a status change
