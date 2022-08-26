@@ -154,7 +154,7 @@ namespace BMBF.QMod
                 {
                     Logger.Information($"Uninstalling {existing.Id} v{existing.Version} to upgrade it to v{mod.Version}");
                     // We use UninstallSelfUnsafe here to avoid having to uninstall then reinstall the dependants
-                    existing.UninstallSelfUnsafe(Logger);
+                    existing.UninstallSelfUnsafe();
 
                     // Now we have to uninstall any dependant mods that will not be compatible with a newer version of the mod
                     foreach (var m in Mods.Values)

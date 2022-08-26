@@ -238,19 +238,18 @@ namespace BMBF.QMod
             }
         }
 
-        internal async Task UninstallAsyncInternal(int depth = 0)
+        internal async Task UninstallAsyncInternal()
         {
-            var logger = CreateInstallLogger(depth);
-            UninstallSelfUnsafe(logger);
+            UninstallSelfUnsafe();
 
 
             // Uninstall mods depending on this mod (and collect in list)
             var uninstalledDependants = new List<QMod>();
             foreach (var mod in _provider.Mods.Values.Where(m => m.Installed && m.Mod.Dependencies.Any(d => d.Id == Id)))
             {
-                logger.Warning($"Uninstalling dependant mod {mod.Id} v{mod.Version}: ");
+                Logger.Warning($"Uninstalling dependant mod {mod.Id} v{mod.Version}: ");
                 uninstalledDependants.Add(mod);
-                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
+                await mod.UninstallAsyncInternal().ConfigureAwait(false);
             }
 
             // Uninstall libraries that no installed mods depend on
@@ -259,11 +258,11 @@ namespace BMBF.QMod
                          m.Mod.IsLibrary &&
                          !_provider.Mods.Values.Any(dependingMod => dependingMod.Installed && dependingMod.Mod.Dependencies.Any(d => d.Id == m.Id))))
             {
-                logger.Information($"Uninstalling library {mod.Id} v{mod.Version}: (as no installed mods depend on it)");
-                await mod.UninstallAsyncInternal(depth + 1).ConfigureAwait(false);
+                Logger.Information($"Uninstalling library {mod.Id} v{mod.Version}: (as no installed mods depend on it)");
+                await mod.UninstallAsyncInternal().ConfigureAwait(false);
             }
 
-            logger.Information($"Uninstalled {Id} v{Version}. Removed {Mod.ModFileNames.Count} mod files, {Mod.LibraryFileNames.Count} lib files and {Mod.FileCopies.Count} file copies");
+            Logger.Information($"Uninstalled {Id} v{Version}. Removed {Mod.ModFileNames.Count} mod files, {Mod.LibraryFileNames.Count} lib files and {Mod.FileCopies.Count} file copies");
 
             _provider.InvokeModStatusChanged(this); // Now we actually forward the uninstall to the frontend
         }
@@ -272,7 +271,7 @@ namespace BMBF.QMod
         /// Uninstalls the mod without uninstalling its dependants or removing unused libraries.
         /// Sets the mod to uninstalled but does not notify the change.
         /// </summary>
-        internal void UninstallSelfUnsafe(ILogger logger)
+        internal void UninstallSelfUnsafe()
         {
             foreach (string m in Mod.ModFileNames)
             {
@@ -280,7 +279,7 @@ namespace BMBF.QMod
                 if (FileSystem.File.Exists(destPath))
                 {
                     FileSystem.File.Delete(destPath);
-                    logger.Debug($"Deleted {m} from mods");
+                    Logger.Debug($"Deleted {m} from mods");
                 }
             }
 
@@ -293,7 +292,7 @@ namespace BMBF.QMod
                 if (FileSystem.File.Exists(destPath))
                 {
                     FileSystem.File.Delete(destPath);
-                    logger.Debug($"Deleted {lib} from libs");
+                    Logger.Debug($"Deleted {lib} from libs");
                 }
             }
 
@@ -301,7 +300,7 @@ namespace BMBF.QMod
             {
                 if (FileSystem.File.Exists(fileCopy.Destination))
                 {
-                    logger.Debug($"Deleted {fileCopy.Destination}");
+                    Logger.Debug($"Deleted {fileCopy.Destination}");
                     FileSystem.File.Delete(fileCopy.Destination);
                 }
             }
