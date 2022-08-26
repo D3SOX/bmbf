@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using Hydra;
-using MimeMapping;
+using MimeTypes;
 
 namespace BMBF.WebServer;
 
@@ -80,7 +80,7 @@ public static class Responses
 
         var fileStream = System.IO.File.OpenRead(path);
 
-        string contentType = MimeUtility.GetMimeMapping(path);
+        string contentType = MimeTypeMap.GetMimeType(path);
         return Stream(fileStream, 200, contentType);
     }
 
