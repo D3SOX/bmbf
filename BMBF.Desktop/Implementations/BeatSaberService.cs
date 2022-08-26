@@ -147,4 +147,9 @@ public class BeatSaberService : IBeatSaberService, IDisposable
         _appUpdateDebouncey.Dispose();
         _appInfoLoadLock.Dispose();
     }
+
+    public void Launch()
+    {
+        Log.Warning("Beat Saber was requested to be launched, but this cannot happen on the PC wrapper");
+    }
 }

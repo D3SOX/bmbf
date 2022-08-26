@@ -25,4 +25,10 @@ public class BeatSaberEndpoints : IEndpoints
         }
         return Responses.Json(installInfo);
     }
+
+    [HttpPost("/beatsaber/launch")]
+    public void Launch()
+    {
+        _beatSaberService.Launch();
+    }
 }

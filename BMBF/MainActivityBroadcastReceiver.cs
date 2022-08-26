@@ -6,7 +6,7 @@ namespace BMBF;
 /// <summary>
 /// Listens for the webserver startup broadcast
 /// </summary>
-public class WebServerStartedReceiver : BroadcastReceiver
+public class MainActivityBroadcastReceiver : BroadcastReceiver
 {
     /// <summary>
     /// Invoked when the web server finishes starting up
@@ -31,6 +31,11 @@ public class WebServerStartedReceiver : BroadcastReceiver
     /// Argument is package ID
     /// </summary>
     public event EventHandler<string>? PackageUninstallTriggered;
+
+    /// <summary>
+    /// Invoked to trigger launching a package.
+    /// </summary>
+    public event EventHandler<string>? PackageLaunchTriggered;
 
     /// <summary>
     /// Invoked when the service requests the activity to quit
@@ -64,6 +69,10 @@ public class WebServerStartedReceiver : BroadcastReceiver
         else if (intent.Action == BMBFIntents.TriggerPackageUninstall)
         {
             PackageUninstallTriggered?.Invoke(this, intent.GetStringExtra("PackageId")!);
+        }
+        else if (intent.Action == BMBFIntents.TriggerPackageLaunch)
+        {
+            PackageLaunchTriggered?.Invoke(this, intent.GetStringExtra("PackageId")!);
         }
         else if (intent.Action == BMBFIntents.Quit)
         {

@@ -14,6 +14,8 @@ public static class BMBFIntents
 
     public const string TriggerPackageUninstall = "BMBFTriggerPackageUninstall";
 
+    public const string TriggerPackageLaunch = "BMBFTriggerPackageLaunch";
+
     public const string Quit = "BMBFQuit";
 
     public const string Restart = "BMBFRestart";

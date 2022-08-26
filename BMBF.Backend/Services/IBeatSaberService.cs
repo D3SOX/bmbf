@@ -27,6 +27,11 @@ public interface IBeatSaberService
     void TriggerUninstall();
 
     /// <summary>
+    /// Launches Beat Saber
+    /// </summary>
+    void Launch();
+
+    /// <summary>
     /// Called whenever Beat Saber is uninstalled or installed
     /// </summary>
     event EventHandler<InstallationInfo?> AppChanged;

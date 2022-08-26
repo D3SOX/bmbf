@@ -13,7 +13,7 @@ namespace BMBF;
 [Activity(Name = "com.weareneutralaboutoculus.BMBF.MainActivity", Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
 public class MainActivity : Activity
 {
-    private WebServerStartedReceiver? _receiver;
+    private MainActivityBroadcastReceiver? _receiver;
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
@@ -32,11 +32,12 @@ public class MainActivity : Activity
         intentFilter.AddAction(BMBFIntents.WebServerFailedToStartIntent);
         intentFilter.AddAction(BMBFIntents.TriggerPackageInstall);
         intentFilter.AddAction(BMBFIntents.TriggerPackageUninstall);
+        intentFilter.AddAction(BMBFIntents.TriggerPackageLaunch);
         intentFilter.AddAction(BMBFIntents.Quit);
         intentFilter.AddAction(BMBFIntents.Restart);
         if (_receiver == null)
         {
-            _receiver = new WebServerStartedReceiver();
+            _receiver = new MainActivityBroadcastReceiver();
             // Navigate to the main page when WebServer startup finishes
             _receiver.WebServerStartupComplete +=
                 (_, port) => RunOnUiThread(() => OnLoaded(port));
@@ -49,6 +50,7 @@ public class MainActivity : Activity
 
             _receiver.PackageInstallTriggered += (_, apkPath) => TriggerPackageInstall(apkPath);
             _receiver.PackageUninstallTriggered += (_, packageId) => TriggerPackageUninstall(packageId);
+            _receiver.PackageLaunchTriggered += (_, packageId) => TriggerPackageLaunch(packageId);
             _receiver.Restart += (_, _) => Restart();
         }
         RegisterReceiver(_receiver, intentFilter);
@@ -78,6 +80,13 @@ public class MainActivity : Activity
             Intent.ActionDelete,
             Android.Net.Uri.FromParts("package", packageId, null)
         );
+        StartActivity(intent);
+    }
+
+    private void TriggerPackageLaunch(string packageId)
+    {
+        var intent = new Intent();
+        intent.SetComponent(new ComponentName(packageId, "com.unity3d.player.UnityPlayerActivity"));
         StartActivity(intent);
     }
 

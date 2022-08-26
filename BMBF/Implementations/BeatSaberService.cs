@@ -79,6 +79,14 @@ public class BeatSaberService : BroadcastReceiver, IBeatSaberService, IDisposabl
         _bmbfService.SendBroadcast(intent);
     }
 
+    public void Launch()
+    {
+        Intent intent = new Intent(BMBFIntents.TriggerPackageLaunch);
+        intent.PutExtra("PackageId", _packageId);
+        _bmbfService.SendBroadcast(intent);
+    }
+
+
     private async Task<InstallationInfo?> LoadInstallationInfoAsync()
     {
         var packageInfo = _packageManager.GetInstalledPackages(0).FirstOrDefault(package => package.PackageName == _packageId);
