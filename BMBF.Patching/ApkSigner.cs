@@ -24,7 +24,6 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Abstractions;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
@@ -55,6 +54,69 @@ namespace BMBF.Patching
     {
         private static readonly Encoding Encoding = new UTF8Encoding();
         private static readonly SHA1 Sha = SHA1.Create();
+
+        /// <summary>
+        /// Parses the existing signature in the given APK file and determines if any of the hashes can be reused.
+        /// The keys in the returned dictionary are the full file paths, while the values are the digests in the previous manifest.
+        /// This includes the "SHA-256-Digest: " prefix - since the digests returned may not be SHA256, but could be SHA1, etc.
+        /// Thus we retain the original prefix and write it to the new manifest.
+        /// 
+        /// This method also checks the time at which at the APK was previously signed. If a file was modified after this time,
+        /// the existing digest of the file will not be returned, as the file needs to be hashed again.
+        /// </summary>
+        /// <returns></returns>
+        private async Task<Dictionary<string, string>> ParseExistingSignature(ZipArchive apkArchive)
+        {
+            var result = new Dictionary<string, string>();
+
+            var manifestEntry = apkArchive.GetEntry("META-INF/MANIFEST.MF");
+            if (manifestEntry == null) return result; // APK was not signed
+
+            await using var manifestStream = manifestEntry.Open();
+            using var manifest = new StreamReader(manifestStream);
+
+            if ((await manifest.ReadLineAsync()) != "Manifest-Version: 1.0") return result; // Incorrect manifest version
+            while (await manifest.ReadLineAsync() != "") { }
+
+            while (true)
+            {
+                var name = new StringBuilder();
+                string? firstNameLine = await manifest.ReadLineAsync();
+
+                if (firstNameLine == null) return result; // Formatting issue: no file name or EOF
+                name.Append(firstNameLine.AsSpan(6)); // Skip "Name: "
+
+                string digest;
+                while (true)
+                {
+                    string? nextNameLine = await manifest.ReadLineAsync();
+                    if (nextNameLine == null) return result; // Formatting issue or EOF
+                    else if (nextNameLine.StartsWith(' ')) name.Append(nextNameLine.AsSpan(1));
+                    else if (nextNameLine.Split(':').First().Contains("Digest"))
+                    {
+                        digest = nextNameLine;
+                        break;
+                    }
+                    else
+                    {
+                        return result; // Formattting issue or EOF
+                    }
+                }
+
+                string entryName = name.ToString();
+                var entry = apkArchive.GetEntry(entryName);
+
+                // If the entry was modified before the APK was signed
+                if (entry != null && entry.LastWriteTime <= manifestEntry.LastWriteTime)
+                {
+                    // We can use the existing digest
+                    result[entryName] = digest;
+                }
+
+                await manifest.ReadLineAsync();
+            }
+
+        }
 
         /// <summary>
         /// Signs the signature file's content using the given certificate, and returns the RSA signature.
@@ -122,20 +184,26 @@ namespace BMBF.Patching
             return (cert, privateKey);
         }
 
+
         /// <summary>
-        /// Writes the MANIFEST.MF and signature file hashes for the given entry
+        /// Writes the MANIFEST.MF and signature file hashes for the given entry.
+        /// Reuses any existing hashes in <paramref name="digests"/>
         /// </summary>
-        private async Task WriteEntryHash(ZipArchiveEntry entry, Stream manifestStream, Stream signatureStream)
+        private async Task WriteEntryHash(ZipArchiveEntry entry, Stream manifestStream, Stream signatureStream, Dictionary<string, string> digests)
         {
-            await using Stream sourceStream = entry.Open();
-            byte[] hash = Sha.ComputeHash(sourceStream);
+            if (!digests.TryGetValue(entry.FullName, out var digestWithAlgorithm))
+            {
+                await using Stream sourceStream = entry.Open();
+                byte[] hash = Sha.ComputeHash(sourceStream);
+                digestWithAlgorithm = $"SHA1-Digest: {Convert.ToBase64String(hash)}";
+            }
 
             // Write the digest for this entry to the manifest
             await using var sectStream = new MemoryStream();
             await using (var sectWriter = OpenStreamWriter(sectStream))
             {
                 await sectWriter.WriteLineAsync($"Name: {entry.FullName}");
-                await sectWriter.WriteLineAsync($"SHA1-Digest: {Convert.ToBase64String(hash)}");
+                await sectWriter.WriteLineAsync(digestWithAlgorithm);
                 await sectWriter.WriteLineAsync();
             }
 
@@ -158,7 +226,7 @@ namespace BMBF.Patching
             return new StreamWriter(stream, Encoding, 1024, true);
         }
 
-        public async Task SignApkAsync(IFileSystem fileSystem, string path, string pemData, string signerName, CancellationToken ct)
+        public async Task SignApkAsync(ZipArchive apkArchive, string pemData, string signerName, CancellationToken ct)
         {
             // Create streams to save the signature data to during the first path
             await using var manifestFile = new MemoryStream();
@@ -170,61 +238,50 @@ namespace BMBF.Patching
                 await manifestWriter.WriteLineAsync();
             }
 
-            // Begin the first pass
-            // In this pass, we compute the hash of each file within the APK, and save it in the manifest/sig files
-            // Two passes are used since we require ZipArchiveMode.Update to save the hash
-            // In this pass, we can open the APK with ZipArchiveMode.Read and avoid increasing the save time in the
-            // update pass, as opening a file with ZipArchiveMode.Update triggers a recompression during dispose
-            await using (var apkStream = fileSystem.File.OpenRead(path))
-            using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Read))
+            var digests = await ParseExistingSignature(apkArchive);
+
+            foreach (var entry in apkArchive.Entries.Where(entry =>
+                            !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
             {
-                foreach (var entry in apkArchive.Entries.Where(entry =>
-                             !entry.FullName.StartsWith("META-INF"))) // Skip signature related files
-                {
-                    ct.ThrowIfCancellationRequested();
-                    await WriteEntryHash(entry, manifestFile, sigFileBody);
-                }
+                ct.ThrowIfCancellationRequested();
+                await WriteEntryHash(entry, manifestFile, sigFileBody, digests);
             }
 
-            await using (var apkStream = fileSystem.File.Open(path, FileMode.Open, FileAccess.ReadWrite))
-            using (var apkArchive = new ZipArchive(apkStream, ZipArchiveMode.Update))
+            // Delete the previous signature first!
+            foreach (var entry in apkArchive.Entries.Where(entry => entry.FullName.StartsWith("META-INF")).ToList())
             {
-                // Delete the previous signature first!
-                foreach (var entry in apkArchive.Entries.Where(entry => entry.FullName.StartsWith("META-INF")).ToList())
-                {
-                    entry.Delete();
-                }
-
-                await using var signaturesFile = apkArchive.CreateEntry("META-INF/BS.SF").Open();
-                await using var rsaFile = apkArchive.CreateEntry("META-INF/BS.RSA").Open();
-                await using var manifestStream = apkArchive.CreateEntry("META-INF/MANIFEST.MF").Open();
-
-                // Find the hash of the manifest, then we can finally copy it to MANIFEST.MF
-                manifestFile.Position = 0;
-                byte[] manifestHash = Sha.ComputeHash(manifestFile);
-                manifestFile.Position = 0;
-                await manifestFile.CopyToAsync(manifestStream, ct);
-
-                await using (var signatureWriter = OpenStreamWriter(signaturesFile))
-                {
-                    await signatureWriter.WriteLineAsync("Signature-Version: 1.0");
-                    await signatureWriter.WriteLineAsync($"SHA1-Digest-Manifest: {Convert.ToBase64String(manifestHash)}");
-                    await signatureWriter.WriteLineAsync($"Created-By: {signerName}");
-                    await signatureWriter.WriteLineAsync();
-                }
-
-                // Copy the entry hashes into the signature file
-                sigFileBody.Position = 0;
-                await sigFileBody.CopyToAsync(signaturesFile, ct);
-                signaturesFile.Position = 0;
-
-                await using var sigFileMs = new MemoryStream();
-                await signaturesFile.CopyToAsync(sigFileMs, ct);
-
-                // Actually sign the digest file, and write to the RSA file
-                byte[] keyFile = GetSignature(sigFileMs.ToArray(), pemData);
-                await rsaFile.WriteAsync(keyFile, ct);
+                entry.Delete();
             }
+
+            await using var signaturesFile = apkArchive.CreateEntry("META-INF/BS.SF").Open();
+            await using var rsaFile = apkArchive.CreateEntry("META-INF/BS.RSA").Open();
+            await using var manifestStream = apkArchive.CreateEntry("META-INF/MANIFEST.MF").Open();
+
+            // Find the hash of the manifest, then we can finally copy it to MANIFEST.MF
+            manifestFile.Position = 0;
+            byte[] manifestHash = Sha.ComputeHash(manifestFile);
+            manifestFile.Position = 0;
+            await manifestFile.CopyToAsync(manifestStream, ct);
+
+            await using (var signatureWriter = OpenStreamWriter(signaturesFile))
+            {
+                await signatureWriter.WriteLineAsync("Signature-Version: 1.0");
+                await signatureWriter.WriteLineAsync($"SHA1-Digest-Manifest: {Convert.ToBase64String(manifestHash)}");
+                await signatureWriter.WriteLineAsync($"Created-By: {signerName}");
+                await signatureWriter.WriteLineAsync();
+            }
+
+            // Copy the entry hashes into the signature file
+            sigFileBody.Position = 0;
+            await sigFileBody.CopyToAsync(signaturesFile, ct);
+            signaturesFile.Position = 0;
+
+            await using var sigFileMs = new MemoryStream();
+            await signaturesFile.CopyToAsync(sigFileMs, ct);
+
+            // Actually sign the digest file, and write to the RSA file
+            byte[] keyFile = GetSignature(sigFileMs.ToArray(), pemData);
+            await rsaFile.WriteAsync(keyFile, ct);
         }
 
         public string GenerateNewCertificatePem()

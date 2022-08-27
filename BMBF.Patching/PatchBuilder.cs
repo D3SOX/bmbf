@@ -148,7 +148,7 @@ namespace BMBF.Patching
 
                     fileEntry?.Delete(); // Remove the existing entry
                     await using var fileStream = apkArchive.CreateEntry(fileModification.ApkFilePath).Open();
-                    await sourceFile.CopyToAsync(fileStream, ct);
+                    await sourceFile.CopyToAsync(fileStream, 1024, ct);
                     continue;
                 }
 
@@ -175,13 +175,13 @@ namespace BMBF.Patching
                 // Actually modify the APK
                 await DoFileModifications(apkArchive, logger, ct);
 
-                logger.Information("Disposing archive (this takes a minute)");
-            }
+                if (_signingCertificate != null)
+                {
+                    logger.Information("Signing APK");
+                    await _apkSigner.SignApkAsync(apkArchive, _signingCertificate, _manifest.PatcherName, ct);
+                }
 
-            if (_signingCertificate != null)
-            {
-                logger.Information("Signing APK");
-                await _apkSigner.SignApkAsync(fileSystem, apkPath, _signingCertificate, _manifest.PatcherName, ct);
+                logger.Information("Disposing archive (this takes a minute)");
             }
         }
     }
