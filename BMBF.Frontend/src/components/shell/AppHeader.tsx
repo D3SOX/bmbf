@@ -1,6 +1,6 @@
-import { Group, Header, ActionIcon } from '@mantine/core';
+import { Group, Header, ActionIcon, useMantineColorScheme } from '@mantine/core';
 import { Link, useMatch, useResolvedPath } from 'react-router-dom';
-import { IconHome, IconMusic, IconPlaylist, IconRefresh, IconSettings, IconTool } from '@tabler/icons';
+import { IconHome, IconMoonStars, IconMusic, IconPlaylist, IconRefresh, IconSettings, IconSun, IconTool } from '@tabler/icons';
 import React from 'react';
 import NavigationButton from './NavigationButton';
 import { useNeedsSetup } from '../../api/beatsaber';
@@ -45,6 +45,9 @@ function AppHeader() {
 
   const needsSetup = useNeedsSetup();
 
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const dark = colorScheme === 'dark';
+
   return (
     <Header height={60}>
       <Group
@@ -66,6 +69,14 @@ function AppHeader() {
         {pages.map(page => (
           <NavigationButton key={page.to} page={page} disabled={needsSetup} />
         ))}
+        <ActionIcon
+          variant="outline"
+          color={dark ? "yellow" : 'blue'}
+          onClick={() => toggleColorScheme()}
+          title="Toggle color scheme"
+        >
+          {dark ? <IconSun size={18} /> : <IconMoonStars size={18} />}
+        </ActionIcon>
       </Group>
     </Header>
   );
