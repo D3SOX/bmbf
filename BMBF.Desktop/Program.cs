@@ -61,5 +61,6 @@ Log.Information("BMBF startup complete");
 
 Console.ReadKey();
 await host.StopAsync();
+host.Dispose();
 Log.Information("Goodbye!");
 Log.CloseAndFlush();
