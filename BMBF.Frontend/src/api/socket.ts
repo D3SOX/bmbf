@@ -125,7 +125,7 @@ function handleEvent(event: SocketMessage) {
 }
 
 export function startSocket() {
-  if (!socket) {
+  if (!socket || (socket.readyState !== WebSocket.CONNECTING && socket.readyState !== WebSocket.OPEN)) {
     const ws = new WebSocket(`ws://${API_HOST}/api/ws`);
     ws.addEventListener('message', socketEvent => {
       try {
