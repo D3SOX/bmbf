@@ -60,4 +60,6 @@ public class BMBFSettings
     public int MaxConcurrentSongLoads { get; set; }
 
     public Uri BeatSaverBaseUri { get; set; }
+
+    public string DefaultSongKey { get; set; }
 }

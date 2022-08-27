@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
@@ -61,15 +62,23 @@ public class SetupService : ISetupService, IDisposable
     private readonly IFileSystem _io;
     private readonly Func<IPatchBuilder> _patcherFactory;
     private readonly ICoreModService _coreModService;
+    private readonly IBeatSaverService _beatSaverService;
+    private readonly ISongService _songService;
+    private readonly string _defaultSongKey;
 
     public SetupService(IBeatSaberService beatSaberService,
         IAssetService assetService,
         BMBFSettings settings,
         IFileSystem io,
         Func<IPatchBuilder> patcherFactory,
-        ICoreModService coreModService)
+        ICoreModService coreModService,
+        ISongService songService,
+        IBeatSaverService beatSaverService)
     {
         _beatSaberService = beatSaberService;
+        _beatSaverService = beatSaverService;
+        _songService = songService;
+        _defaultSongKey = settings.DefaultSongKey;
         _assetService = assetService;
         _patcherFactory = patcherFactory;
         _coreModService = coreModService;
@@ -534,7 +543,14 @@ public class SetupService : ISetupService, IDisposable
             // Install core mods
             await _coreModService.InstallAsync(true);
 
-            // Install a song by default?
+            // Install the very very fun default song
+            await using var defaultSongStream = await _beatSaverService.DownloadSongByKey(_defaultSongKey);
+            if (defaultSongStream != null)
+            {
+                _logger.Information($"Installing the default song (key: {_defaultSongKey})");
+                using var archive = new ZipArchive(defaultSongStream, ZipArchiveMode.Read);
+                await _songService.ImportSongAsync(new ArchiveSongProvider(archive), "DefaultSong.zip");
+            }
 
             QuitSetupInternal(true);
             Log.Information("Setup finished");
