@@ -18,7 +18,6 @@ import { sendErrorNotification } from './api/base';
 
 export default function App() {
   const [subsequentConnect, setSubsequentConnect] = useState<boolean>(false);
-  const [errorRetry, setErrorRetry] = useState(0)
 
   useEffect(() => {
     // connect to websocket
@@ -32,7 +31,6 @@ export default function App() {
 
   // Load on connect
   useSocketEvent("open", () => {
-    setErrorRetry(0);
     (async () => {
       // initial data load
       await fetchModdableVersions();
@@ -42,17 +40,7 @@ export default function App() {
   })
 
   useSocketEvent("error", (event) => {
-    if (errorRetry > 5) {
-      console.error('Tried too many times to reconnect with errors, stopping', event);
-      sendErrorNotification("Tried too many times to reconnect with errors, stopping")
-      return
-    }
-
     console.error('Error while attempting to connect socket', event);
-    sendErrorNotification('Error connecting socket');
-    setErrorRetry(e => e++)
-    setSubsequentConnect(true);
-    startSocket()
   });
 
   // Reconnect to backend
