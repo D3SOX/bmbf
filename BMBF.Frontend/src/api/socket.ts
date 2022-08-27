@@ -7,6 +7,7 @@ import { setupStore } from './setup';
 import { beatSaberStore } from './beatsaber';
 import { SetupStage } from '../types/setup';
 import { progressStore } from './progress';
+import { useEffect, useState } from 'react';
 
 let socket: WebSocket | null = null;
 
@@ -136,6 +137,31 @@ export function startSocket() {
     });
     socket = ws;
   }
+}
+
+export function useSocketEvent<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | AddEventListenerOptions) {
+  useEffect(() => {
+    if (!socket) return;
+
+    const s = socket;
+    s.addEventListener(type, listener, options);
+
+    return () => {
+      s.removeEventListener(type, listener, options)
+    };
+  }, [socket, type, listener, options]);
+}
+
+export function useIsSocketClosed() {
+  const [closed, setClosed] = useState<boolean>((socket?.readyState ?? WebSocket.CLOSED) !== WebSocket.OPEN);
+  useSocketEvent("close", () => {
+    setClosed(true);
+  })
+  useSocketEvent("open", () => {
+    setClosed(false);
+  })
+
+  return closed;
 }
 
 export function stopSocket() {
