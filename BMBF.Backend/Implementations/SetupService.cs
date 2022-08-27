@@ -567,15 +567,10 @@ public class SetupService : ISetupService, IDisposable
 
         if (CurrentStatus is { IsInProgress: true })
         {
-            Log.Information("Waiting for setup stage to finish");
-            _cts.Cancel();
-            Thread.Sleep(10000);
+            Log.Warning("Setup stage in progress while shutting down. This will be forcefully aborted!");
 
-            if (CurrentStatus.IsInProgress)
-            {
-                Log.Warning("Setup stage took too long to shut down");
-                CurrentStatus.IsInProgress = false;
-            }
+            // Make sure that the status isn't saved as in-progress
+            CurrentStatus.IsInProgress = false;
             ProcessStatusChange().Wait();
         }
         _cts.Dispose();
