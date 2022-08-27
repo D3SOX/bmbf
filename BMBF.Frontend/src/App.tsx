@@ -8,7 +8,7 @@ import Songs from './pages/Songs';
 import SyncSaber from './pages/SyncSaber';
 import Tools from './pages/Tools';
 import { NotificationsProvider } from '@mantine/notifications';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { beatSaberStore, fetchInstallationInfo } from './api/beatsaber';
 import Setup from './pages/Setup';
 import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup';
@@ -16,6 +16,8 @@ import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './ap
 import { useSnapshot } from 'valtio';
 
 export default function App() {
+  const [subsequentConnect, setSubsequentConnect] = useState<boolean>(false);
+
   useEffect(() => {
     // connect to websocket
     startSocket();
@@ -38,10 +40,11 @@ export default function App() {
 
   // Reconnect to backend
   useSocketEvent("close", () => {
+    setSubsequentConnect(true);
     startSocket()
   });
 
-  const isClosed = useIsSocketClosed();
+  const isClosed = useIsSocketClosed() && subsequentConnect;
 
   return (
     <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme: 'dark' }}>
