@@ -175,10 +175,11 @@ public class SetupService : ISetupService, IDisposable
             {
                 _cts.Cancel(); // Cancel the current setup stage
                 Log.Warning("Attempted to quit setup while setup stage was in progress, waiting for the stage to pick up the cancellation");
-                await Task.Delay(5000);
+                await Task.Delay(15000);
                 if (CurrentStatus.IsInProgress)
                 {
-                    Log.Warning("Setup stage did not shut down, quitting setup anyway");
+                    Log.Warning("Cancelling setup stage took too long - cannot quit setup");
+                    return;
                 }
             }
 
@@ -568,12 +569,14 @@ public class SetupService : ISetupService, IDisposable
         {
             Log.Information("Waiting for setup stage to finish");
             _cts.Cancel();
-            Thread.Sleep(5000);
+            Thread.Sleep(10000);
 
             if (CurrentStatus.IsInProgress)
             {
                 Log.Warning("Setup stage took too long to shut down");
+                CurrentStatus.IsInProgress = false;
             }
+            ProcessStatusChange().Wait();
         }
         _cts.Dispose();
         _stageBeginLock.Dispose();
