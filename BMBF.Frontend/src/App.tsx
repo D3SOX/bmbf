@@ -1,4 +1,4 @@
-import { AppShell, MantineProvider, Title } from '@mantine/core';
+import { AppShell, MantineProvider, Modal, Title, Text, Loader, Center } from '@mantine/core';
 import AppHeader from './components/shell/AppHeader';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -12,20 +12,13 @@ import { useEffect } from 'react';
 import { beatSaberStore, fetchInstallationInfo } from './api/beatsaber';
 import Setup from './pages/Setup';
 import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup';
-import { startSocket, stopSocket } from './api/socket';
+import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './api/socket';
 import { useSnapshot } from 'valtio';
 
 export default function App() {
   useEffect(() => {
-    (async () => {
-      // initial data load
-      await fetchModdableVersions();
-      await fetchSetupStatus();
-      await fetchInstallationInfo();
-
-      // connect to websocket
-      startSocket();
-    })();
+    // connect to websocket
+    startSocket();
 
     // disconnect on unmount
     return () => {
@@ -33,10 +26,44 @@ export default function App() {
     };
   }, []);
 
+  // Load on connect
+  useSocketEvent("open", () => {
+    (async () => {
+      // initial data load
+      await fetchModdableVersions();
+      await fetchSetupStatus();
+      await fetchInstallationInfo();
+    })();
+  })
+
+  // Reconnect to backend
+  useSocketEvent("close", () => {
+    startSocket()
+  });
+
+  const isClosed = useIsSocketClosed();
+
   return (
     <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme: 'dark' }}>
       <NotificationsProvider>
         <AppShell padding="md" header={<AppHeader />}>
+          <Modal
+            opened={isClosed}
+            withCloseButton={false}
+            onClose={() => {/* do nothing*/ }}          >
+            <Center> 
+              <Title order={4}>BMBF has lost connection with your headset</Title>
+            </Center>
+            <Center>
+              <Text>Retrying to connect</Text>
+            </Center>
+            <Center sx={{
+              'padding': "16px"
+            }}>
+              <Loader />
+            </Center>
+          </Modal>
+
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
