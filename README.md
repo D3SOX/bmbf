@@ -54,7 +54,7 @@ Before you build or test BMBF, you first need to build the frontend:
 1. Navigate to `./BMBF.Desktop`
 2. Make sure that the working directory for the debugger in your IDE is the `BMBF.Desktop` directory - otherwise the wrapper won't be able to find the files that it needs.
 3. Run the project in your IDE, or execute `dotnet run`.
-4. BMBF will serve to `http://localhost:50006`.
+4. BMBF will serve to `http://localhost:50005`.
 
 Some notes:
 
