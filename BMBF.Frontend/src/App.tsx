@@ -63,7 +63,7 @@ export default function App() {
               <Title order={4}>BMBF has lost connection with your headset</Title>
             </Center>
             <Center>
-              <Text>Retrying to connect</Text>
+              <Text>Attempting to reconnect</Text>
             </Center>
             <Center sx={{
               'padding': "16px"
