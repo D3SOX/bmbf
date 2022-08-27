@@ -1,4 +1,4 @@
-import { AppShell, MantineProvider, Title } from '@mantine/core';
+import { AppShell, MantineProvider, Modal, Title, Text, Loader, Center } from '@mantine/core';
 import AppHeader from './components/shell/AppHeader';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -8,24 +8,20 @@ import Songs from './pages/Songs';
 import SyncSaber from './pages/SyncSaber';
 import Tools from './pages/Tools';
 import { NotificationsProvider } from '@mantine/notifications';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { beatSaberStore, fetchInstallationInfo } from './api/beatsaber';
 import Setup from './pages/Setup';
 import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup';
-import { startSocket, stopSocket } from './api/socket';
+import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './api/socket';
 import { useSnapshot } from 'valtio';
+import { sendErrorNotification } from './api/base';
 
 export default function App() {
-  useEffect(() => {
-    (async () => {
-      // initial data load
-      await fetchModdableVersions();
-      await fetchSetupStatus();
-      await fetchInstallationInfo();
+  const [subsequentConnect, setSubsequentConnect] = useState<boolean>(false);
 
-      // connect to websocket
-      startSocket();
-    })();
+  useEffect(() => {
+    // connect to websocket
+    startSocket();
 
     // disconnect on unmount
     return () => {
@@ -33,10 +29,49 @@ export default function App() {
     };
   }, []);
 
+  // Load on connect
+  useSocketEvent("open", () => {
+    (async () => {
+      // initial data load
+      await fetchModdableVersions();
+      await fetchSetupStatus();
+      await fetchInstallationInfo();
+    })();
+  })
+
+  useSocketEvent("error", (event) => {
+    console.error('Error while attempting to connect socket', event);
+  });
+
+  // Reconnect to backend
+  useSocketEvent("close", () => {
+    setSubsequentConnect(true);
+    startSocket()
+  });
+
+  const isClosed = useIsSocketClosed() && subsequentConnect;
+
   return (
     <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme: 'dark' }}>
       <NotificationsProvider>
         <AppShell padding="md" header={<AppHeader />}>
+          <Modal
+            opened={isClosed}
+            withCloseButton={false}
+            onClose={() => {/* do nothing*/ }}          >
+            <Center> 
+              <Title order={4}>BMBF has lost connection with your headset</Title>
+            </Center>
+            <Center>
+              <Text>Attempting to reconnect</Text>
+            </Center>
+            <Center sx={{
+              'padding': "16px"
+            }}>
+              <Loader />
+            </Center>
+          </Modal>
+
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
