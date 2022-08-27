@@ -165,7 +165,8 @@ export function useIsSocketClosed() {
 }
 
 export function stopSocket() {
-  if (socket) {
-    socket.close();
+  if (socket && socket.readyState === WebSocket.OPEN) {
+     socket.close();
   }
+  socket = null;
 }
