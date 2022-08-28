@@ -52,14 +52,10 @@ export default function App() {
 
   const isClosed = useIsSocketClosed() && subsequentConnect;
 
-  // hook will return either 'dark' or 'light' on client
-  // and always 'light' during ssr as window.matchMedia is not available
-  const preferredColorScheme = useColorScheme("dark");
-
   // https://mantine.dev/guides/dark-theme/#save-to-localstorage-and-add-keyboard-shortcut
   const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
     key: 'mantine-color-scheme',
-    defaultValue: preferredColorScheme,
+    defaultValue: "dark",
     getInitialValueInEffect: true,
   });
 
