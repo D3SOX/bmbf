@@ -9,7 +9,7 @@ export const beatSaberStore = proxy<{ installationInfo: InstallationInfo | null 
 });
 
 export async function fetchInstallationInfo(): Promise<void> {
-  const data = await backendRequest(`beatsaber/install`);
+  const data = await backendRequest(`beatsaber/install`, undefined, [404]);
   if (data.ok) {
     beatSaberStore.installationInfo = await data.json();
   } else {

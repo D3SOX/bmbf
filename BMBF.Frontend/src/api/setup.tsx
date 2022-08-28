@@ -22,7 +22,7 @@ export async function fetchSetupStatus(): Promise<void> {
 }
 
 export async function fetchModdableVersions(): Promise<void> {
-  const data = await backendRequest(`setup/moddableversions`, undefined, [404]);
+  const data = await backendRequest(`setup/moddableversions`, undefined);
   if (data.ok) {
     setupStore.moddableVersions = await data.json();
   }
