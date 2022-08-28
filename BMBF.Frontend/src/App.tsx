@@ -1,4 +1,4 @@
-import { AppShell, MantineProvider, Modal, Title, Text, Loader, Center } from '@mantine/core';
+import { AppShell, MantineProvider, Modal, Title, Text, Loader, Center, ColorSchemeProvider, ColorScheme } from '@mantine/core';
 import AppHeader from './components/shell/AppHeader';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -15,6 +15,7 @@ import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup
 import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './api/socket';
 import { useSnapshot } from 'valtio';
 import { sendErrorNotification } from './api/base';
+import { useColorScheme, useHotkeys, useLocalStorage } from '@mantine/hooks';
 
 export default function App() {
   const [subsequentConnect, setSubsequentConnect] = useState<boolean>(false);
@@ -51,82 +52,96 @@ export default function App() {
 
   const isClosed = useIsSocketClosed() && subsequentConnect;
 
-  return (
-    <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme: 'dark' }}>
-      <NotificationsProvider>
-        <AppShell padding="md" header={<AppHeader />}>
-          <Modal
-            opened={isClosed}
-            withCloseButton={false}
-            onClose={() => {/* do nothing*/ }}          >
-            <Center> 
-              <Title order={4}>BMBF has lost connection with your headset</Title>
-            </Center>
-            <Center>
-              <Text>Attempting to reconnect</Text>
-            </Center>
-            <Center sx={{
-              'padding': "16px"
-            }}>
-              <Loader />
-            </Center>
-          </Modal>
+  // https://mantine.dev/guides/dark-theme/#save-to-localstorage-and-add-keyboard-shortcut
+  const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
+    key: 'mantine-color-scheme',
+    defaultValue: "dark",
+    getInitialValueInEffect: true,
+  });
 
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/mods"
-              element={
-                <RequireSetup>
-                  <Mods />
-                </RequireSetup>
-              }
-            />
-            <Route
-              path="/playlists"
-              element={
-                <RequireSetup>
-                  <Playlists />
-                </RequireSetup>
-              }
-            />
-            <Route
-              path="/songs"
-              element={
-                <RequireSetup>
-                  <Songs />
-                </RequireSetup>
-              }
-            />
-            <Route
-              path="/syncSaber"
-              element={
-                <RequireSetup>
-                  <SyncSaber />
-                </RequireSetup>
-              }
-            />
-            <Route
-              path="/tools"
-              element={
-                <RequireSetup>
-                  <Tools />
-                </RequireSetup>
-              }
-            />
-            <Route
-              path="/setup"
-              element={
-                <RequireUnpatchedGame>
-                  <Setup />
-                </RequireUnpatchedGame>
-              }
-            />
-            <Route path="*" element={<Title>Not found</Title>} />
-          </Routes>
-        </AppShell>
-      </NotificationsProvider>
-    </MantineProvider>
+  const toggleColorScheme = (value?: ColorScheme) =>
+    setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+
+  useHotkeys([['mod+J', () => toggleColorScheme()]]);
+
+  return (
+    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
+      <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme }} >
+        <NotificationsProvider>
+          <AppShell padding="md" header={<AppHeader />}>
+            <Modal
+              opened={isClosed}
+              withCloseButton={false}
+              onClose={() => {/* do nothing*/ }}          >
+              <Center>
+                <Title order={4}>BMBF has lost connection with your headset</Title>
+              </Center>
+              <Center>
+                <Text>Attempting to reconnect</Text>
+              </Center>
+              <Center sx={{
+                'padding': "16px"
+              }}>
+                <Loader />
+              </Center>
+            </Modal>
+
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/mods"
+                element={
+                  <RequireSetup>
+                    <Mods />
+                  </RequireSetup>
+                }
+              />
+              <Route
+                path="/playlists"
+                element={
+                  <RequireSetup>
+                    <Playlists />
+                  </RequireSetup>
+                }
+              />
+              <Route
+                path="/songs"
+                element={
+                  <RequireSetup>
+                    <Songs />
+                  </RequireSetup>
+                }
+              />
+              <Route
+                path="/syncSaber"
+                element={
+                  <RequireSetup>
+                    <SyncSaber />
+                  </RequireSetup>
+                }
+              />
+              <Route
+                path="/tools"
+                element={
+                  <RequireSetup>
+                    <Tools />
+                  </RequireSetup>
+                }
+              />
+              <Route
+                path="/setup"
+                element={
+                  <RequireUnpatchedGame>
+                    <Setup />
+                  </RequireUnpatchedGame>
+                }
+              />
+              <Route path="*" element={<Title>Not found</Title>} />
+            </Routes>
+          </AppShell>
+        </NotificationsProvider>
+      </MantineProvider>
+    </ColorSchemeProvider>
   );
 }
 
