@@ -25,11 +25,12 @@ export function sendErrorNotification(error: string) {
 }
 
 
-export async function backendRequest(...args: Parameters<typeof fetch>): Promise<Response> {
+export async function backendRequest(...args: [...Parameters<typeof fetch>, (number[])?]): Promise<Response> {
   try {
+    const ignoredCodes = args[2]
     const result = await fetch(`${API_ROOT}/${args[0]}`, args[1]);
 
-    if (result.ok)
+    if (result.ok || ignoredCodes?.some(a => a === result.status))
       return result;
 
     console.error("Request failed", result);

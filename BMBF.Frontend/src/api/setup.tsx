@@ -13,7 +13,7 @@ export const setupStore = proxy<{
 });
 
 export async function fetchSetupStatus(): Promise<void> {
-  const data = await backendRequest(`setup/status`);
+  const data = await backendRequest(`setup/status`, undefined, [404]);
   if (data.ok) {
     setupStore.setupStatus = await data.json();
   } else {
@@ -22,7 +22,7 @@ export async function fetchSetupStatus(): Promise<void> {
 }
 
 export async function fetchModdableVersions(): Promise<void> {
-  const data = await backendRequest(`setup/moddableversions`);
+  const data = await backendRequest(`setup/moddableversions`, undefined, [404]);
   if (data.ok) {
     setupStore.moddableVersions = await data.json();
   }
