@@ -23,3 +23,22 @@ export function sendErrorNotification(error: string) {
     icon: <IconAlertTriangle />,
   });
 }
+
+
+export async function backendRequest(...args: Parameters<typeof fetch>): Promise<Response> {
+  try {
+    const result = await fetch(`${API_ROOT}/${args[0]}`, args[1]);
+
+    if (result.ok)
+      return result;
+
+    console.error("Request failed", result);
+    sendErrorNotification(`Error while making request, received ${result.status}\n${await result.text()}`);
+
+    return result;
+  } catch (e) {
+    console.error("Error while fulfilling request", e);
+    sendErrorNotification(`Error while making request`);
+    throw e;
+  }
+}

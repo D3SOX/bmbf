@@ -1,4 +1,4 @@
-import { API_ROOT, sendErrorNotification } from './base';
+import { API_ROOT, backendRequest } from './base';
 import { SetupStage, SetupStatus, Versions } from '../types/setup';
 import { proxy } from 'valtio';
 
@@ -12,25 +12,8 @@ export const setupStore = proxy<{
   loadingStep: null,
 });
 
-export async function backendRequest(...args: Parameters<typeof fetch>): Promise<Response> {
-  try {
-    const result = await fetch(...args)
-
-    if (result.ok) return result;
-
-    console.error("Request failed", result)
-    sendErrorNotification(`Error while making request, received ${result.status}\n${await result.text()}`)
-
-    return result;
-  } catch (e) {
-    console.error("Error while fulfilling request", e)
-    sendErrorNotification(`Error while making request`)
-    throw e;
-  }
-}
-
 export async function fetchSetupStatus(): Promise<void> {
-  const data = await backendRequest(`${API_ROOT}/setup/status`);
+  const data = await backendRequest(`setup/status`);
   if (data.ok) {
     setupStore.setupStatus = await data.json();
   } else {
@@ -39,7 +22,7 @@ export async function fetchSetupStatus(): Promise<void> {
 }
 
 export async function fetchModdableVersions(): Promise<void> {
-  const data = await backendRequest(`${API_ROOT}/setup/moddableversions`);
+  const data = await backendRequest(`setup/moddableversions`);
   if (data.ok) {
     setupStore.moddableVersions = await data.json();
   }
@@ -48,7 +31,7 @@ export async function fetchModdableVersions(): Promise<void> {
 export async function begin(): Promise<void> {
   if (!setupStore.setupStatus) {
     setupStore.loadingStep = 0;
-    await backendRequest(`${API_ROOT}/setup/begin`, {
+    await backendRequest(`setup/begin`, {
       method: 'POST',
     });
   }
@@ -65,7 +48,7 @@ export function needsDowngrade(): boolean {
 
 export async function downgrade(version: string): Promise<void> {
   if (needsDowngrade()) {
-    await backendRequest(`${API_ROOT}/setup/downgrade`, {
+    await backendRequest(`setup/downgrade`, {
       method: 'POST',
       body: `"${version}"`,
     });
@@ -74,7 +57,7 @@ export async function downgrade(version: string): Promise<void> {
 
 export async function patch(): Promise<void> {
   if (setupStore.setupStatus) {
-    await backendRequest(`${API_ROOT}/setup/patch`, {
+    await backendRequest(`setup/patch`, {
       method: 'POST',
     });
   }
@@ -82,7 +65,7 @@ export async function patch(): Promise<void> {
 
 export async function triggerUninstall(): Promise<void> {
   if (setupStore.setupStatus) {
-    await backendRequest(`${API_ROOT}/setup/triggeruninstall`, {
+    await backendRequest(`setup/triggeruninstall`, {
       method: 'POST',
     });
   }
@@ -90,7 +73,7 @@ export async function triggerUninstall(): Promise<void> {
 
 export async function triggerInstall(): Promise<void> {
   if (setupStore.setupStatus) {
-    await backendRequest(`${API_ROOT}/setup/triggerinstall`, {
+    await backendRequest(`setup/triggerinstall`, {
       method: 'POST',
     });
   }
@@ -98,7 +81,7 @@ export async function triggerInstall(): Promise<void> {
 
 export async function finalize(): Promise<void> {
   if (setupStore.setupStatus) {
-    await backendRequest(`${API_ROOT}/setup/finalize`, {
+    await backendRequest(`setup/finalize`, {
       method: 'POST',
     });
   }
@@ -106,7 +89,7 @@ export async function finalize(): Promise<void> {
 
 export async function quit(): Promise<void> {
   if (setupStore.setupStatus) {
-    await backendRequest(`${API_ROOT}/setup/quit`, {
+    await backendRequest(`setup/quit`, {
       method: 'POST',
     });
   }
