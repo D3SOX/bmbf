@@ -122,6 +122,7 @@ public class MainActivity : Activity
             throw new NullReferenceException(nameof(webView.Settings));
         }
 
+        webView.Settings.DomStorageEnabled = true;
         webView.Settings.JavaScriptEnabled = true;
         webView.LoadUrl($"http://localhost:{port}");
     }
