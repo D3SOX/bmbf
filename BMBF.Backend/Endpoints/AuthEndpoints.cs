@@ -31,7 +31,7 @@ public class AuthEndpoints
     public async Task DeleteUsers(Request req)
     {
         var cfg = await _authService.GetAuthConfig();
-        await foreach (string toRemove in req.JsonBody<IAsyncEnumerable<string>>())
+        await foreach (string toRemove in await req.JsonBody<IAsyncEnumerable<string>>())
         {
             cfg.Users.TryRemove(toRemove, out _);
         }
@@ -42,7 +42,7 @@ public class AuthEndpoints
     public async Task AddUsers(Request req)
     {
         var cfg = await _authService.GetAuthConfig();
-        foreach (var userPair in req.JsonBody<Dictionary<string, string>>())
+        foreach (var userPair in await req.JsonBody<Dictionary<string, string>>())
         {
             cfg.Users[userPair.Key] = userPair.Value;
         }
@@ -55,7 +55,7 @@ public class AuthEndpoints
     [HttpPost("enabled")]
     public async Task SetEnabled(Request req)
     {
-        (await _authService.GetAuthConfig()).AuthEnabled = req.JsonBody<bool>();
+        (await _authService.GetAuthConfig()).AuthEnabled = await req.JsonBody<bool>();
         await _authService.SaveAuthConfig();
     }
 }

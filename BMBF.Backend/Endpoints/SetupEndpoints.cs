@@ -95,7 +95,7 @@ public class SetupEndpoints : IEndpoints
     [HttpPost("/setup/downgrade")]
     public async Task<HttpResponse> Downgrade(Request request)
     {
-        string toVersion = request.JsonBody<string>();
+        string toVersion = await request.JsonBody<string>();
         List<DiffInfo> diffs;
         try
         {

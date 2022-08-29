@@ -63,7 +63,7 @@ public class ImportEndpoints : IEndpoints
     [HttpPost("/import/url")]
     public async Task<HttpResponse> ImportFromUrl(Request request)
     {
-        var url = new Uri(request.JsonBody<string>());
+        var url = new Uri(await request.JsonBody<string>());
         try
         {
             using var resp = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);

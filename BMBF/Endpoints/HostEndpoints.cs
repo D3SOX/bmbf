@@ -4,6 +4,7 @@ using BMBF.Backend.Endpoints;
 using BMBF.WebServer;
 using BMBF.WebServer.Attributes;
 using Hydra;
+using System.Threading.Tasks;
 
 namespace BMBF.Endpoints;
 
@@ -52,9 +53,9 @@ public class HostEndpoints : IEndpoints
     }
 
     [HttpPost("/runInBackground")]
-    public void SetRunInBackground(Request request)
+    public async Task SetRunInBackground(Request request)
     {
-        RunAsForegroundService = request.JsonBody<bool>();
+        RunAsForegroundService = await request.JsonBody<bool>();
     }
 
     [HttpGet("/runInBackground")]

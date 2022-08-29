@@ -105,13 +105,13 @@ public class Request
     /// <typeparam name="T">Type of the JSON to deserialize to</typeparam>
     /// <returns>The body deserialized from JSON</returns>
     /// <exception cref="WebException">If the body is not valid JSON</exception>
-    public T JsonBody<T>()
+    public async Task<T> JsonBody<T>()
     {
         T? json;
 
         try
         {
-            json = JsonSerializer.Deserialize<T>(Body);
+            json = await JsonSerializer.DeserializeAsync<T>(Body);
         }
         catch (JsonException ex)
         {

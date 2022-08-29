@@ -71,7 +71,7 @@ public class PlaylistsEndpoints : IEndpoints
     {
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(request.Param<string>("id"), out var matching))
         {
-            matching.Songs = request.JsonBody<List<BPSong>>();
+            matching.Songs = await request.JsonBody<List<BPSong>>();
             return Responses.Ok();
         }
 
@@ -81,7 +81,7 @@ public class PlaylistsEndpoints : IEndpoints
     [HttpPut("/playlists/update")]
     public async Task<HttpResponse> UpdatePlaylistInfo(Request request)
     {
-        var newPlaylistInfo = request.JsonBody<PlaylistInfo>();
+        var newPlaylistInfo = await request.JsonBody<PlaylistInfo>();
         if ((await _playlistService.GetPlaylistsAsync()).TryGetValue(newPlaylistInfo.Id, out var matching))
         {
             matching.SetPlaylistInfo(newPlaylistInfo);
@@ -122,7 +122,7 @@ public class PlaylistsEndpoints : IEndpoints
     [HttpPost("/playlists/add")]
     public async Task<HttpResponse> Add(Request request)
     {
-        var playlistInfo = request.JsonBody<PlaylistInfo>();
+        var playlistInfo = await request.JsonBody<PlaylistInfo>();
         var playlist = new Playlist(
             playlistInfo.PlaylistTitle,
             playlistInfo.PlaylistAuthor,

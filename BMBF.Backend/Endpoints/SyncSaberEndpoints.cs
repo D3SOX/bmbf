@@ -25,7 +25,7 @@ public class SyncSaberEndpoints : IEndpoints
     [HttpPut("/syncsaber/config")]
     public async Task PutSyncSaberConfig(Request req)
     {
-        await _syncSaberService.OverwriteConfig(req.JsonBody<SyncSaberConfig>());
+        await _syncSaberService.OverwriteConfig(await req.JsonBody<SyncSaberConfig>());
     }
 
     [HttpPost("/syncsaber/sync")]
