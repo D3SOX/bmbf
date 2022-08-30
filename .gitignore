@@ -6,3 +6,4 @@ Device/
 BMBF.DiffGenerator/Output/
 BMBF.keystore
 BMBF/Assets/wwwroot
+*.csproj.user
