@@ -8,8 +8,9 @@
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
 
-        <!-- 
+      <!-- 
             We need set the target SDK version to 29 in order to allow us to use legacy external storage 
             Therefore we supress the warning that API level 31 will be used for ACW compilation,
             and that the targetSdkVersion in the manifest does not match TargetFrameworkVersion
