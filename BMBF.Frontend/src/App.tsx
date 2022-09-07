@@ -24,11 +24,10 @@ import Setup from './pages/Setup';
 import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup';
 import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './api/socket';
 import { useSnapshot } from 'valtio';
-import { sendErrorNotification } from './api/base';
-import { useColorScheme, useHotkeys, useLocalStorage } from '@mantine/hooks';
+import { useHotkeys, useLocalStorage } from '@mantine/hooks';
 
 export default function App() {
-  const [subsequentConnect, setSubsequentConnect] = useState<boolean>(false);
+  const [subsequentConnect, setSubsequentConnect] = useState(false);
 
   useEffect(() => {
     // connect to websocket
