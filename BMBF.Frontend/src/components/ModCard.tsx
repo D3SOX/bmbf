@@ -1,5 +1,5 @@
 import { Mod } from '../types/mod';
-import { Card, Group, Image, Stack, Text, Button, Switch, Modal, Title } from '@mantine/core';
+import { Badge, Card, Group, Image, Stack, Text, Button, Switch, Modal, Title } from '@mantine/core';
 import { IconEye, IconTrash } from '@tabler/icons';
 import { installMod, uninstallMod, unloadMod } from '../api/mods';
 import { API_ROOT } from '../api/base';
@@ -19,7 +19,9 @@ function SongCard({ mod }: ModCardProps) {
         <Image src={`${API_ROOT}/mods/cover/${mod.id}`} alt="Cover" width={150} radius="md" />
         <Stack>
           <Stack spacing={1}>
-            <Text size="xl">{mod.name}</Text>
+            <Text size="xl">
+              {mod.name} <Badge size="xs">{mod.version}</Badge>
+            </Text>
             <Text>Created by {mod.author}</Text>
           </Stack>
           <Group>
