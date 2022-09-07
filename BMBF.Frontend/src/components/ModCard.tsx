@@ -1,7 +1,7 @@
 import { Mod } from '../types/mod';
-import { Card, Group, Image, Stack, Text, Button } from '@mantine/core';
-import { IconPackage, IconTrash } from '@tabler/icons';
-import { installMod, uninstallMod } from '../api/mods';
+import { Card, Group, Image, Stack, Text, Button, Switch } from '@mantine/core';
+import { IconTrash } from '@tabler/icons';
+import { installMod, uninstallMod, unloadMod } from '../api/mods';
 import { API_ROOT } from '../api/base';
 
 interface ModCardProps {
@@ -19,25 +19,15 @@ function SongCard({ mod }: ModCardProps) {
             <Text>Created by {mod.author}</Text>
           </Stack>
           <Group>
-            {mod.installed ? (
-              <Button
-                leftIcon={<IconTrash />}
-                color="red"
-                variant="light"
-                onClick={() => uninstallMod(mod)}
-              >
-                Uninstall
-              </Button>
-            ) : (
-              <Button
-                leftIcon={<IconPackage />}
-                color="green"
-                variant="light"
-                onClick={() => installMod(mod)}
-              >
-                Install
-              </Button>
-            )}
+            <Switch
+              checked={mod.installed}
+              onChange={event => {
+                event.currentTarget.checked ? installMod(mod) : uninstallMod(mod);
+              }}
+            />
+            <Button leftIcon={<IconTrash />} color="red" variant="light" onClick={() => unloadMod(mod)}>
+              Remove
+            </Button>
           </Group>
         </Stack>
       </Group>
