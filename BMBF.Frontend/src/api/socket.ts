@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { API_HOST, sendErrorNotification, sendSuccessNotification } from './base';
 import { MessageType, SocketMessage } from '../types/socket';
 import { playlistsStore } from './playlists';
