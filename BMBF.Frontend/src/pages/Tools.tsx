@@ -5,12 +5,14 @@ import { IconArrowRight, IconWorldDownload } from '@tabler/icons';
 import { useState } from 'react';
 import { useSnapshot } from 'valtio';
 import { beatSaberStore } from '../api/beatsaber';
+import { infoStore } from '../api/info';
 
 function Tools() {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useInputState('');
 
   const { installationInfo } = useSnapshot(beatSaberStore);
+  const { hostInfo } = useSnapshot(infoStore);
 
   function ModInfo() {
     if (installationInfo?.modTag) {
@@ -50,6 +52,16 @@ function Tools() {
           Start import
         </Button>
       </Group>
+      <Title order={2}>Host Info</Title>
+      {hostInfo ? (
+        <Stack spacing={1}>
+          <Text>Version: {hostInfo.version}</Text>
+          <Text>Host Local IP: {hostInfo.hostLocalIp}</Text>
+          <Text>Connecting IP: {hostInfo.connectingIp}</Text>
+        </Stack>
+      ) : (
+        <Text>Host info not loaded yet</Text>
+      )}
       <Title order={2}>Debug info</Title>
       {installationInfo ? (
         <Stack spacing={1}>

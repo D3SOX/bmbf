@@ -24,6 +24,7 @@ import Setup from './pages/Setup';
 import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup';
 import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './api/socket';
 import { useSnapshot } from 'valtio';
+import { fetchHostInfo } from './api/info';
 import { useHotkeys, useLocalStorage } from '@mantine/hooks';
 
 export default function App() {
@@ -46,6 +47,7 @@ export default function App() {
       await fetchModdableVersions();
       await fetchSetupStatus();
       await fetchInstallationInfo();
+      await fetchHostInfo();
     })();
   });
 
