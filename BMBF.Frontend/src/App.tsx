@@ -1,4 +1,14 @@
-import { AppShell, MantineProvider, Modal, Title, Text, Loader, Center, ColorSchemeProvider, ColorScheme } from '@mantine/core';
+import {
+  AppShell,
+  MantineProvider,
+  Modal,
+  Title,
+  Text,
+  Loader,
+  Center,
+  ColorSchemeProvider,
+  ColorScheme,
+} from '@mantine/core';
 import AppHeader from './components/shell/AppHeader';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
@@ -31,23 +41,23 @@ export default function App() {
   }, []);
 
   // Load on connect
-  useSocketEvent("open", () => {
+  useSocketEvent('open', () => {
     (async () => {
       // initial data load
       await fetchModdableVersions();
       await fetchSetupStatus();
       await fetchInstallationInfo();
     })();
-  })
+  });
 
-  useSocketEvent("error", (event) => {
+  useSocketEvent('error', event => {
     console.error('Error while attempting to connect socket', event);
   });
 
   // Reconnect to backend
-  useSocketEvent("close", () => {
+  useSocketEvent('close', () => {
     setSubsequentConnect(true);
-    startSocket()
+    startSocket();
   });
 
   const isClosed = useIsSocketClosed() && subsequentConnect;
@@ -55,7 +65,7 @@ export default function App() {
   // https://mantine.dev/guides/dark-theme/#save-to-localstorage-and-add-keyboard-shortcut
   const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
     key: 'mantine-color-scheme',
-    defaultValue: "dark",
+    defaultValue: 'dark',
     getInitialValueInEffect: true,
   });
 
@@ -66,22 +76,27 @@ export default function App() {
 
   return (
     <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-      <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme }} >
+      <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme }}>
         <NotificationsProvider>
           <AppShell padding="md" header={<AppHeader />}>
             <Modal
               opened={isClosed}
               withCloseButton={false}
-              onClose={() => {/* do nothing*/ }}          >
+              onClose={() => {
+                /* do nothing*/
+              }}
+            >
               <Center>
                 <Title order={4}>BMBF has lost connection with your headset</Title>
               </Center>
               <Center>
                 <Text>Attempting to reconnect</Text>
               </Center>
-              <Center sx={{
-                'padding': "16px"
-              }}>
+              <Center
+                sx={{
+                  padding: '16px',
+                }}
+              >
                 <Loader />
               </Center>
             </Modal>

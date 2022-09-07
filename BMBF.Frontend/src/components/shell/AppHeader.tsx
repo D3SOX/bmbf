@@ -1,6 +1,15 @@
 import { Group, Header, ActionIcon, useMantineColorScheme } from '@mantine/core';
 import { Link, useMatch, useResolvedPath } from 'react-router-dom';
-import { IconHome, IconMoonStars, IconMusic, IconPlaylist, IconRefresh, IconSettings, IconSun, IconTool } from '@tabler/icons';
+import {
+  IconHome,
+  IconMoonStars,
+  IconMusic,
+  IconPlaylist,
+  IconRefresh,
+  IconSettings,
+  IconSun,
+  IconTool,
+} from '@tabler/icons';
 import React from 'react';
 import NavigationButton from './NavigationButton';
 import { useNeedsSetup } from '../../api/beatsaber';
@@ -71,7 +80,7 @@ function AppHeader() {
         ))}
         <ActionIcon
           variant="outline"
-          color={dark ? "yellow" : 'blue'}
+          color={dark ? 'yellow' : 'blue'}
           onClick={() => toggleColorScheme()}
           title="Toggle color scheme"
         >

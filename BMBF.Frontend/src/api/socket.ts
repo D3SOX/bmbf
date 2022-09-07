@@ -128,22 +128,32 @@ const socketEvents: Record<keyof WebSocketEventMap, ((this: WebSocket, ev: Event
   close: [],
   error: [],
   message: [],
-  open: []
+  open: [],
+};
+
+export function listenToSocketEvent<K extends keyof WebSocketEventMap>(
+  type: K,
+  listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any
+) {
+  const events = socketEvents[type];
+  events.push(listener as any);
 }
 
-export function listenToSocketEvent<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any) {
-  const events = socketEvents[type]
-  events.push(listener as any)
+export function unlistenToSocketEvent<K extends keyof WebSocketEventMap>(
+  type: K,
+  listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any
+) {
+  const events = socketEvents[type];
+  socketEvents[type] = events.filter(e => e !== listener);
 }
 
-export function unlistenToSocketEvent<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any) {
-  const events = socketEvents[type]
-  socketEvents[type] = events.filter(e => e !== listener)
-}
-
-export function invokeSocketEvent<K extends keyof WebSocketEventMap>(socket: WebSocket, type: K, ev: WebSocketEventMap[K]) {
-  const events = socketEvents[type]
-  events.forEach(e => e.bind(socket)(ev))
+export function invokeSocketEvent<K extends keyof WebSocketEventMap>(
+  socket: WebSocket,
+  type: K,
+  ev: WebSocketEventMap[K]
+) {
+  const events = socketEvents[type];
+  events.forEach(e => e.bind(socket)(ev));
 }
 
 export function startSocket() {
@@ -157,47 +167,52 @@ export function startSocket() {
         sendErrorNotification('Error while parsing WebSocket message');
       }
     });
-    ws.addEventListener("close", function(ev) {
-      invokeSocketEvent(this, "close", ev);
-    })
-    ws.addEventListener("open", function(ev) {
-      invokeSocketEvent(this, "open", ev);
-    })
-    ws.addEventListener("message", function(ev) {
-      invokeSocketEvent(this, "message", ev);
-    })
-    ws.addEventListener("error", function(ev) {
-      invokeSocketEvent(this, "error", ev);
-    })
+    ws.addEventListener('close', function (ev) {
+      invokeSocketEvent(this, 'close', ev);
+    });
+    ws.addEventListener('open', function (ev) {
+      invokeSocketEvent(this, 'open', ev);
+    });
+    ws.addEventListener('message', function (ev) {
+      invokeSocketEvent(this, 'message', ev);
+    });
+    ws.addEventListener('error', function (ev) {
+      invokeSocketEvent(this, 'error', ev);
+    });
     socket = ws;
   }
 }
 
-export function useSocketEvent<K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any) {
+export function useSocketEvent<K extends keyof WebSocketEventMap>(
+  type: K,
+  listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any
+) {
   useEffect(() => {
     listenToSocketEvent(type, listener);
 
     return () => {
-      unlistenToSocketEvent(type, listener)
+      unlistenToSocketEvent(type, listener);
     };
   }, [type, listener]);
 }
 
 export function useIsSocketClosed() {
-  const [closed, setClosed] = useState<boolean>((socket?.readyState ?? WebSocket.CLOSED) !== WebSocket.OPEN);
-  useSocketEvent("close", () => {
+  const [closed, setClosed] = useState<boolean>(
+    (socket?.readyState ?? WebSocket.CLOSED) !== WebSocket.OPEN
+  );
+  useSocketEvent('close', () => {
     setClosed(true);
-  })
-  useSocketEvent("open", () => {
+  });
+  useSocketEvent('open', () => {
     setClosed(false);
-  })
+  });
 
   return closed;
 }
 
 export function stopSocket() {
   if (socket && socket.readyState === WebSocket.OPEN) {
-     socket.close();
+    socket.close();
   }
   socket = null;
 }
