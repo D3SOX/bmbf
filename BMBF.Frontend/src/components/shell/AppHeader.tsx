@@ -1,9 +1,10 @@
-import { Group, Header, ActionIcon, useMantineColorScheme } from '@mantine/core';
+import { Group, Header, ActionIcon, Button, useMantineColorScheme } from '@mantine/core';
 import { Link, useMatch, useResolvedPath } from 'react-router-dom';
 import {
   IconHome,
   IconMoonStars,
   IconMusic,
+  IconPlayerPlay,
   IconPlaylist,
   IconRefresh,
   IconSettings,
@@ -12,7 +13,7 @@ import {
 } from '@tabler/icons';
 import React from 'react';
 import NavigationButton from './NavigationButton';
-import { useNeedsSetup } from '../../api/beatsaber';
+import { launchBeatSaber, useNeedsSetup } from '../../api/beatsaber';
 
 export interface Page {
   to: string;
@@ -62,8 +63,6 @@ function AppHeader() {
       <Group
         style={{
           height: '100%',
-          marginTop: 0,
-          marginBottom: 0,
         }}
         px="lg"
         position="center"
@@ -86,6 +85,14 @@ function AppHeader() {
         >
           {dark ? <IconSun size={18} /> : <IconMoonStars size={18} />}
         </ActionIcon>
+        <Button
+          leftIcon={<IconPlayerPlay />}
+          variant="filled"
+          disabled={needsSetup}
+          onClick={() => launchBeatSaber()}
+        >
+          Start Beat Saber
+        </Button>
       </Group>
     </Header>
   );
