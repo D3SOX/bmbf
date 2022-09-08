@@ -12,7 +12,7 @@ import {
   Title,
   List,
 } from '@mantine/core';
-import { IconArrowBackUp, IconEye, IconTrash } from '@tabler/icons';
+import { IconArrowBackUp, IconEye, IconToggleLeft, IconTrash } from '@tabler/icons';
 import { installMod, modsStore, uninstallMod, unloadMod } from '../api/mods';
 import { API_ROOT } from '../api/base';
 import { useMemo, useState } from 'react';
@@ -24,6 +24,7 @@ interface ModCardProps {
 
 function SongCard({ mod }: ModCardProps) {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [showDisableModal, setShowDisableModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const dependencies = useMemo(() => Object.entries(mod.dependencies), [mod.dependencies]);
 
@@ -98,6 +99,39 @@ function SongCard({ mod }: ModCardProps) {
         </Stack>
       </Modal>
 
+      <Modal
+        opened={showDisableModal}
+        onClose={() => setShowDisableModal(false)}
+        title={<Title order={3}>Disable {mod.name}?</Title>}
+        withCloseButton={false}
+        centered
+      >
+        <Stack>
+          {dependants.length ? (
+            <Stack spacing={1}>
+              <Title order={4}>Warning</Title>
+              <Text>This mod is required by the following mods:</Text>
+              <List>
+                {dependants.map(m => (
+                  <List.Item key={m.id}>{m.name}</List.Item>
+                ))}
+              </List>
+              <Text>Disabling this mod will also disable the above mods.</Text>
+            </Stack>
+          ) : (
+            <Text>There are no mods installed that depend on this mod.</Text>
+          )}
+          <Group grow>
+            <Button leftIcon={<IconArrowBackUp />} onClick={() => setShowDisableModal(false)}>
+              No, don't disable
+            </Button>
+            <Button leftIcon={<IconToggleLeft />} color="red" onClick={() => uninstallMod(mod)}>
+              Yes, disable
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Group align="start" noWrap>
         <Image src={`${API_ROOT}/mods/cover/${mod.id}`} alt="Cover" width={150} radius="md" />
         <Stack>
@@ -111,7 +145,13 @@ function SongCard({ mod }: ModCardProps) {
             <Switch
               checked={mod.installed}
               onChange={event => {
-                event.currentTarget.checked ? installMod(mod) : uninstallMod(mod);
+                if (event.currentTarget.checked) {
+                  installMod(mod);
+                } else if (dependants.length) {
+                  setShowDisableModal(true);
+                } else {
+                  uninstallMod(mod);
+                }
               }}
             />
             <Button leftIcon={<IconEye />} variant="light" onClick={() => setShowDetailsModal(true)}>
