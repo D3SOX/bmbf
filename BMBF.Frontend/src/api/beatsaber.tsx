@@ -17,6 +17,10 @@ export async function fetchInstallationInfo(): Promise<void> {
   }
 }
 
+export async function launchBeatSaber(): Promise<void> {
+  await fetch(`${API_ROOT}/beatsaber/launch`, { method: 'POST' });
+}
+
 export function useNeedsSetup() {
   const { installationInfo } = useSnapshot(beatSaberStore);
   const { setupStatus } = useSnapshot(setupStore);

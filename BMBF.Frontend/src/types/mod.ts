@@ -12,6 +12,7 @@ export interface Mod {
   name: string;
   author: string;
   porter: string | null;
+  dependencies: Record<string, string>;
   version: string;
   description: string;
   packageVersion: string;

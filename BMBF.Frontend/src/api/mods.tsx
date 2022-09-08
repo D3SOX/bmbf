@@ -31,6 +31,15 @@ export async function installMod(mod: Pick<Mod, 'id'>): Promise<void> {
   }
 }
 
+export async function unloadMod(mod: Pick<Mod, 'id'>): Promise<void> {
+  const data = await fetch(`${API_ROOT}/mods/unload/${mod.id}`, {
+    method: 'POST',
+  });
+  if (!data.ok) {
+    sendErrorNotification(await data.text());
+  }
+}
+
 export async function installCore(): Promise<void> {
   const data = await fetch(`${API_ROOT}/mods/installcore`, {
     method: 'POST',

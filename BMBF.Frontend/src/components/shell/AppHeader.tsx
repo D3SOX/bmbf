@@ -1,9 +1,19 @@
-import { Group, Header, ActionIcon, useMantineColorScheme } from '@mantine/core';
+import { Group, Header, ActionIcon, Button, useMantineColorScheme } from '@mantine/core';
 import { Link, useMatch, useResolvedPath } from 'react-router-dom';
-import { IconHome, IconMoonStars, IconMusic, IconPlaylist, IconRefresh, IconSettings, IconSun, IconTool } from '@tabler/icons';
+import {
+  IconHome,
+  IconMoonStars,
+  IconMusic,
+  IconPlayerPlay,
+  IconPlaylist,
+  IconRefresh,
+  IconSettings,
+  IconSun,
+  IconTool,
+} from '@tabler/icons';
 import React from 'react';
 import NavigationButton from './NavigationButton';
-import { useNeedsSetup } from '../../api/beatsaber';
+import { launchBeatSaber, useNeedsSetup } from '../../api/beatsaber';
 
 export interface Page {
   to: string;
@@ -53,8 +63,6 @@ function AppHeader() {
       <Group
         style={{
           height: '100%',
-          marginTop: 0,
-          marginBottom: 0,
         }}
         px="lg"
         position="center"
@@ -71,13 +79,23 @@ function AppHeader() {
         ))}
         <ActionIcon
           variant="outline"
-          color={dark ? "yellow" : 'blue'}
+          color={dark ? 'yellow' : 'blue'}
           onClick={() => toggleColorScheme()}
           title="Toggle color scheme"
         >
           {dark ? <IconSun size={18} /> : <IconMoonStars size={18} />}
         </ActionIcon>
       </Group>
+      <Button
+        leftIcon={<IconPlayerPlay />}
+        variant="filled"
+        disabled={needsSetup}
+        onClick={() => launchBeatSaber()}
+        // TODO: improve the way this is handled
+        sx={{ position: 'absolute', right: 20, top: 12 }}
+      >
+        Start Beat Saber
+      </Button>
     </Header>
   );
 }
