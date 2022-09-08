@@ -44,10 +44,9 @@ export default function App() {
     console.error('Error while attempting to connect socket', event);
   });
 
-  // Reconnect to backend
-  useSocketEvent("close", () => {
+  useSocketEvent('close', () => {
     setSubsequentConnect(true);
-    startSocket()
+    startSocket();
   });
 
   const isClosed = useIsSocketClosed() && subsequentConnect;
