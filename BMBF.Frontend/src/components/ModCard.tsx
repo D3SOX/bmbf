@@ -1,5 +1,6 @@
 import { Mod } from '../types/mod';
 import {
+  ActionIcon,
   Badge,
   Card,
   Group,
@@ -11,6 +12,7 @@ import {
   Modal,
   Title,
   List,
+  Tooltip,
 } from '@mantine/core';
 import { IconArrowBackUp, IconEye, IconToggleLeft, IconTrash } from '@tabler/icons';
 import { installMod, modsStore, uninstallMod, unloadMod } from '../api/mods';
@@ -162,9 +164,11 @@ function SongCard({ mod }: ModCardProps) {
                 }
               }}
             />
-            <Button leftIcon={<IconEye />} variant="light" onClick={() => setShowDetailsModal(true)}>
-              Details
-            </Button>
+            <Tooltip label="Show details">
+              <ActionIcon variant="transparent" color="indigo" onClick={() => setShowDetailsModal(true)}>
+                <IconEye />
+              </ActionIcon>
+            </Tooltip>
             <Button
               leftIcon={<IconTrash />}
               color="red"
