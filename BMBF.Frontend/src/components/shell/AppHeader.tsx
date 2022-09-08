@@ -85,15 +85,17 @@ function AppHeader() {
         >
           {dark ? <IconSun size={18} /> : <IconMoonStars size={18} />}
         </ActionIcon>
-        <Button
-          leftIcon={<IconPlayerPlay />}
-          variant="filled"
-          disabled={needsSetup}
-          onClick={() => launchBeatSaber()}
-        >
-          Start Beat Saber
-        </Button>
       </Group>
+      <Button
+        leftIcon={<IconPlayerPlay />}
+        variant="filled"
+        disabled={needsSetup}
+        onClick={() => launchBeatSaber()}
+        // TODO: improve the way this is handled
+        sx={{ position: 'absolute', right: 20, top: 12 }}
+      >
+        Start Beat Saber
+      </Button>
     </Header>
   );
 }
