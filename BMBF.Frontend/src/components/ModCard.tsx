@@ -30,9 +30,10 @@ function SongCard({ mod }: ModCardProps) {
 
   const { mods } = useSnapshot(modsStore);
   const dependants = useMemo(() => {
-    // installed mods that depend on this mod
+    // installed & enabled mods that depend on this mod
     return mods.filter(
-      otherMod => otherMod.id !== mod.id && otherMod.dependencies[mod.id] !== undefined
+      otherMod =>
+        otherMod.id !== mod.id && otherMod.dependencies[mod.id] !== undefined && otherMod.installed
     );
   }, [mod, mods]);
 
@@ -77,7 +78,7 @@ function SongCard({ mod }: ModCardProps) {
           {dependants.length ? (
             <Stack spacing={1}>
               <Title order={4}>Warning</Title>
-              <Text>This mod is required by the following mods:</Text>
+              <Text>This mod is required by the following enabled mods:</Text>
               <List>
                 {dependants.map(m => (
                   <List.Item key={m.id}>{m.name}</List.Item>
@@ -110,7 +111,7 @@ function SongCard({ mod }: ModCardProps) {
           {dependants.length ? (
             <Stack spacing={1}>
               <Title order={4}>Warning</Title>
-              <Text>This mod is required by the following mods:</Text>
+              <Text>This mod is required by the following enabled mods:</Text>
               <List>
                 {dependants.map(m => (
                   <List.Item key={m.id}>{m.name}</List.Item>
