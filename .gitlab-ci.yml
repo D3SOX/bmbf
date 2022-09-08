@@ -8,7 +8,7 @@ publish:
   image: "$CI_REGISTRY_IMAGE/buildenv:latest"
   stage: deploy
   script:
-    - curl -f "$BMBF_KEYSTORE_URL" --output BMBF.keystore
+    - curl "$BMBF_KEYSTORE_URL" --output BMBF.keystore || true
     - cd ./BMBF.Frontend && yarn install --frozen-lockfile && yarn build
     - cd ..
     - dotnet publish ./BMBF/BMBF.csproj -c Release
