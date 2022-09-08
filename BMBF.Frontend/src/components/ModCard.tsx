@@ -126,7 +126,14 @@ function SongCard({ mod }: ModCardProps) {
             <Button leftIcon={<IconArrowBackUp />} onClick={() => setShowDisableModal(false)}>
               No, don't disable
             </Button>
-            <Button leftIcon={<IconToggleLeft />} color="red" onClick={() => uninstallMod(mod)}>
+            <Button
+              leftIcon={<IconToggleLeft />}
+              color="red"
+              onClick={() => {
+                setShowDisableModal(false);
+                uninstallMod(mod);
+              }}
+            >
               Yes, disable
             </Button>
           </Group>
