@@ -82,7 +82,7 @@ function SongCard({ mod }: ModCardProps) {
                   <List.Item key={m.id}>{m.name}</List.Item>
                 ))}
               </List>
-              <Text>Removing this mod will also remove the above mods.</Text>
+              <Text>Removing this mod will also disable the above mods.</Text>
             </Stack>
           ) : (
             <Text>There are no mods installed that depend on this mod.</Text>
