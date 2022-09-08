@@ -158,24 +158,16 @@ export function startSocket() {
       }
     });
     ws.addEventListener('close', function (ev) {
-      if(socket == ws) {
-        invokeSocketEvent(this, 'close', ev);
-      }
+      invokeSocketEvent(this, 'close', ev);
     });
     ws.addEventListener('open', function (ev) {
-      if(socket == ws) {
-        invokeSocketEvent(this, 'open', ev);
-      }
+      invokeSocketEvent(this, 'open', ev);
     });
     ws.addEventListener('message', function (ev) {
-      if(socket == ws) {
-        invokeSocketEvent(this, 'message', ev);
-      }
+      invokeSocketEvent(this, 'message', ev);
     });
     ws.addEventListener('error', function (ev) {
-      if(socket == ws) {
-        invokeSocketEvent(this, 'error', ev);
-      }
+      invokeSocketEvent(this, 'error', ev);
     });
     socket = ws;
   }
@@ -206,8 +198,7 @@ export function useIsSocketClosed() {
 export function stopSocket() {
   if (socket) {
     const toClose = socket;
-    socket = null; // Signal to events fired by the close that this close was from our side
+    socket = null;
     toClose.close();
   }
-  socket = null;
 }
