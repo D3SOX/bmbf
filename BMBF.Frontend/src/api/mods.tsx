@@ -14,13 +14,22 @@ export async function fetchMods(): Promise<void> {
 export async function uninstallMod(mod: Pick<Mod, 'id'>): Promise<void> {
   const data = await backendRequest(`mods/uninstall/${mod.id}`, {
     method: 'POST',
-  });
+  }, [400]);
+  if (data.status === 400) {
+    const message = await data.text();
+    sendErrorNotification(`Failed to uninstall ${mod.id}: ${message}`)
+  }
 }
 
 export async function installMod(mod: Pick<Mod, 'id'>): Promise<void> {
   const data = await backendRequest(`mods/install/${mod.id}`, {
     method: 'POST',
-  });
+  }, [400]);
+
+  if (data.status === 400) {
+    const message = await data.text();
+    sendErrorNotification(`Failed to install ${mod.id}: ${message}`)
+  }
 }
 
 export async function unloadMod(mod: Pick<Mod, 'id'>): Promise<void> {
