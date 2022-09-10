@@ -1,5 +1,5 @@
 import { InstallationInfo } from '../types/beatsaber';
-import { API_ROOT } from './base';
+import { API_ROOT, backendRequest } from './base';
 import { proxy, useSnapshot } from 'valtio';
 import { useMemo } from 'react';
 import { setupStore } from './setup';
@@ -9,7 +9,7 @@ export const beatSaberStore = proxy<{ installationInfo: InstallationInfo | null 
 });
 
 export async function fetchInstallationInfo(): Promise<void> {
-  const data = await fetch(`${API_ROOT}/beatsaber/install`);
+  const data = await backendRequest(`beatsaber/install`, undefined, [404]);
   if (data.ok) {
     beatSaberStore.installationInfo = await data.json();
   } else {

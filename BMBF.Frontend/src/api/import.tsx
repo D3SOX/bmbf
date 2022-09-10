@@ -1,8 +1,8 @@
-import { API_ROOT, sendErrorNotification } from './base';
+import { API_ROOT, backendRequest, sendErrorNotification } from './base';
 import { ImportResponse, ImportType } from '../types/import';
 
 export async function startImport(url: string): Promise<void> {
-  const data = await fetch(`${API_ROOT}/import/url`, {
+  const data = await backendRequest(`import/url`, {
     method: 'POST',
     body: `"${url}"`,
   });
@@ -11,7 +11,5 @@ export async function startImport(url: string): Promise<void> {
     if (json.type === ImportType.Failed) {
       sendErrorNotification(json.error);
     }
-  } else {
-    sendErrorNotification(await data.text());
   }
 }
