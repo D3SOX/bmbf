@@ -10,13 +10,21 @@ namespace BMBF.Backend.Util;
 
 public static class SongUtil
 {
+    private static async Task HashStreamAsync(HashAlgorithm hash, Stream stream, byte[] buffer)
+    {
+        int read;
+        while ((read = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+        {
+            hash.TransformBlock(buffer, 0, read, buffer, 0);
+        }
+    }
+
     private static async Task<string?> TryGetSongHashAsync(ISongProvider provider, Stream infoDatStream, BeatmapInfoDat infoDat)
     {
         using var hash = SHA1.Create();
-        await using var dataStream = new MemoryStream();
 
-        await infoDatStream.CopyToAsync(dataStream);
-
+        var buffer = new byte[4096];
+        await HashStreamAsync(hash, infoDatStream, buffer);
         foreach (var difficultySet in infoDat.DifficultyBeatmapSets)
         {
             foreach (var difficulty in difficultySet.DifficultyBeatmaps)
@@ -28,12 +36,12 @@ public static class SongUtil
                 }
 
                 await using var difficultyStream = provider.Open(difficulty.BeatmapFilename);
-                await difficultyStream.CopyToAsync(dataStream);
+                await HashStreamAsync(hash, difficultyStream, buffer);
             }
         }
+        hash.TransformFinalBlock(buffer, 0, 0);
 
-        dataStream.Position = 0;
-        return BitConverter.ToString(hash.ComputeHash(dataStream)).Replace("-", "").ToUpper();
+        return BitConverter.ToString(hash.Hash!).Replace("-", "").ToUpper();
     }
 
     /// <summary>
