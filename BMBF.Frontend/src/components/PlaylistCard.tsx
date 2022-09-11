@@ -1,6 +1,6 @@
 import { Playlist } from '../types/playlist';
 import { Card, Group, Image, Stack, Text, Button } from '@mantine/core';
-import { IconTrash } from '@tabler/icons';
+import { IconMusic, IconTrash } from '@tabler/icons';
 import { deletePlaylist } from '../api/playlists';
 import { API_ROOT } from '../api/base';
 
@@ -12,7 +12,7 @@ function PlaylistCard({ playlist }: PlaylistCardProps) {
   return (
     <Card title={playlist.id}>
       <Group align="start" noWrap>
-        <Image src={`${API_ROOT}/playlists/cover/${playlist.id}`} alt="Cover" width={150} radius="md" />
+        <Image src={`${API_ROOT}/playlists/cover/${playlist.id}`} alt="Cover" width={150} height={150} radius="md" withPlaceholder placeholder={<IconMusic size={36}/>} />
         <Stack>
           <Stack spacing={1}>
             <Text size="xl">{playlist.playlistTitle}</Text>

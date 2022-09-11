@@ -14,7 +14,7 @@ import {
   List,
   Tooltip,
 } from '@mantine/core';
-import { IconArrowBackUp, IconEye, IconToggleLeft, IconTrash } from '@tabler/icons';
+import { IconArrowBackUp, IconEye, IconPlugConnected, IconToggleLeft, IconTrash } from '@tabler/icons';
 import { installMod, modsStore, uninstallMod, unloadMod } from '../api/mods';
 import { API_ROOT } from '../api/base';
 import { useMemo, useState } from 'react';
@@ -143,7 +143,14 @@ function SongCard({ mod }: ModCardProps) {
       </Modal>
 
       <Group align="start" noWrap>
-        <Image src={`${API_ROOT}/mods/cover/${mod.id}`} alt="Cover" width={150} radius="md" />
+        <Image src={`${API_ROOT}/mods/cover/${mod.id}`}
+          alt="Cover"
+          width={200}
+          height={113}
+          radius="md"
+          withPlaceholder
+          placeholder={<IconPlugConnected size={36}/>} 
+        />
         <Stack>
           <Stack spacing={1}>
             <Text size="xl">
