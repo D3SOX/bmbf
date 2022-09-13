@@ -11,7 +11,7 @@ function ProgressIndicator() {
       {progress.length > 0 && (
         <Stack>
           {progress.map(({ id, name, completed, total, representAsPercentage }) => (
-            <Notification key={id} title={name}>
+            <Notification key={id} title={name} disallowClose>
               {representAsPercentage ? (
                 <Progress value={Math.round((completed / total) * 100)} />
               ) : (
