@@ -17,7 +17,13 @@ function Songs() {
       <img src="/logo.png" alt="Logo" />
       <Title>Songs</Title>
       {songs.length ? (
-        <Masonry items={songsStore.songs} render={SongCard} columnGutter={15} columnWidth={400} />
+        <Masonry
+          items={songsStore.songs}
+          render={SongCard}
+          columnGutter={15}
+          columnWidth={400}
+          itemHeightEstimate={150}
+        />
       ) : (
         <Text>No songs found</Text>
       )}
