@@ -1,4 +1,12 @@
-import { Group, Header, ActionIcon, Button, useMantineColorScheme } from '@mantine/core';
+import {
+  Group,
+  Header,
+  ActionIcon,
+  Button,
+  useMantineColorScheme,
+  Switch,
+  useMantineTheme,
+} from '@mantine/core';
 import { Link, useMatch, useResolvedPath } from 'react-router-dom';
 import {
   IconHome,
@@ -55,11 +63,23 @@ function AppHeader() {
 
   const needsSetup = useNeedsSetup();
 
+  const theme = useMantineTheme();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
 
   return (
     <Header height={60}>
+      <Switch
+        size="xl"
+        color={dark ? 'gray' : 'dark'}
+        checked={!dark}
+        onChange={() => toggleColorScheme()}
+        onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
+        offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
+        // TODO: improve the way this is handled
+        sx={{ position: 'absolute', left: 5, top: 12 }}
+      />
+
       <Group
         style={{
           height: '100%',
