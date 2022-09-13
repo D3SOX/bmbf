@@ -1,13 +1,15 @@
-import { Button, Group, Stack, TextInput, Title, Text } from '@mantine/core';
+import { Button, Group, Stack, TextInput, Title, Text, Card, useMantineTheme } from '@mantine/core';
 import { useInputState } from '@mantine/hooks';
-import { startImport } from '../api/import';
-import { IconArrowRight, IconWorldDownload } from '@tabler/icons';
+import { importViaFile, importViaUrl } from '../api/import';
+import { IconArrowRight, IconFileUpload, IconUpload, IconWorldDownload, IconX } from '@tabler/icons';
 import { useState } from 'react';
 import { useSnapshot } from 'valtio';
 import { beatSaberStore } from '../api/beatsaber';
+import { Dropzone } from '@mantine/dropzone';
 import { infoStore } from '../api/info';
 
 function Tools() {
+  const theme = useMantineTheme();
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useInputState('');
 
@@ -28,11 +30,17 @@ function Tools() {
     return <Text>Game not modded</Text>;
   }
 
-  async function handleImport() {
+  async function handleUrlImport() {
     setBusy(true);
-    await startImport(url);
+    await importViaUrl(url);
     setBusy(false);
     setUrl('');
+  }
+
+  async function handleFileImport(files: File[]) {
+    setBusy(true);
+    await importViaFile(files[0]);
+    setBusy(false);
   }
 
   return (
@@ -48,10 +56,51 @@ function Tools() {
           icon={<IconWorldDownload />}
           disabled={busy}
         />
-        <Button onClick={handleImport} leftIcon={<IconArrowRight />} disabled={busy} loading={busy}>
+        <Button onClick={handleUrlImport} leftIcon={<IconArrowRight />} disabled={busy} loading={busy}>
           Start import
         </Button>
       </Group>
+      <Title order={2}>Import via File</Title>
+      <Card radius="md" shadow="md">
+        <Dropzone
+          onDrop={handleFileImport}
+          multiple={false}
+          loading={busy}
+          accept={{
+            'application/zip': ['.zip'],
+            'application/octet-stream': ['.qmod', '.bplist'],
+          }}
+        >
+          <Group position="center" spacing="xl" style={{ minHeight: 220, pointerEvents: 'none' }}>
+            <Dropzone.Accept>
+              <IconUpload
+                size={50}
+                stroke={1.5}
+                color={theme.colors[theme.primaryColor][theme.colorScheme === 'dark' ? 4 : 6]}
+              />
+            </Dropzone.Accept>
+            <Dropzone.Reject>
+              <IconX
+                size={50}
+                stroke={1.5}
+                color={theme.colors.red[theme.colorScheme === 'dark' ? 4 : 6]}
+              />
+            </Dropzone.Reject>
+            <Dropzone.Idle>
+              <IconFileUpload size={50} stroke={1.5} />
+            </Dropzone.Idle>
+
+            <div>
+              <Text size="xl" inline>
+                Drag Mods / Playlists / Songs here or click to select files
+              </Text>
+              <Text size="sm" color="dimmed" inline mt={7}>
+                Attach any supported file as you like, multiple files are not yet supported
+              </Text>
+            </div>
+          </Group>
+        </Dropzone>
+      </Card>
       <Title order={2}>Host Info</Title>
       {hostInfo ? (
         <Stack spacing={1}>
