@@ -1,6 +1,6 @@
 import { Playlist } from '../types/playlist';
 import { Card, Group, Image, Stack, Text, Button } from '@mantine/core';
-import { IconMusic, IconTrash } from '@tabler/icons';
+import { IconPlaylist, IconTrash } from '@tabler/icons';
 import { deletePlaylist } from '../api/playlists';
 import { API_ROOT } from '../api/base';
 
@@ -19,7 +19,7 @@ function PlaylistCard({ playlist }: PlaylistCardProps) {
           height={150}
           radius="md"
           withPlaceholder
-          placeholder={<IconMusic size={36} />}
+          placeholder={<IconPlaylist size={36} />}
         />
         <Stack>
           <Stack spacing={1}>
