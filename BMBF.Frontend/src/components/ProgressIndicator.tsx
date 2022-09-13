@@ -3,7 +3,11 @@ import React from 'react';
 import { useSnapshot } from 'valtio';
 import { progressStore } from '../api/progress';
 
-function ProgressBar({ completed, total }: { completed: number; total: number }) {
+interface ProgressBarProps {
+  completed: number;
+  total: number;
+}
+function ProgressBar({ completed, total }: ProgressBarProps) {
   const percent = Math.round((completed / total) * 100);
 
   return <Progress value={percent} label={`${percent}% (${completed}/${total})`} size="xl" />;
