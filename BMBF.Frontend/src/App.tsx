@@ -77,7 +77,7 @@ export default function App() {
 
   return (
     <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-      <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme }}>
+      <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme, cursorType: 'pointer' }}>
         <NotificationsProvider>
           <AppShell padding="md" header={<AppHeader />}>
             <Modal
