@@ -22,6 +22,7 @@ import {
 import React from 'react';
 import NavigationButton from './NavigationButton';
 import { launchBeatSaber, useNeedsSetup } from '../../api/beatsaber';
+import { useMediaQuery } from '@mantine/hooks';
 
 export interface Page {
   to: string;
@@ -67,6 +68,8 @@ function AppHeader() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
 
+  const useIconButton = useMediaQuery('(max-width: 1075px)');
+
   return (
     <Header height={60}>
       <Switch
@@ -97,25 +100,31 @@ function AppHeader() {
         {pages.map(page => (
           <NavigationButton key={page.to} page={page} disabled={needsSetup} />
         ))}
-        <ActionIcon
-          variant="outline"
-          color={dark ? 'yellow' : 'blue'}
-          onClick={() => toggleColorScheme()}
-          title="Toggle color scheme"
-        >
-          {dark ? <IconSun size={18} /> : <IconMoonStars size={18} />}
-        </ActionIcon>
       </Group>
-      <Button
-        leftIcon={<IconPlayerPlay />}
-        variant="filled"
-        disabled={needsSetup}
-        onClick={() => launchBeatSaber()}
-        // TODO: improve the way this is handled
-        sx={{ position: 'absolute', right: 20, top: 12 }}
-      >
-        Start Beat Saber
-      </Button>
+      {useIconButton ? (
+        <ActionIcon
+          variant="filled"
+          color="blue"
+          size="lg"
+          disabled={needsSetup}
+          onClick={() => launchBeatSaber()}
+          // TODO: improve the way this is handled
+          sx={{ position: 'absolute', right: 20, top: 12 }}
+        >
+          <IconPlayerPlay />
+        </ActionIcon>
+      ) : (
+        <Button
+          leftIcon={<IconPlayerPlay />}
+          variant="filled"
+          disabled={needsSetup}
+          onClick={() => launchBeatSaber()}
+          // TODO: improve the way this is handled
+          sx={{ position: 'absolute', right: 20, top: 12 }}
+        >
+          Start Beat Saber
+        </Button>
+      )}
     </Header>
   );
 }
