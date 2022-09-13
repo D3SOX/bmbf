@@ -13,6 +13,7 @@ export interface FeedSettings {
   enabled: boolean;
 }
 
-export interface SyncSaberConfig extends Record<FeedType, FeedSettings> {
+export interface SyncSaberConfig {
   beastSaberUsername: string | null;
+  feeds: Record<FeedType, FeedSettings>;
 }
