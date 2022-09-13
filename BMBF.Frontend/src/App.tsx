@@ -8,10 +8,6 @@ import {
   Center,
   ColorSchemeProvider,
   ColorScheme,
-  Stack,
-  Notification,
-  Progress,
-  Portal,
 } from '@mantine/core';
 import AppHeader from './components/shell/AppHeader';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
@@ -30,11 +26,10 @@ import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './ap
 import { useSnapshot } from 'valtio';
 import { fetchHostInfo } from './api/info';
 import { useHotkeys, useLocalStorage } from '@mantine/hooks';
-import { progressStore } from './api/progress';
+import ProgressIndicator from './components/ProgressIndicator';
 
 export default function App() {
   const [subsequentConnect, setSubsequentConnect] = useState(false);
-  const { progress } = useSnapshot(progressStore);
 
   useEffect(() => {
     // connect to websocket
@@ -160,23 +155,7 @@ export default function App() {
               <Route path="*" element={<Title>Not found</Title>} />
             </Routes>
 
-            {progress.length > 0 && (
-              <Portal target="header">
-                <Stack>
-                  {progress.map(({ id, name, completed, total, representAsPercentage }) => (
-                    <Notification key={id} title={name}>
-                      {representAsPercentage ? (
-                        <Progress value={Math.round((completed / total) * 100)} />
-                      ) : (
-                        <Text>
-                          Progress: {completed}/{total}
-                        </Text>
-                      )}
-                    </Notification>
-                  ))}
-                </Stack>
-              </Portal>
-            )}
+            <ProgressIndicator />
           </AppShell>
         </NotificationsProvider>
       </MantineProvider>
