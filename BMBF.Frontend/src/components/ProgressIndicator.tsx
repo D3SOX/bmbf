@@ -3,6 +3,12 @@ import React from 'react';
 import { useSnapshot } from 'valtio';
 import { progressStore } from '../api/progress';
 
+function ProgressBar({ completed, total }: { completed: number; total: number }) {
+  const percent = Math.round((completed / total) * 100);
+
+  return <Progress value={percent} label={`${percent}% (${completed}/${total})`} size="xl" />;
+}
+
 function ProgressIndicator() {
   const { progress } = useSnapshot(progressStore);
 
@@ -13,7 +19,7 @@ function ProgressIndicator() {
           {progress.map(({ id, name, completed, total, representAsPercentage }) => (
             <Notification key={id} title={name} disallowClose>
               {representAsPercentage ? (
-                <Progress value={Math.round((completed / total) * 100)} />
+                <ProgressBar completed={completed} total={total} />
               ) : (
                 <Text>
                   Progress: {completed}/{total}
