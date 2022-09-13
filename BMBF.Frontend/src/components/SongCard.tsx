@@ -10,7 +10,7 @@ interface SongCardProps {
 
 function SongCard({ song }: SongCardProps) {
   return (
-    <Card title={song.hash}>
+    <Card title={song.hash} shadow="md">
       <Group align="start" noWrap>
         <Image
           src={`${API_ROOT}/songs/cover/${song.hash}`}

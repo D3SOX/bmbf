@@ -10,7 +10,7 @@ interface PlaylistCardProps {
 
 function PlaylistCard({ playlist }: PlaylistCardProps) {
   return (
-    <Card title={playlist.id}>
+    <Card title={playlist.id} shadow="md">
       <Group align="start" noWrap>
         <Image
           src={`${API_ROOT}/playlists/cover/${playlist.id}`}

@@ -40,7 +40,7 @@ function SongCard({ mod }: ModCardProps) {
   }, [mod, mods]);
 
   return (
-    <Card title={mod.id}>
+    <Card title={mod.id} shadow="md">
       <Modal
         opened={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
