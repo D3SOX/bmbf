@@ -67,8 +67,8 @@ function Tools() {
           multiple={false}
           loading={busy}
           accept={{
-            'application/zip': ['.zip'],
-            'application/octet-stream': ['.qmod', '.bplist'],
+            'application/zip': ['.zip', '.qmod'],
+            'application/json': ['.bplist'],
           }}
         >
           <Group position="center" spacing="xl" style={{ minHeight: 220, pointerEvents: 'none' }}>
