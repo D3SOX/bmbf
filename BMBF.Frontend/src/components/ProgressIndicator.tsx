@@ -10,7 +10,7 @@ interface ProgressBarProps {
 function ProgressBar({ completed, total }: ProgressBarProps) {
   const percent = Math.round((completed / total) * 100);
 
-  return <Progress value={percent} label={`${percent}% (${completed}/${total})`} size="xl" />;
+  return <Progress value={percent} label={`${percent}%`} size="xl" />;
 }
 
 function ProgressIndicator() {
@@ -21,7 +21,11 @@ function ProgressIndicator() {
       {progress.length > 0 && (
         <Stack>
           {progress.map(({ id, name, completed, total, representAsPercentage }) => (
-            <Notification key={id} title={name} disallowClose>
+            <Notification
+              key={id}
+              title={representAsPercentage ? `${name} (${completed}/${total})` : name}
+              disallowClose
+            >
               {representAsPercentage ? (
                 <ProgressBar completed={completed} total={total} />
               ) : (
