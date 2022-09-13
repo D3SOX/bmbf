@@ -8,6 +8,10 @@ import {
   Center,
   ColorSchemeProvider,
   ColorScheme,
+  Stack,
+  Notification,
+  Progress,
+  Portal,
 } from '@mantine/core';
 import AppHeader from './components/shell/AppHeader';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
@@ -18,7 +22,7 @@ import Songs from './pages/Songs';
 import SyncSaber from './pages/SyncSaber';
 import Tools from './pages/Tools';
 import { NotificationsProvider } from '@mantine/notifications';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { beatSaberStore, fetchInstallationInfo } from './api/beatsaber';
 import Setup from './pages/Setup';
 import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup';
@@ -26,9 +30,11 @@ import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './ap
 import { useSnapshot } from 'valtio';
 import { fetchHostInfo } from './api/info';
 import { useHotkeys, useLocalStorage } from '@mantine/hooks';
+import { progressStore } from './api/progress';
 
 export default function App() {
   const [subsequentConnect, setSubsequentConnect] = useState(false);
+  const { progress } = useSnapshot(progressStore);
 
   useEffect(() => {
     // connect to websocket
@@ -153,6 +159,24 @@ export default function App() {
               />
               <Route path="*" element={<Title>Not found</Title>} />
             </Routes>
+
+            {progress.length > 0 && (
+              <Portal target="header">
+                <Stack>
+                  {progress.map(({ id, name, completed, total, representAsPercentage }) => (
+                    <Notification key={id} title={name}>
+                      {representAsPercentage ? (
+                        <Progress value={Math.round((completed / total) * 100)} />
+                      ) : (
+                        <Text>
+                          Progress: {completed}/{total}
+                        </Text>
+                      )}
+                    </Notification>
+                  ))}
+                </Stack>
+              </Portal>
+            )}
           </AppShell>
         </NotificationsProvider>
       </MantineProvider>
