@@ -52,6 +52,12 @@ function SongCard({ mod }: ModCardProps) {
             <Title order={4}>Description</Title>
             <Text>{mod.description}</Text>
           </Stack>
+          {mod.porter && (
+            <Stack spacing={1}>
+              <Title order={4}>Porter</Title>
+              <Text>{mod.porter}</Text>
+            </Stack>
+          )}
           <Stack spacing={1}>
             <Title order={4}>Dependencies</Title>
             {dependencies.length ? (

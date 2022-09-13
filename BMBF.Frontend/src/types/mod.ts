@@ -16,7 +16,7 @@ export interface Mod {
   version: string;
   description: string;
   packageVersion: string;
-  coverImageFileName: string;
+  coverImageFileName: string | null;
   installed: boolean;
   copyExtensions: Record<string, string>;
 }
