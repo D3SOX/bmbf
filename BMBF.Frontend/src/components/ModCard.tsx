@@ -143,13 +143,14 @@ function SongCard({ mod }: ModCardProps) {
       </Modal>
 
       <Group align="start" noWrap>
-        <Image src={`${API_ROOT}/mods/cover/${mod.id}`}
+        <Image
+          src={`${API_ROOT}/mods/cover/${mod.id}`}
           alt="Cover"
           width={200}
           height={113}
           radius="md"
           withPlaceholder
-          placeholder={<IconPlugConnected size={36}/>} 
+          placeholder={<IconPlugConnected size={36} />}
         />
         <Stack>
           <Stack spacing={1}>

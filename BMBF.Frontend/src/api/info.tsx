@@ -1,5 +1,5 @@
 import { HostInfo } from '../types/info';
-import { API_ROOT } from './base';
+import { backendRequest } from './base';
 import { proxy } from 'valtio';
 
 export const infoStore = proxy<{ hostInfo: HostInfo | null }>({
@@ -7,7 +7,7 @@ export const infoStore = proxy<{ hostInfo: HostInfo | null }>({
 });
 
 export async function fetchHostInfo(): Promise<void> {
-  const data = await fetch(`${API_ROOT}/host`);
+  const data = await backendRequest('host');
   if (data.ok) {
     infoStore.hostInfo = await data.json();
   } else {

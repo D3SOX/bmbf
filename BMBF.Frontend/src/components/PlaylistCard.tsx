@@ -12,7 +12,15 @@ function PlaylistCard({ playlist }: PlaylistCardProps) {
   return (
     <Card title={playlist.id}>
       <Group align="start" noWrap>
-        <Image src={`${API_ROOT}/playlists/cover/${playlist.id}`} alt="Cover" width={150} height={150} radius="md" withPlaceholder placeholder={<IconMusic size={36}/>} />
+        <Image
+          src={`${API_ROOT}/playlists/cover/${playlist.id}`}
+          alt="Cover"
+          width={150}
+          height={150}
+          radius="md"
+          withPlaceholder
+          placeholder={<IconMusic size={36} />}
+        />
         <Stack>
           <Stack spacing={1}>
             <Text size="xl">{playlist.playlistTitle}</Text>

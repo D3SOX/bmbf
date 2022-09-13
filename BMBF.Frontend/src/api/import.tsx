@@ -1,8 +1,8 @@
-import { API_ROOT, backendRequest, sendErrorNotification } from './base';
+import { backendRequest, sendErrorNotification } from './base';
 import { ImportResponse, ImportType } from '../types/import';
 
 export async function startImport(url: string): Promise<void> {
-  const data = await backendRequest(`import/url`, {
+  const data = await backendRequest('import/url', {
     method: 'POST',
     body: `"${url}"`,
   });

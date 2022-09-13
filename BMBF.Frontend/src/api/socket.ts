@@ -119,6 +119,8 @@ function handleEvent(event: SocketMessage) {
       const progress = progressStore.progress.find(p => p.id === event.id);
       if (progress) {
         progress.completed = event.itemsCompleted;
+      } else {
+        // TODO: warn?
       }
       break;
     }

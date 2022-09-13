@@ -12,7 +12,15 @@ function SongCard({ song }: SongCardProps) {
   return (
     <Card title={song.hash}>
       <Group align="start" noWrap>
-        <Image src={`${API_ROOT}/songs/cover/${song.hash}`} alt="Cover" width={150} height={150} radius="md" withPlaceholder placeholder={<IconMusic size={36}/>} />
+        <Image
+          src={`${API_ROOT}/songs/cover/${song.hash}`}
+          alt="Cover"
+          width={150}
+          height={150}
+          radius="md"
+          withPlaceholder
+          placeholder={<IconMusic size={36} />}
+        />
         <Stack>
           <Stack spacing={1}>
             <Text size="xl">
