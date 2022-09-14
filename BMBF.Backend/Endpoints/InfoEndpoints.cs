@@ -6,6 +6,8 @@ using Hydra;
 using System.Net;
 using System.Linq;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
+using Serilog;
 
 namespace BMBF.Backend.Endpoints;
 
@@ -24,8 +26,22 @@ public class InfoEndpoints : IEndpoints
 
     private string? GetLocalIpAddress()
     {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-        return host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)?.ToString();
+        var nonLoopbackAddresses = NetworkInterface
+            .GetAllNetworkInterfaces()
+            .Where(i => i.NetworkInterfaceType != NetworkInterfaceType.Loopback && i.OperationalStatus == OperationalStatus.Up)
+            .SelectMany(i => i.GetIPProperties().UnicastAddresses.Where(addr => addr.Address.AddressFamily == AddressFamily.InterNetwork))
+            .ToArray();
+
+        if (nonLoopbackAddresses.Length == 0)
+        {
+            Log.Warning("Could not find any local IP address. Is the Quest connected to wifi?");
+        }
+        else if (nonLoopbackAddresses.Length > 1)
+        {
+            Log.Warning("Multiple ({nonLoopbackAddresses.Length}) local IP addresses found. The first will be used");
+        }
+
+        return nonLoopbackAddresses.FirstOrDefault()?.Address.ToString();
     }
 
     [HttpGet("/host")]
