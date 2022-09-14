@@ -1,9 +1,9 @@
 import { backendRequest } from './base';
-import { SyncSaberConfig } from '../types/sync-saber';
+import { FeedType, SyncSaberConfig } from '../types/sync-saber';
 import { proxy } from 'valtio';
 
-export const syncSaberStore = proxy<{ syncSaberConfig: Partial<SyncSaberConfig> }>({
-  syncSaberConfig: {},
+export const syncSaberStore = proxy<{ syncSaberConfig: SyncSaberConfig | null }>({
+  syncSaberConfig: null,
 });
 
 export async function fetchSyncSaberConfig(): Promise<void> {
@@ -13,13 +13,26 @@ export async function fetchSyncSaberConfig(): Promise<void> {
   }
 }
 
-export async function setSyncSaberConfig(config: Partial<SyncSaberConfig>): Promise<void> {
-  const data = await backendRequest('syncsaber/config', {
-    method: 'PUT',
-    body: JSON.stringify(config),
-  });
-  // this can be removed when the websocket is implemented
-  if (data.ok) {
-    syncSaberStore.syncSaberConfig = config;
+export function setBeastSaberUsername(beastSaberUsername: string) {
+  if (syncSaberStore.syncSaberConfig) {
+    syncSaberStore.syncSaberConfig.beastSaberUsername = beastSaberUsername;
   }
+}
+
+export function setFeedSongsToSync(feedType: FeedType, songsToSync: number) {
+  if (syncSaberStore.syncSaberConfig) {
+    syncSaberStore.syncSaberConfig.feeds[feedType].songsToSync = songsToSync;
+  }
+}
+export function setFeedEnabled(feedType: FeedType, enabled: boolean) {
+  if (syncSaberStore.syncSaberConfig) {
+    syncSaberStore.syncSaberConfig.feeds[feedType].enabled = enabled;
+  }
+}
+
+export async function saveSyncSaberConfig(): Promise<void> {
+  await backendRequest('syncsaber/config', {
+    method: 'PUT',
+    body: JSON.stringify(syncSaberStore.syncSaberConfig),
+  });
 }
