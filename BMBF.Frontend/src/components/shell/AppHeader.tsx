@@ -77,8 +77,6 @@ function AppHeader() {
           height: '100%',
         }}
         px="lg"
-        position="center"
-        align="center"
         noWrap
       >
         <Switch
