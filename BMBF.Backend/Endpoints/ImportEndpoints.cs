@@ -79,8 +79,12 @@ public class ImportEndpoints : IEndpoints
             if (result.Type == FileImportResultType.Failed)
             {
                 Log.Error($"Failed to import file {fileName}: {result.Error}");
+                return Responses.Json(result, 400);
             }
-            return Responses.Json(result);
+            else
+            {
+                return Responses.Json(result, 200);
+            }
         }
         catch (HttpRequestException ex)
         {
