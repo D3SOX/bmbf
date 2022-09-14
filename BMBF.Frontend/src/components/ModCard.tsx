@@ -24,7 +24,7 @@ interface ModCardProps {
   mod: Mod;
 }
 
-function SongCard({ mod }: ModCardProps) {
+function ModCard({ mod }: ModCardProps) {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -198,4 +198,4 @@ function SongCard({ mod }: ModCardProps) {
   );
 }
 
-export default SongCard;
+export default ModCard;
