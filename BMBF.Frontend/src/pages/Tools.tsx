@@ -62,15 +62,7 @@ function Tools() {
       </Group>
       <Title order={2}>Import via File</Title>
       <Card radius="md" shadow="md">
-        <Dropzone
-          onDrop={handleFileImport}
-          multiple={false}
-          loading={busy}
-          accept={{
-            'application/zip': ['.zip', '.qmod'],
-            'application/json': ['.bplist'],
-          }}
-        >
+        <Dropzone onDrop={handleFileImport} multiple={false} loading={busy}>
           <Group position="center" spacing="xl" style={{ minHeight: 220, pointerEvents: 'none' }}>
             <Dropzone.Accept>
               <IconUpload
