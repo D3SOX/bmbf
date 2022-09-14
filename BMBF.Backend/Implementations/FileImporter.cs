@@ -84,7 +84,12 @@ public class FileImporter : IFileImporter
     {
         Log.Information($"Importing {fileName}");
 
-        var extension = Path.GetExtension(fileName).ToLowerInvariant().Substring(1);
+        var extension = Path.GetExtension(fileName);
+        if (string.IsNullOrEmpty(extension))
+        {
+            return FileImportResult.CreateError($"No file extension in file name \"{fileName}\"");
+        }
+        extension = extension.ToLowerInvariant()[1..];
 
         if (extension == "zip")
         {
