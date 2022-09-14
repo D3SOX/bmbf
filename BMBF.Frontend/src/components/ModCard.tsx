@@ -52,12 +52,6 @@ function SongCard({ mod }: ModCardProps) {
             <Title order={4}>Description</Title>
             <Text>{mod.description}</Text>
           </Stack>
-          {mod.porter && (
-            <Stack spacing={1}>
-              <Title order={4}>Porter</Title>
-              <Text>{mod.porter}</Text>
-            </Stack>
-          )}
           <Stack spacing={1}>
             <Title order={4}>Dependencies</Title>
             {dependencies.length ? (
@@ -163,7 +157,13 @@ function SongCard({ mod }: ModCardProps) {
             <Text size="xl">
               {mod.name} <Badge size="xs">{mod.version}</Badge>
             </Text>
-            <Text>Created by {mod.author}</Text>
+            {mod.porter ? (
+              <Text>
+                Ported by {mod.porter}, original mod by {mod.author}
+              </Text>
+            ) : (
+              <Text>Created by {mod.author}</Text>
+            )}
           </Stack>
           <Group>
             <Switch
