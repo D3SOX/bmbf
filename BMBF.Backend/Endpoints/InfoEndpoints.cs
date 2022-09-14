@@ -38,7 +38,7 @@ public class InfoEndpoints : IEndpoints
         }
         else if (nonLoopbackAddresses.Length > 1)
         {
-            Log.Warning("Multiple ({nonLoopbackAddresses.Length}) local IP addresses found. The first will be used");
+            Log.Warning($"Multiple ({nonLoopbackAddresses.Length}) local IP addresses found. The first will be used");
         }
 
         return nonLoopbackAddresses.FirstOrDefault()?.Address.ToString();
