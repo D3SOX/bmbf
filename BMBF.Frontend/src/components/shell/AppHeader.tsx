@@ -72,17 +72,6 @@ function AppHeader() {
 
   return (
     <Header height={60}>
-      <Switch
-        size="xl"
-        color={dark ? 'gray' : 'dark'}
-        checked={!dark}
-        onChange={() => toggleColorScheme()}
-        onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
-        offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
-        // TODO: improve the way this is handled
-        sx={{ position: 'absolute', left: 5, top: 12 }}
-      />
-
       <Group
         style={{
           height: '100%',
@@ -92,6 +81,15 @@ function AppHeader() {
         align="center"
         noWrap
       >
+        <Switch
+          size="xl"
+          color={dark ? 'gray' : 'dark'}
+          checked={!dark}
+          onChange={() => toggleColorScheme()}
+          onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
+          offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
+          sx={{ marginRight: 'auto' }}
+        />
         <Link to="/">
           <ActionIcon variant={matchedHome ? 'filled' : 'default'} color="blue" radius="xl" size="xl">
             <IconHome />
@@ -100,31 +98,29 @@ function AppHeader() {
         {pages.map(page => (
           <NavigationButton key={page.to} page={page} disabled={needsSetup} />
         ))}
+        {useIconButton ? (
+          <ActionIcon
+            variant="filled"
+            color="blue"
+            size="lg"
+            disabled={needsSetup}
+            onClick={() => launchBeatSaber()}
+            sx={{ marginLeft: 'auto' }}
+          >
+            <IconPlayerPlay />
+          </ActionIcon>
+        ) : (
+          <Button
+            leftIcon={<IconPlayerPlay />}
+            variant="filled"
+            disabled={needsSetup}
+            onClick={() => launchBeatSaber()}
+            sx={{ marginLeft: 'auto' }}
+          >
+            Start Beat Saber
+          </Button>
+        )}
       </Group>
-      {useIconButton ? (
-        <ActionIcon
-          variant="filled"
-          color="blue"
-          size="lg"
-          disabled={needsSetup}
-          onClick={() => launchBeatSaber()}
-          // TODO: improve the way this is handled
-          sx={{ position: 'absolute', right: 20, top: 12 }}
-        >
-          <IconPlayerPlay />
-        </ActionIcon>
-      ) : (
-        <Button
-          leftIcon={<IconPlayerPlay />}
-          variant="filled"
-          disabled={needsSetup}
-          onClick={() => launchBeatSaber()}
-          // TODO: improve the way this is handled
-          sx={{ position: 'absolute', right: 20, top: 12 }}
-        >
-          Start Beat Saber
-        </Button>
-      )}
     </Header>
   );
 }
