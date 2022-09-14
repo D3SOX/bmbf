@@ -1,4 +1,5 @@
 import {
+  Box,
   Group,
   Header,
   ActionIcon,
@@ -19,7 +20,7 @@ import {
   IconSun,
   IconTool,
 } from '@tabler/icons';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import NavigationButton from './NavigationButton';
 import { launchBeatSaber, useNeedsSetup } from '../../api/beatsaber';
 import { useMediaQuery } from '@mantine/hooks';
@@ -68,7 +69,14 @@ function AppHeader() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
 
-  const useIconButton = useMediaQuery('(max-width: 1075px)');
+  const useIconButton = useMediaQuery('(max-width: 750px)');
+
+  const boxStyle: CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  };
 
   return (
     <Header height={60}>
@@ -79,45 +87,51 @@ function AppHeader() {
         px="lg"
         noWrap
       >
-        <Switch
-          size="xl"
-          color={dark ? 'gray' : 'dark'}
-          checked={!dark}
-          onChange={() => toggleColorScheme()}
-          onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
-          offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
-          sx={{ marginRight: 'auto' }}
-        />
-        <Link to="/">
-          <ActionIcon variant={matchedHome ? 'filled' : 'default'} color="blue" radius="xl" size="xl">
-            <IconHome />
-          </ActionIcon>
-        </Link>
-        {pages.map(page => (
-          <NavigationButton key={page.to} page={page} disabled={needsSetup} />
-        ))}
-        {useIconButton ? (
-          <ActionIcon
-            variant="filled"
-            color="blue"
-            size="lg"
-            disabled={needsSetup}
-            onClick={() => launchBeatSaber()}
-            sx={{ marginLeft: 'auto' }}
-          >
-            <IconPlayerPlay />
-          </ActionIcon>
-        ) : (
-          <Button
-            leftIcon={<IconPlayerPlay />}
-            variant="filled"
-            disabled={needsSetup}
-            onClick={() => launchBeatSaber()}
-            sx={{ marginLeft: 'auto' }}
-          >
-            Start Beat Saber
-          </Button>
-        )}
+        <Box style={boxStyle}>
+          <Switch
+            size="xl"
+            color={dark ? 'gray' : 'dark'}
+            checked={!dark}
+            onChange={() => toggleColorScheme()}
+            onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
+            offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
+            sx={{ marginRight: 'auto' }}
+          />
+        </Box>
+        <Group noWrap>
+          <Link to="/">
+            <ActionIcon variant={matchedHome ? 'filled' : 'default'} color="blue" radius="xl" size="xl">
+              <IconHome />
+            </ActionIcon>
+          </Link>
+          {pages.map(page => (
+            <NavigationButton key={page.to} page={page} disabled={needsSetup} />
+          ))}
+        </Group>
+        <Box style={boxStyle}>
+          {useIconButton ? (
+            <ActionIcon
+              variant="filled"
+              color="blue"
+              size="lg"
+              disabled={needsSetup}
+              onClick={() => launchBeatSaber()}
+              sx={{ marginLeft: 'auto' }}
+            >
+              <IconPlayerPlay />
+            </ActionIcon>
+          ) : (
+            <Button
+              leftIcon={<IconPlayerPlay />}
+              variant="filled"
+              disabled={needsSetup}
+              onClick={() => launchBeatSaber()}
+              sx={{ marginLeft: 'auto' }}
+            >
+              Start Beat Saber
+            </Button>
+          )}
+        </Box>
       </Group>
     </Header>
   );
