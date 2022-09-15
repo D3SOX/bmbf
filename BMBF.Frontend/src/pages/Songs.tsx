@@ -14,7 +14,6 @@ function Songs() {
 
   return (
     <Stack align="center">
-      <img src="/logo.png" alt="Logo" />
       <Title>Songs</Title>
       {songs.length ? (
         <Masonry

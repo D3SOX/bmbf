@@ -45,7 +45,6 @@ function Tools() {
 
   return (
     <Stack align="center">
-      <img src="/logo.png" alt="Logo" />
       <Title>Tools</Title>
       <Title order={2}>Import via URL</Title>
       <Group>

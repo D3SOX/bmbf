@@ -88,6 +88,7 @@ function AppHeader() {
         noWrap
       >
         <Box style={boxStyle}>
+          <img src="/logo.png" alt="Logo" height={60} style={{ padding: theme.spacing.xs }} />
           <Switch
             size="xl"
             color={dark ? 'gray' : 'dark'}

@@ -49,7 +49,6 @@ function Setup() {
 
   return (
     <Stack align="center">
-      <img src="/logo.png" alt="Logo" />
       <Title>Setup</Title>
       {setupStatus && (
         <Button variant="outline" color="orange" leftIcon={<IconLogout />} onClick={quit}>

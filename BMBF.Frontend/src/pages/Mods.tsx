@@ -13,7 +13,6 @@ function Mods() {
 
   return (
     <Stack align="center">
-      <img src="/logo.png" alt="Logo" />
       <Title>Mods</Title>
       {mods.length ? (
         <Grid gutter="md" grow>
