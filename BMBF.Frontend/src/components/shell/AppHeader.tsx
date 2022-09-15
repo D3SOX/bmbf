@@ -84,22 +84,18 @@ function AppHeader() {
         style={{
           height: '100%',
         }}
-        px="lg"
+        px="sm"
         noWrap
       >
         <Box style={boxStyle}>
-          <img src="/logo.png" alt="Logo" height={60} style={{ padding: theme.spacing.xs }} />
-          <Switch
-            size="xl"
-            color={dark ? 'gray' : 'dark'}
-            checked={!dark}
-            onChange={() => toggleColorScheme()}
-            onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
-            offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
-            sx={{ marginRight: 'auto' }}
+          <img
+            src="/logo.png"
+            alt="Logo"
+            height={60}
+            style={{ padding: theme.spacing.xs, marginRight: 'auto' }}
           />
         </Box>
-        <Group noWrap>
+        <Group spacing="xs" noWrap>
           <Link to="/">
             <ActionIcon variant={matchedHome ? 'filled' : 'default'} color="blue" radius="xl" size="xl">
               <IconHome />
@@ -110,6 +106,15 @@ function AppHeader() {
           ))}
         </Group>
         <Box style={boxStyle}>
+          <Switch
+            size="lg"
+            color={dark ? 'gray' : 'dark'}
+            checked={!dark}
+            onChange={() => toggleColorScheme()}
+            onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
+            offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
+            sx={{ marginLeft: 'auto', marginRight: theme.spacing.md }}
+          />
           {useIconButton ? (
             <ActionIcon
               variant="filled"
@@ -117,7 +122,6 @@ function AppHeader() {
               size="lg"
               disabled={needsSetup}
               onClick={() => launchBeatSaber()}
-              sx={{ marginLeft: 'auto' }}
             >
               <IconPlayerPlay />
             </ActionIcon>
@@ -127,7 +131,6 @@ function AppHeader() {
               variant="filled"
               disabled={needsSetup}
               onClick={() => launchBeatSaber()}
-              sx={{ marginLeft: 'auto' }}
             >
               Start Beat Saber
             </Button>
