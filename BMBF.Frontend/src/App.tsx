@@ -5,9 +5,10 @@ import {
   Title,
   Text,
   Loader,
-  Center,
   ColorSchemeProvider,
   ColorScheme,
+  Stack,
+  useMantineTheme,
 } from '@mantine/core';
 import AppHeader from './components/shell/AppHeader';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
@@ -27,6 +28,7 @@ import { useSnapshot } from 'valtio';
 import { fetchHostInfo } from './api/info';
 import { useHotkeys, useLocalStorage } from '@mantine/hooks';
 import ProgressIndicator from './components/ProgressIndicator';
+import { IconPlugConnectedX } from '@tabler/icons';
 
 export default function App() {
   const [subsequentConnect, setSubsequentConnect] = useState(false);
@@ -61,6 +63,7 @@ export default function App() {
     startSocket();
   });
 
+  const theme = useMantineTheme();
   const isClosed = useIsSocketClosed() && subsequentConnect;
 
   // https://mantine.dev/guides/dark-theme/#save-to-localstorage-and-add-keyboard-shortcut
@@ -87,19 +90,14 @@ export default function App() {
                 /* do nothing*/
               }}
             >
-              <Center>
-                <Title order={4}>BMBF has lost connection with your headset</Title>
-              </Center>
-              <Center>
-                <Text>Attempting to reconnect</Text>
-              </Center>
-              <Center
-                sx={{
-                  padding: '16px',
-                }}
-              >
-                <Loader />
-              </Center>
+              <Stack align="center">
+                <IconPlugConnectedX size={32} color={theme.colors.orange[4]} />
+                <Stack align="center" spacing={2}>
+                  <Title order={4}>BMBF has lost connection with your headset</Title>
+                  <Text>Attempting to reconnect</Text>
+                </Stack>
+                <Loader variant="dots" my="xs" />
+              </Stack>
             </Modal>
 
             <Routes>
