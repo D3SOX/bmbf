@@ -3,16 +3,21 @@ import { Card, Group, Image, Stack, Text, Button } from '@mantine/core';
 import { IconMusic, IconTrash } from '@tabler/icons';
 import { deleteSong } from '../api/songs';
 import { API_ROOT } from '../api/base';
+import { RenderComponentProps } from 'masonic/src/use-masonry';
 
-interface SongCardProps {
-  song: Song;
-}
-
-function SongCard({ song }: SongCardProps) {
+function SongCard({ data: song }: RenderComponentProps<Song>) {
   return (
-    <Card title={song.hash}>
+    <Card title={song.hash} shadow="md">
       <Group align="start" noWrap>
-        <Image src={`${API_ROOT}/songs/cover/${song.hash}`} alt="Cover" width={150} height={150} radius="md" withPlaceholder placeholder={<IconMusic size={36}/>} />
+        <Image
+          src={`${API_ROOT}/songs/cover/${song.hash}`}
+          alt="Cover"
+          width={150}
+          height={150}
+          radius="md"
+          withPlaceholder
+          placeholder={<IconMusic size={36} />}
+        />
         <Stack>
           <Stack spacing={1}>
             <Text size="xl">

@@ -15,7 +15,7 @@ function Home() {
       <Title>Home</Title>
       <Text>Welcome to BMBF! ({acronym})</Text>
       {needsSetup ? (
-        <Card>
+        <Card radius="md" shadow="md">
           <Stack>
             <Text>You need to setup BMBF before you can use it.</Text>
             <Button component={Link} to="/setup" leftIcon={<IconArrowBigRight />}>

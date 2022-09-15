@@ -67,7 +67,7 @@ function Setup() {
             icon={<IconFlag />}
             loading={loadingStep === 0}
           >
-            <Card>
+            <Card radius="md" shadow="md">
               <Stack align="start">
                 <Text>Start the initial setup</Text>
                 <Button onClick={begin} disabled={loadingStep !== null} leftIcon={<IconArrowRight />}>
@@ -83,7 +83,7 @@ function Setup() {
             loading={loadingStep === 1}
             sx={{ display: needsDowngrade() ? 'block' : 'none' }}
           >
-            <Card>
+            <Card radius="md" shadow="md">
               <Stack align="start">
                 <Text>Your game needs a downgrade</Text>
                 <Button
@@ -102,7 +102,7 @@ function Setup() {
             icon={<IconWand />}
             loading={loadingStep === 2}
           >
-            <Card>
+            <Card radius="md" shadow="md">
               <Stack align="start">
                 <Text>Now patch the game</Text>
                 <Button onClick={patch} disabled={loadingStep !== null} leftIcon={<IconArrowRight />}>
@@ -117,7 +117,7 @@ function Setup() {
             icon={<IconTrash />}
             loading={loadingStep === 3}
           >
-            <Card>
+            <Card radius="md" shadow="md">
               <Stack align="start">
                 <Text>Now uninstall the original game</Text>
                 <Button
@@ -136,7 +136,7 @@ function Setup() {
             icon={<IconPackage />}
             loading={loadingStep === 4}
           >
-            <Card>
+            <Card radius="md" shadow="md">
               <Stack align="start">
                 <Text>Now install the modded game</Text>
                 <Button
@@ -155,7 +155,7 @@ function Setup() {
             icon={<IconFlag3 />}
             loading={loadingStep === 5}
           >
-            <Card>
+            <Card radius="md" shadow="md">
               <Stack align="start">
                 <Text>Now finalize the setup</Text>
                 <Button onClick={finalize} disabled={loadingStep !== null} leftIcon={<IconArrowRight />}>

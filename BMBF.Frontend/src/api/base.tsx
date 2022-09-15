@@ -24,21 +24,23 @@ export function sendErrorNotification(error: string) {
   });
 }
 
-
-export async function backendRequest(...args: [...Parameters<typeof fetch>, (number[])?]): Promise<Response> {
+export async function backendRequest(
+  ...args: [...Parameters<typeof fetch>, number[]?]
+): Promise<Response> {
   try {
-    const ignoredCodes = args[2]
+    const ignoredCodes = args[2];
     const result = await fetch(`${API_ROOT}/${args[0]}`, args[1]);
 
-    if (result.ok || ignoredCodes?.some(a => a === result.status))
-      return result;
+    if (result.ok || ignoredCodes?.some(a => a === result.status)) return result;
 
-    console.error("Request failed", result);
-    sendErrorNotification(`Error while making request, received ${result.status}\n${await result.text()}`);
+    console.error('Request failed', result);
+    sendErrorNotification(
+      `Error while making request, received ${result.status}\n${await result.text()}`
+    );
 
     return result;
   } catch (e) {
-    console.error("Error while fulfilling request", e);
+    console.error('Error while fulfilling request', e);
     sendErrorNotification(`Error while making request`);
     throw e;
   }

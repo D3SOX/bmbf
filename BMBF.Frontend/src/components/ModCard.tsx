@@ -24,7 +24,7 @@ interface ModCardProps {
   mod: Mod;
 }
 
-function SongCard({ mod }: ModCardProps) {
+function ModCard({ mod }: ModCardProps) {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -40,7 +40,7 @@ function SongCard({ mod }: ModCardProps) {
   }, [mod, mods]);
 
   return (
-    <Card title={mod.id}>
+    <Card title={mod.id} shadow="md">
       <Modal
         opened={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
@@ -143,20 +143,27 @@ function SongCard({ mod }: ModCardProps) {
       </Modal>
 
       <Group align="start" noWrap>
-        <Image src={`${API_ROOT}/mods/cover/${mod.id}`}
+        <Image
+          src={`${API_ROOT}/mods/cover/${mod.id}`}
           alt="Cover"
           width={200}
           height={113}
           radius="md"
           withPlaceholder
-          placeholder={<IconPlugConnected size={36}/>} 
+          placeholder={<IconPlugConnected size={36} />}
         />
         <Stack>
           <Stack spacing={1}>
             <Text size="xl">
               {mod.name} <Badge size="xs">{mod.version}</Badge>
             </Text>
-            <Text>Created by {mod.author}</Text>
+            {mod.porter ? (
+              <Text>
+                Ported by {mod.porter}, original mod by {mod.author}
+              </Text>
+            ) : (
+              <Text>Created by {mod.author}</Text>
+            )}
           </Stack>
           <Group>
             <Switch
@@ -191,4 +198,4 @@ function SongCard({ mod }: ModCardProps) {
   );
 }
 
-export default SongCard;
+export default ModCard;

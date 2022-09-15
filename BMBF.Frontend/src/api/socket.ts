@@ -119,13 +119,15 @@ function handleEvent(event: SocketMessage) {
       const progress = progressStore.progress.find(p => p.id === event.id);
       if (progress) {
         progress.completed = event.itemsCompleted;
+      } else {
+        // TODO: warn?
       }
       break;
     }
   }
 }
 
-const socketEvents: Record<keyof WebSocketEventMap, ((this: WebSocket, ev: Event) => any)[]> = {
+const socketEvents: Record<keyof WebSocketEventMap, ((this: WebSocket, event: Event) => any)[]> = {
   close: [],
   error: [],
   message: [],
@@ -134,7 +136,7 @@ const socketEvents: Record<keyof WebSocketEventMap, ((this: WebSocket, ev: Event
 
 export function listenToSocketEvent<K extends keyof WebSocketEventMap>(
   type: K,
-  listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any
+  listener: (this: WebSocket, event: WebSocketEventMap[K]) => any
 ) {
   const events = socketEvents[type];
   events.push(listener as any);
@@ -142,7 +144,7 @@ export function listenToSocketEvent<K extends keyof WebSocketEventMap>(
 
 export function unlistenToSocketEvent<K extends keyof WebSocketEventMap>(
   type: K,
-  listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any
+  listener: (this: WebSocket, event: WebSocketEventMap[K]) => any
 ) {
   const events = socketEvents[type];
   socketEvents[type] = events.filter(e => e !== listener);
@@ -160,25 +162,25 @@ export function invokeSocketEvent<K extends keyof WebSocketEventMap>(
 export function startSocket() {
   if (!socket || (socket.readyState !== WebSocket.CONNECTING && socket.readyState !== WebSocket.OPEN)) {
     const ws = new WebSocket(`ws://${API_HOST}/api/ws`);
-    ws.addEventListener('message', socketEvent => {
+    ws.addEventListener('message', event => {
       try {
-        handleEvent(JSON.parse(socketEvent.data));
+        handleEvent(JSON.parse(event.data));
       } catch (error) {
         console.error('Error while parsing message', error);
         sendErrorNotification('Error while parsing WebSocket message');
       }
     });
-    ws.addEventListener('close', function (ev) {
-      invokeSocketEvent(this, 'close', ev);
+    ws.addEventListener('close', function (event) {
+      invokeSocketEvent(this, 'close', event);
     });
-    ws.addEventListener('open', function (ev) {
-      invokeSocketEvent(this, 'open', ev);
+    ws.addEventListener('open', function (event) {
+      invokeSocketEvent(this, 'open', event);
     });
-    ws.addEventListener('message', function (ev) {
-      invokeSocketEvent(this, 'message', ev);
+    ws.addEventListener('message', function (event) {
+      invokeSocketEvent(this, 'message', event);
     });
-    ws.addEventListener('error', function (ev) {
-      invokeSocketEvent(this, 'error', ev);
+    ws.addEventListener('error', function (event) {
+      invokeSocketEvent(this, 'error', event);
     });
     socket = ws;
   }

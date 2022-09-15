@@ -1,11 +1,11 @@
 import { Playlist, PlaylistSong } from '../types/playlist';
-import { API_ROOT, backendRequest, sendErrorNotification } from './base';
+import { backendRequest } from './base';
 import { proxy } from 'valtio';
 
 export const playlistsStore = proxy<{ playlists: Playlist[] }>({ playlists: [] });
 
 export async function fetchPlaylists(): Promise<void> {
-  const data = await backendRequest(`playlists`);
+  const data = await backendRequest('playlists');
   if (data.ok) {
     playlistsStore.playlists = await data.json();
   }
@@ -21,7 +21,7 @@ export async function getPlaylistSongs(
 }
 
 export async function deletePlaylist(playlist: Pick<Playlist, 'id'>): Promise<void> {
-  const data = await backendRequest(`playlists/delete/${playlist.id}`, {
+  await backendRequest(`playlists/delete/${playlist.id}`, {
     method: 'DELETE',
   });
 }

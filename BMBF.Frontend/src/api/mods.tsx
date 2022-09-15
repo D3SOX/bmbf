@@ -1,5 +1,5 @@
 import { CoreModInstallResult, CoreModResultType, Mod } from '../types/mod';
-import { API_ROOT, backendRequest, sendErrorNotification } from './base';
+import { backendRequest, sendErrorNotification } from './base';
 import { proxy } from 'valtio';
 
 export const modsStore = proxy<{ mods: Mod[] }>({ mods: [] });
@@ -12,37 +12,42 @@ export async function fetchMods(): Promise<void> {
 }
 
 export async function uninstallMod(mod: Pick<Mod, 'id'>): Promise<void> {
-  const data = await backendRequest(`mods/uninstall/${mod.id}`, {
-    method: 'POST',
-  }, [400]);
+  const data = await backendRequest(
+    `mods/uninstall/${mod.id}`,
+    {
+      method: 'POST',
+    },
+    [400]
+  );
   if (data.status === 400) {
     const message = await data.text();
-    sendErrorNotification(`Failed to uninstall ${mod.id}: ${message}`)
+    sendErrorNotification(`Failed to uninstall ${mod.id}: ${message}`);
   }
 }
 
 export async function installMod(mod: Pick<Mod, 'id'>): Promise<void> {
-  const data = await backendRequest(`mods/install/${mod.id}`, {
-    method: 'POST',
-  }, [400]);
+  const data = await backendRequest(
+    `mods/install/${mod.id}`,
+    {
+      method: 'POST',
+    },
+    [400]
+  );
 
   if (data.status === 400) {
     const message = await data.text();
-    sendErrorNotification(`Failed to install ${mod.id}: ${message}`)
+    sendErrorNotification(`Failed to install ${mod.id}: ${message}`);
   }
 }
 
 export async function unloadMod(mod: Pick<Mod, 'id'>): Promise<void> {
-  const data = await fetch(`${API_ROOT}/mods/unload/${mod.id}`, {
+  await backendRequest(`mods/unload/${mod.id}`, {
     method: 'POST',
   });
-  if (!data.ok) {
-    sendErrorNotification(await data.text());
-  }
 }
 
 export async function installCore(): Promise<void> {
-  const data = await backendRequest(`mods/installcore`, {
+  const data = await backendRequest('mods/installcore', {
     method: 'POST',
   });
   if (data.ok) {

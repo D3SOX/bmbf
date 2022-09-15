@@ -18,7 +18,7 @@ import Songs from './pages/Songs';
 import SyncSaber from './pages/SyncSaber';
 import Tools from './pages/Tools';
 import { NotificationsProvider } from '@mantine/notifications';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { beatSaberStore, fetchInstallationInfo } from './api/beatsaber';
 import Setup from './pages/Setup';
 import { fetchModdableVersions, fetchSetupStatus, setupStore } from './api/setup';
@@ -26,6 +26,7 @@ import { startSocket, stopSocket, useIsSocketClosed, useSocketEvent } from './ap
 import { useSnapshot } from 'valtio';
 import { fetchHostInfo } from './api/info';
 import { useHotkeys, useLocalStorage } from '@mantine/hooks';
+import ProgressIndicator from './components/ProgressIndicator';
 
 export default function App() {
   const [subsequentConnect, setSubsequentConnect] = useState(false);
@@ -76,7 +77,7 @@ export default function App() {
 
   return (
     <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-      <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme }}>
+      <MantineProvider withGlobalStyles withNormalizeCSS theme={{ colorScheme, cursorType: 'pointer' }}>
         <NotificationsProvider>
           <AppShell padding="md" header={<AppHeader />}>
             <Modal
@@ -153,6 +154,8 @@ export default function App() {
               />
               <Route path="*" element={<Title>Not found</Title>} />
             </Routes>
+
+            <ProgressIndicator />
           </AppShell>
         </NotificationsProvider>
       </MantineProvider>

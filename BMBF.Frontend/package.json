@@ -14,26 +14,32 @@
   },
   "dependencies": {
     "@emotion/react": "^11.10.4",
-    "@mantine/core": "^5.2.6",
-    "@mantine/hooks": "^5.2.6",
-    "@mantine/notifications": "^5.2.6",
-    "@tabler/icons": "^1.93.0",
+    "@mantine/core": "^5.3.1",
+    "@mantine/dropzone": "^5.3.1",
+    "@mantine/hooks": "^5.3.1",
+    "@mantine/notifications": "^5.3.1",
+    "@tabler/icons": "^1.96.0",
+    "masonic": "^3.6.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.4.0",
     "valtio": "^1.7.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.18",
+    "@types/node": "~16.11.59",
+    "@types/react": "^18.0.20",
     "@types/react-dom": "^18.0.6",
-    "@typescript-eslint/eslint-plugin": "^5.36.2",
-    "@typescript-eslint/parser": "^5.36.2",
+    "@typescript-eslint/eslint-plugin": "^5.37.0",
+    "@typescript-eslint/parser": "^5.37.0",
     "@vitejs/plugin-react": "^2.1.0",
     "concurrently": "^7.4.0",
-    "eslint": "^8.23.0",
+    "eslint": "^8.23.1",
     "eslint-plugin-valtio": "^0.6.0",
     "prettier": "^2.7.1",
-    "typescript": "^4.8.2",
+    "typescript": "^4.8.3",
     "vite": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
