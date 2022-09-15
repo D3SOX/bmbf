@@ -7,6 +7,7 @@ import { useSnapshot } from 'valtio';
 import { beatSaberStore } from '../api/beatsaber';
 import { Dropzone } from '@mantine/dropzone';
 import { infoStore } from '../api/info';
+import ToolButtons from '../components/ToolButtons';
 
 function Tools() {
   const theme = useMantineTheme();
@@ -97,11 +98,14 @@ function Tools() {
         <Stack spacing={1}>
           <Text>Version: {hostInfo.version}</Text>
           <Text>Host Local IP: {hostInfo.hostLocalIp}</Text>
+          <Text>Accessible via browser at http://{hostInfo.hostLocalIp}:50005</Text>
           <Text>Connecting IP: {hostInfo.connectingIp}</Text>
         </Stack>
       ) : (
         <Text>Host info not loaded yet</Text>
       )}
+      <Title order={2}>Backend</Title>
+      <ToolButtons />
       <Title order={2}>Debug info</Title>
       {installationInfo ? (
         <Stack spacing={1}>

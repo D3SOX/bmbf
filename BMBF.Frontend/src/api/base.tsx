@@ -45,3 +45,44 @@ export async function backendRequest(
     throw e;
   }
 }
+
+export async function quit(): Promise<void> {
+  await backendRequest('quit', {
+    method: 'POST',
+  });
+}
+
+export async function restart(): Promise<void> {
+  await backendRequest('restart', {
+    method: 'POST',
+  });
+}
+
+export async function getRunInBackground(): Promise<boolean> {
+  const data = await backendRequest('runInBackground');
+  if (data.ok) {
+    return (await data.text()) === 'true';
+  }
+  return false;
+}
+
+export async function setRunInBackground(state: boolean): Promise<void> {
+  await backendRequest('runInBackground', {
+    method: 'POST',
+    body: `${state}`,
+  });
+}
+
+export async function logs(): Promise<void> {
+  const data = await backendRequest('logs');
+  if (data.ok) {
+    const logText = await data.text();
+    const element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(logText));
+    element.setAttribute('download', 'logs.txt');
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  }
+}
